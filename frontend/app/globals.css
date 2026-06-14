@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light — corporate IT */
+    --background: 248 250 252; /* slate-50 */
+    --surface: 255 255 255; /* white */
+    --surface-muted: 248 250 252; /* slate-50 */
+    --border: 226 232 240; /* slate-200 */
+    --foreground: 15 23 42; /* slate-900 */
+    --muted: 241 245 249; /* slate-100 */
+    --muted-foreground: 100 116 139; /* slate-500 */
+    --primary: 79 70 229; /* indigo-600 */
+    --primary-foreground: 255 255 255;
+    --primary-soft: 238 242 255; /* indigo-50 */
+    --ring: 99 102 241; /* indigo-500 */
+  }
+
+  .dark {
+    --background: 2 6 23; /* slate-950 */
+    --surface: 15 23 42; /* slate-900 */
+    --surface-muted: 30 41 59; /* slate-800 */
+    --border: 30 41 59; /* slate-800 */
+    --foreground: 226 232 240; /* slate-200 */
+    --muted: 30 41 59; /* slate-800 */
+    --muted-foreground: 148 163 184; /* slate-400 */
+    --primary: 99 102 241; /* indigo-500 */
+    --primary-foreground: 255 255 255;
+    --primary-soft: 30 27 75; /* indigo-950 */
+    --ring: 129 140 248; /* indigo-400 */
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  ::selection {
+    @apply bg-primary/20;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Discrete grid backdrop used on marketing surfaces (subtle, not "hacker"). */
+  .bg-grid {
+    background-image: linear-gradient(
+        to right,
+        rgb(var(--border) / 0.6) 1px,
+        transparent 1px
+      ),
+      linear-gradient(to bottom, rgb(var(--border) / 0.6) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--border)) transparent;
+  }
+}
+
+/* xterm container fills its panel */
+.xterm,
+.xterm-viewport {
+  height: 100% !important;
+  width: 100% !important;
+}
+.xterm-viewport {
+  background-color: transparent !important;
+}
