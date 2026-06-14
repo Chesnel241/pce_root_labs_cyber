@@ -15,6 +15,9 @@ import {
 import { type Difficulty } from "@/lib/curriculum";
 import { difficultyMeta } from "@/lib/style-maps";
 import { expectedFlag } from "@/lib/hints";
+import { api, ApiError } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import { useChallenge } from "@/lib/use-platform-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +39,10 @@ export interface ChallengeWorkspaceProps {
 }
 
 export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
+  const { token, apiEnabled, isAuthenticated } = useAuth();
+  // Mode live possible pour les actions (lab/flag) : API + utilisateur connecté.
+  const liveActions = apiEnabled && isAuthenticated && Boolean(token);
+
   const [status, setStatus] = React.useState<LabStatus>("idle");
   const [elapsed, setElapsed] = React.useState(0);
   const [revealed, setRevealed] = React.useState(0);
@@ -43,7 +50,28 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
   const [result, setResult] = React.useState<null | "correct" | "wrong">(
     props.solved ? "correct" : null,
   );
+  const [submitting, setSubmitting] = React.useState(false);
+  const [resultMessage, setResultMessage] = React.useState<string | null>(
+    props.solved ? `+${props.points} XP — challenge déjà résolu.` : null,
+  );
+  const [labError, setLabError] = React.useState<string | null>(null);
+  // Session de lab réelle. null en mode démo.
+  const [sessionId, setSessionId] = React.useState<string | null>(null);
+  // Clé de remontage du terminal (utilisée par Reset).
+  const [termKey, setTermKey] = React.useState(0);
+
   const meta = difficultyMeta[props.difficulty];
+
+  // Hydratation du statut "résolu" depuis l'API quand disponible (sans écraser
+  // un résultat de soumission déjà obtenu côté client).
+  const liveChallenge = useChallenge(props.challengeId);
+  React.useEffect(() => {
+    if (liveChallenge.data?.solved && result === null) {
+      setResult("correct");
+      setResultMessage(`+${props.points} XP — challenge déjà résolu.`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveChallenge.data]);
 
   React.useEffect(() => {
     if (status !== "running") return;
@@ -51,24 +79,96 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
     return () => clearInterval(t);
   }, [status]);
 
-  function startLab() {
+  async function startLab() {
+    setLabError(null);
     setStatus("starting");
-    // Démo : démarrage immédiat. Avec le backend, appeler api.startLab().
+
+    if (liveActions) {
+      try {
+        const session = await api.startLab(props.challengeId);
+        setSessionId(session.sessionId);
+        setStatus("running");
+        return;
+      } catch (err) {
+        // Repli démo : on démarre quand même le simulateur, en signalant l'erreur.
+        setSessionId(null);
+        setLabError(
+          err instanceof ApiError
+            ? `Lab indisponible (${err.message}). Terminal en mode démo.`
+            : "Lab indisponible. Terminal en mode démo.",
+        );
+        setStatus("running");
+        return;
+      }
+    }
+
+    // Mode démo : démarrage simulé immédiat.
+    setSessionId(null);
     setTimeout(() => setStatus("running"), 700);
   }
 
   function stopLab() {
+    // Arrêt côté backend si une session réelle existe (best-effort).
+    if (sessionId && liveActions) {
+      api.stopLab(sessionId).catch(() => {});
+    }
     setStatus("idle");
     setElapsed(0);
+    setSessionId(null);
+    setLabError(null);
   }
 
-  function submit(e: React.FormEvent) {
+  function resetLab() {
+    // Reset : on relance proprement la session/terminal.
+    if (sessionId && liveActions) {
+      api.stopLab(sessionId).catch(() => {});
+    }
+    setSessionId(null);
+    setElapsed(0);
+    setTermKey((k) => k + 1);
+    void startLab();
+  }
+
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!flag.trim()) return;
+    const value = flag.trim();
+    if (!value || submitting) return;
+
+    if (liveActions) {
+      setSubmitting(true);
+      try {
+        const res = await api.submitFlag(props.challengeId, value);
+        if (res.correct) {
+          setResult("correct");
+          setResultMessage(
+            res.alreadySolved
+              ? "Flag correct — challenge déjà résolu."
+              : `Flag correct ! +${res.awardedPoints} XP (total ${res.totalXp}).`,
+          );
+        } else {
+          setResult("wrong");
+          setResultMessage(null);
+        }
+      } catch (err) {
+        setResult("wrong");
+        setResultMessage(
+          err instanceof ApiError
+            ? `Soumission impossible : ${err.message}`
+            : "Soumission impossible. Réessayez.",
+        );
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
+    // Mode démo : vérification locale contre le flag attendu.
     const ok =
-      flag.trim().toLowerCase() ===
-      expectedFlag(props.challengeId).toLowerCase();
+      value.toLowerCase() === expectedFlag(props.challengeId).toLowerCase();
     setResult(ok ? "correct" : "wrong");
+    setResultMessage(
+      ok ? `Flag correct ! +${props.points} XP ajoutés à votre score.` : null,
+    );
   }
 
   const mmss = `${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(
@@ -173,7 +273,7 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
               )}
               {status === "running" && (
                 <>
-                  <Button size="sm" variant="outline" onClick={startLab}>
+                  <Button size="sm" variant="outline" onClick={resetLab}>
                     <RotateCcw className="h-4 w-4" />
                     Reset
                   </Button>
@@ -186,11 +286,20 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
             </div>
           </div>
 
+          {labError && status === "running" && (
+            <div className="border-b border-border bg-amber-50 px-5 py-2 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+              {labError}
+            </div>
+          )}
+
           <div className="h-[420px] p-4">
             {status === "running" ? (
               <LabTerminal
+                key={termKey}
                 challengeId={props.challengeId}
                 labSlug={props.labSlug}
+                sessionId={sessionId}
+                token={token}
               />
             ) : (
               <div className="flex h-full flex-col items-center justify-center rounded-lg border border-dashed border-border bg-surface-muted/40 text-center">
@@ -222,7 +331,10 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
                   value={flag}
                   onChange={(e) => {
                     setFlag(e.target.value);
-                    if (result === "wrong") setResult(null);
+                    if (result === "wrong") {
+                      setResult(null);
+                      setResultMessage(null);
+                    }
                   }}
                   placeholder="PCE{votre_flag_ici}"
                   className={cn(
@@ -233,7 +345,13 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
                   )}
                 />
               </div>
-              <Button type="submit" size="lg" className="sm:w-auto">
+              <Button
+                type="submit"
+                size="lg"
+                className="sm:w-auto"
+                disabled={submitting}
+              >
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 Soumettre le flag
               </Button>
             </form>
@@ -241,13 +359,15 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
             {result === "correct" && (
               <div className="mt-3 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
                 <CheckCircle2 className="h-4 w-4" />
-                Flag correct ! +{props.points} XP ajoutés à votre score.
+                {resultMessage ??
+                  `Flag correct ! +${props.points} XP ajoutés à votre score.`}
               </div>
             )}
             {result === "wrong" && (
               <div className="mt-3 flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 dark:bg-rose-500/10 dark:text-rose-400">
                 <CircleDot className="h-4 w-4" />
-                Flag incorrect. Vérifiez le format et réessayez.
+                {resultMessage ??
+                  "Flag incorrect. Vérifiez le format et réessayez."}
               </div>
             )}
           </CardContent>

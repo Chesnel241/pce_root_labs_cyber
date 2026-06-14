@@ -37,6 +37,10 @@ coverage/
 # Traefik runtime
 traefik/acme.json
 
+# Python (lab build artifacts)
+__pycache__/
+*.pyc
+
 # Local scratch / smoke-test files
 **/_*.mjs
 **/_scratch*

@@ -51,6 +51,16 @@ const FLAG_PREFIX = process.env.FLAG_PREFIX || 'PCE';
 const FIRST_LAB_CHALLENGE_ID = '1.1.1';
 const FIRST_LAB_FLAG = 'PCE{s3_public_bucket_recon_2024}';
 
+// Real flags for challenges backed by a real Docker lab (labs/<slug>/). Any
+// challenge not listed here falls back to its deterministic placeholder flag.
+// Keep these in sync with each lab's challenge.json + frontend/lib/hints.ts.
+const REAL_LAB_FLAGS = {
+  [FIRST_LAB_CHALLENGE_ID]: FIRST_LAB_FLAG,
+  '1.2.1': 'PCE{s3_exfil_hidden_prefix_2024}',
+  '1.3.1': 'PCE{passrole_createaccesskey_escalation_2024}',
+  '1.4.1': 'PCE{imds_ssrf_stolen_role_creds_2024}',
+};
+
 if (!DATABASE_URL) {
   console.error('\n✗ DATABASE_URL non défini. Renseignez-le pour seeder la base.\n');
   process.exit(1);
@@ -70,12 +80,13 @@ function deterministicFlag(challengeId) {
 }
 
 /**
- * Canonical flag for a challenge (real flag for the first lab, placeholder else).
+ * Canonical flag for a challenge: the real lab flag when one exists, otherwise
+ * a deterministic placeholder so flag submission still works end-to-end.
  * @param {string} challengeId
  * @returns {string}
  */
 function flagFor(challengeId) {
-  return challengeId === FIRST_LAB_CHALLENGE_ID ? FIRST_LAB_FLAG : deterministicFlag(challengeId);
+  return REAL_LAB_FLAGS[challengeId] ?? deterministicFlag(challengeId);
 }
 
 const DEFAULT_BADGES = [
@@ -189,7 +200,7 @@ async function main() {
   console.log('  Modules    :', counts.modules);
   console.log('  Challenges :', counts.challenges);
   console.log('  Badges     :', counts.badges);
-  console.log(`  Flag 1.1.1 : ${FIRST_LAB_FLAG}`);
+  console.log('  Flags réels :', Object.keys(REAL_LAB_FLAGS).join(', '), '(labs Docker)');
   console.log('  Autres flags : déterministes -> PCE{<id>_flag}\n');
 }
 

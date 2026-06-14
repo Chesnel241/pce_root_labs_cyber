@@ -36,7 +36,7 @@
           "xp": 300,
           "summary": "Exploiter les misconfigurations classiques du cloud public.",
           "challenges": [
-            { "id": "1.2.1", "title": "Exfiltration depuis un bucket S3 public", "description": "Exfiltrer des données d'un bucket S3 public (fichiers sensibles cachés).", "points": 75 },
+            { "id": "1.2.1", "title": "Exfiltration depuis un bucket S3 public", "description": "Exfiltrer des données d'un bucket S3 public (fichiers sensibles cachés).", "points": 75, "lab": "pentest-02-s3-exfil" },
             { "id": "1.2.2", "title": "Bypass d'auth API Gateway", "description": "Bypass d'auth sur un API Gateway mal configuré.", "points": 75 },
             { "id": "1.2.3", "title": "RDS exposée sur internet", "description": "Accès à une base de données RDS exposée sur internet.", "points": 75 },
             { "id": "1.2.4", "title": "Security Group trop permissif", "description": "Security Group trop permissif (0.0.0.0/0 sur tous les ports).", "points": 75 }
@@ -49,7 +49,7 @@
           "xp": 400,
           "summary": "Passer d'un accès limité à un contrôle total via IAM.",
           "challenges": [
-            { "id": "1.3.1", "title": "PrivEsc via PassRole + CreateAccessKey", "description": "IAM privilege escalation via PassRole + CreateAccessKey.", "points": 100 },
+            { "id": "1.3.1", "title": "PrivEsc via PassRole + CreateAccessKey", "description": "IAM privilege escalation via PassRole + CreateAccessKey.", "points": 100, "lab": "pentest-03-iam-privesc" },
             { "id": "1.3.2", "title": "AssumeRole abuse (pivot)", "description": "AssumeRole abuse pour pivoter vers un autre compte.", "points": 100 },
             { "id": "1.3.3", "title": "Lambda vulnérable (injection)", "description": "Exploitation d'une Lambda Function vulnérable (injection).", "points": 100 },
             { "id": "1.3.4", "title": "AttachPolicy → admin access", "description": "AttachPolicy misconfiguration pour obtenir admin access.", "points": 100 }
@@ -62,7 +62,7 @@
           "xp": 300,
           "summary": "Voler des credentials via le service de métadonnées cloud.",
           "challenges": [
-            { "id": "1.4.1", "title": "SSRF vers IMDSv1 (vol de creds)", "description": "SSRF vers l'IMDSv1 EC2 (169.254.169.254) — vol de credentials.", "points": 100 },
+            { "id": "1.4.1", "title": "SSRF vers IMDSv1 (vol de creds)", "description": "SSRF vers l'IMDSv1 EC2 (169.254.169.254) — vol de credentials.", "points": 100, "lab": "pentest-04-ssrf-imds" },
             { "id": "1.4.2", "title": "Bypass IMDSv2 (header injection)", "description": "Bypass IMDSv2 via header injection dans une app web.", "points": 100 },
             { "id": "1.4.3", "title": "SSRF vers services internes", "description": "SSRF pour accéder à des services internes (RDS, Redis).", "points": 100 }
           ]

@@ -3,20 +3,49 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
+  const { login, register, apiEnabled } = useAuth();
   const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
   const isRegister = mode === "register";
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setError(null);
+
+    // Mode démo : pas d'API configurée — on accède directement à la plateforme.
+    if (!apiEnabled) {
+      setLoading(true);
+      setTimeout(() => router.push("/dashboard"), 500);
+      return;
+    }
+
+    const form = new FormData(e.currentTarget);
+    const email = String(form.get("email") ?? "").trim();
+    const password = String(form.get("password") ?? "");
+    const username = String(form.get("username") ?? "").trim();
+
     setLoading(true);
-    // TODO: brancher api.login / api.register puis setToken().
-    // En mode démo, on accède directement à la plateforme.
-    setTimeout(() => router.push("/dashboard"), 500);
+    try {
+      if (isRegister) {
+        await register(email, username, password);
+      } else {
+        await login(email, password);
+      }
+      router.push("/dashboard");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Une erreur est survenue. Réessayez.",
+      );
+      setLoading(false);
+    }
   }
 
   return (
@@ -28,6 +57,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           type="text"
           placeholder="jdupont"
           autoComplete="username"
+          required
         />
       )}
       <Field
@@ -36,6 +66,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         type="email"
         placeholder="vous@entreprise.com"
         autoComplete="email"
+        required
       />
       <Field
         label="Mot de passe"
@@ -43,6 +74,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         type="password"
         placeholder="••••••••"
         autoComplete={isRegister ? "new-password" : "current-password"}
+        required
       />
 
       {!isRegister && (
@@ -53,6 +85,13 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           >
             Mot de passe oublié ?
           </Link>
+        </div>
+      )}
+
+      {error && (
+        <div className="flex items-start gap-2 rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 dark:bg-rose-500/10 dark:text-rose-400">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 

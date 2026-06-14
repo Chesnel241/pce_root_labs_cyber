@@ -13,13 +13,21 @@ import { cn } from "@/lib/utils";
 export function ModuleAccordion({
   modules,
   accentBar,
+  solvedIds,
 }: {
   modules: Module[];
   accentBar: string;
+  /** Set de challenges résolus (mode live). Repli sur les données démo si absent. */
+  solvedIds?: Set<string> | null;
 }) {
+  const solvedOf = React.useCallback(
+    (id: string) => (solvedIds ? solvedIds.has(id) : isSolved(id)),
+    [solvedIds],
+  );
+
   // First not-fully-completed module open by default.
   const firstOpen = modules.findIndex(
-    (m) => m.challenges.some((c) => !isSolved(c.id)),
+    (m) => m.challenges.some((c) => !solvedOf(c.id)),
   );
   const [open, setOpen] = React.useState<string | null>(
     modules[firstOpen === -1 ? 0 : firstOpen]?.id ?? null,
@@ -28,7 +36,7 @@ export function ModuleAccordion({
   return (
     <div className="space-y-3">
       {modules.map((module) => {
-        const solved = module.challenges.filter((c) => isSolved(c.id)).length;
+        const solved = module.challenges.filter((c) => solvedOf(c.id)).length;
         const total = module.challenges.length;
         const percent = Math.round((solved / total) * 100);
         const isOpen = open === module.id;
@@ -81,7 +89,7 @@ export function ModuleAccordion({
             {isOpen && (
               <ul className="divide-y divide-border border-t border-border">
                 {module.challenges.map((challenge) => {
-                  const solvedChallenge = isSolved(challenge.id);
+                  const solvedChallenge = solvedOf(challenge.id);
                   return (
                     <li key={challenge.id}>
                       <Link
