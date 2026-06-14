@@ -10,6 +10,10 @@ api:
   dashboard: true
   insecure: false # tableau de bord exposé uniquement via un routeur sécurisé.
 
+# Endpoint /ping interne utilisé par le HEALTHCHECK du conteneur
+# (`traefik healthcheck --ping`). N'est pas exposé publiquement.
+ping: {}
+
 entryPoints:
   web:
     address: ":80"
@@ -33,8 +37,11 @@ providers:
 certificatesResolvers:
   letsencrypt:
     acme:
-      # Renseignez une adresse réelle via la variable d'env ACME_EMAIL
-      # (substituée dans le compose) ou éditez ici.
+      # IMPORTANT : Traefik ne substitue PAS ${ACME_EMAIL} dans ce fichier YAML
+      # statique. Renseignez ici une adresse RÉELLE avant le premier démarrage,
+      # ou surchargez-la via l'argument CLI / variable d'environnement Traefik :
+      #   --certificatesresolvers.letsencrypt.acme.email=$ACME_EMAIL
+      # Une adresse valide est requise par Let's Encrypt (notifications d'expiration).
       email: "admin@example.com"
       storage: /etc/traefik/acme.json
       httpChallenge:

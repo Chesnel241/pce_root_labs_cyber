@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "installCommand": "npm ci",
+  "outputDirectory": ".next",
+  "github": {
+    "silent": true
+  },
+  "comment": "Deployez ce dossier `frontend/` comme Root Directory du projet Vercel. Variable d'env REQUISE (Project Settings > Environment Variables) : NEXT_PUBLIC_API_URL = https://api.votre-domaine.tld (URL publique du backend VPS, derriere Traefik/TLS). Sans elle le frontend tourne en mode demo. Cf. docs/deployment.md."
+}

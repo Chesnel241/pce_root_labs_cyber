@@ -1,90 +1,168 @@
 # =============================================================================
-# PCE Root Labs Cyber — orchestration (production-ish)
+# PCE Root Labs Cyber — orchestration de PRODUCTION
 # -----------------------------------------------------------------------------
-# Services : backend (API + WS), postgres (avec volume + healthcheck), traefik
-# (reverse proxy 80/443 + TLS). Le frontend est déployé séparément sur Vercel ;
-# il figure en service OPTIONNEL commenté en bas.
+# Services :
+#   - postgres : base de données (volume nommé + healthcheck + env_file).
+#   - backend  : API REST + WebSocket terminal + orchestrateur de labs (dockerode).
+#   - traefik  : reverse proxy 80/443, TLS Let's Encrypt (HTTP-01), middlewares.
 #
-# Démarrage :  docker compose up -d --build
+# Le frontend est déployé séparément sur Vercel ; il figure en service OPTIONNEL
+# commenté en bas (déploiement self-hosted).
+#
+# Pré-requis :
+#   1. cp .env.production.example .env   puis renseignez les valeurs.
+#   2. touch traefik/acme.json && chmod 600 traefik/acme.json
+#   3. docker compose up -d --build
+#
+# Validation locale (sans build) :   docker compose config
 # =============================================================================
 
 services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — données persistantes (volume nommé) + schéma appliqué au 1er boot.
+  # ---------------------------------------------------------------------------
   postgres:
     image: postgres:16-alpine
     container_name: pce-postgres
     restart: unless-stopped
+    # Secrets et identifiants chargés depuis .env (jamais committé).
+    # `required: false` : le fichier est optionnel pour que `docker compose
+    # config` valide hors prod ; en production, créez-le (cf. deployment.md).
+    env_file:
+      - path: .env
+        required: false
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-pce}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pce}
       POSTGRES_DB: ${POSTGRES_DB:-pce_labs}
     volumes:
       - pce-pgdata:/var/lib/postgresql/data
-      # Applique automatiquement le schéma au premier démarrage du volume.
+      # Applique automatiquement le schéma au PREMIER démarrage du volume.
+      # (Le seed se lance manuellement après coup — cf. docs/deployment.md.)
       - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pce} -d ${POSTGRES_DB:-pce_labs}"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    # La DB n'est JAMAIS exposée publiquement : accessible uniquement via le
+    # réseau interne `pce-net` (pas de section `ports:`).
     networks:
       - pce-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
+  # ---------------------------------------------------------------------------
+  # Backend — API + WS. Construit depuis ./backend (image multi-stage non-root).
+  # ---------------------------------------------------------------------------
   backend:
     build:
       context: ./backend
+    image: pce-backend:latest
     container_name: pce-backend
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
     environment:
       PORT: 4000
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-pce}:${POSTGRES_PASSWORD:-pce}@postgres:5432/${POSTGRES_DB:-pce_labs}
-      JWT_SECRET: ${JWT_SECRET:?Définissez JWT_SECRET dans .env}
+      # JWT_SECRET est OBLIGATOIRE en production (échec explicite si absent).
+      JWT_SECRET: ${JWT_SECRET:?Definissez JWT_SECRET dans .env}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      # CORS_ORIGIN = le domaine Vercel du frontend (ex. https://app.exemple.tld).
       CORS_ORIGIN: ${CORS_ORIGIN:-https://app.example.com}
       DOCKER_SOCKET: /var/run/docker.sock
       LAB_TTL_MINUTES: ${LAB_TTL_MINUTES:-60}
       FLAG_PREFIX: ${FLAG_PREFIX:-PCE}
+      # Chemin du curriculum DANS le conteneur (cf. montage ./data ci-dessous).
       CURRICULUM_PATH: /data/curriculum.json
     volumes:
       # Permet au backend d'orchestrer les conteneurs de lab via dockerode.
-      # ATTENTION : monter le socket Docker accorde des privilèges élevés.
+      # ATTENTION : monter le socket Docker accorde des privilèges élevés
+      # (= root sur l'hôte). Acceptable ici car le backend EST l'orchestrateur ;
+      # durcissez l'accès réseau au backend en conséquence (cf. deployment.md).
       - /var/run/docker.sock:/var/run/docker.sock
-      # Le curriculum (source unique de vérité) est monté en lecture seule ;
-      # CURRICULUM_PATH (ci-dessous) pointe vers ce chemin dans le conteneur.
+      # Le curriculum (source unique de vérité) est monté en LECTURE SEULE ;
+      # CURRICULUM_PATH (ci-dessus) pointe vers ce chemin dans le conteneur.
       - ./data:/data:ro
     expose:
       - "4000"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:4000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    # Garde-fous de ressources pour le service applicatif (les labs ont leurs
+    # propres limites, appliquées par le backend via dockerode).
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`${API_HOST:-api.example.com}`)"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      # En-têtes de sécurité (dynamic.yml). Ajoutez `,rate-limit@file` pour
+      # activer la limitation de débit fournie.
       - "traefik.http.routers.backend.middlewares=security-headers@file"
       - "traefik.http.services.backend.loadbalancer.server.port=4000"
     networks:
       - pce-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
+  # ---------------------------------------------------------------------------
+  # Traefik — reverse proxy + terminaison TLS (Let's Encrypt, challenge HTTP-01).
+  # ---------------------------------------------------------------------------
   traefik:
     image: traefik:v3.1
     container_name: pce-traefik
     restart: unless-stopped
+    # ACME_EMAIL : adresse pour les certificats Let's Encrypt (cf. traefik.yml,
+    # surchargeable au démarrage). Renseignez-la dans .env.
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:-admin@example.com}
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      # Stockage des certificats ACME (créez le fichier avec chmod 600 au préalable).
       - ./traefik/acme.json:/etc/traefik/acme.json
-      # Socket Docker en lecture seule : provider Docker de Traefik.
+      # Socket Docker en LECTURE SEULE : provider Docker de Traefik.
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks:
       - pce-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ---------------------------------------------------------------------------
-  # Frontend — déployé sur Vercel (séparément). Service OPTIONNEL pour un
+  # Frontend — déployé sur Vercel (recommandé). Service OPTIONNEL pour un
   # déploiement self-hosted. Décommentez si vous souhaitez l'embarquer ici.
   # ---------------------------------------------------------------------------
   # frontend:
@@ -93,7 +171,7 @@ services:
   #   container_name: pce-frontend
   #   restart: unless-stopped
   #   environment:
-  #     NEXT_PUBLIC_API_URL: https://${API_HOST:-api.example.com}/api
+  #     NEXT_PUBLIC_API_URL: https://${API_HOST:-api.example.com}
   #   expose:
   #     - "3000"
   #   labels:
@@ -111,6 +189,7 @@ volumes:
     driver: local
 
 networks:
+  # Réseau interne dédié : seul Traefik expose des ports vers l'extérieur.
   pce-net:
     name: pce-net
     driver: bridge
