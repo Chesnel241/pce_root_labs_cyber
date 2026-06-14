@@ -9,6 +9,8 @@ import {
   Trophy,
   User,
   LifeBuoy,
+  ShieldHalf,
+  Settings2,
 } from "lucide-react";
 import { Logo } from "./logo";
 import { cn } from "@/lib/utils";
@@ -18,7 +20,9 @@ const nav = [
   { href: "/tracks", label: "Parcours", icon: Layers },
   { href: "/vulnerabilities", label: "Vulnérabilités", icon: ShieldAlert },
   { href: "/leaderboard", label: "Classement", icon: Trophy },
+  { href: "/admin", label: "Administration", icon: ShieldHalf },
   { href: "/profile", label: "Profil", icon: User },
+  { href: "/settings", label: "Paramètres", icon: Settings2 },
 ];
 
 export function Sidebar() {
@@ -39,8 +43,9 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              aria-current={active ? "page" : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50",
                 active
                   ? "bg-primary-soft text-primary"
                   : "text-muted-foreground hover:bg-surface-muted hover:text-foreground",

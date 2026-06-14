@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Bell, LogOut, Search, Zap } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
+import { MobileNav } from "./mobile-nav";
 import { Logo } from "./logo";
 import { currentUser, earnedXp } from "@/lib/demo";
 import { useAuth } from "@/lib/auth";
@@ -45,7 +46,8 @@ export function Topbar() {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-surface/80 px-4 backdrop-blur-md sm:px-6">
-      <div className="lg:hidden">
+      <div className="flex items-center gap-1 lg:hidden">
+        <MobileNav />
         <Logo compact />
       </div>
 
