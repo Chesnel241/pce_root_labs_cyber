@@ -36,3 +36,8 @@ coverage/
 
 # Traefik runtime
 traefik/acme.json
+
+# Local scratch / smoke-test files
+**/_*.mjs
+**/_scratch*
+
