@@ -1,0 +1,22 @@
+==============================================================================
+ PCE Root Labs Cyber — Lab 2.1.3 : Wildcard dangereux (Action:*)
+==============================================================================
+ Scénario : le compte "PCE Corp" (123456789012) possède plusieurs policies
+ IAM managées. L'une d'elles accorde Action:"*" sur Resource:"*" — un wildcard
+ équivalent à un accès administrateur, à proscrire en production.
+
+ Objectif : énumérer les policies, inspecter leurs documents, identifier la
+ policy fautive, puis récupérer le flag au format PCE{...}.
+
+ Pistes :
+   1) Lister les policies managées locales :
+        aws iam list-policies --scope Local
+   2) Lister les versions et lire la version par défaut d'une policy :
+        aws iam list-policy-versions --policy-arn <arn>
+        aws iam get-policy-version  --policy-arn <arn> --version-id <v>
+   3) Auditer une policy (signale les wildcards dangereux) :
+        aws iam audit-policy --policy-arn <arn>
+
+ Astuce : cherchez "Action": "*" ET "Resource": "*" dans la version par
+ défaut. L'audit de la bonne policy révèle le drapeau.
+==============================================================================

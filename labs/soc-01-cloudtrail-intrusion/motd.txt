@@ -1,0 +1,25 @@
+==============================================================================
+ PCE Root Labs Cyber — Lab 5.1.1 : Intrusion dans CloudTrail
+==============================================================================
+ Scénario : un export CloudTrail (~/cloudtrail-events.json) couvre 2 jours
+ d'activité du compte PCE Corp. La plupart des événements sont légitimes, mais
+ une clé d'accès volée a permis à un acteur externe de s'authentifier, d'assumer
+ un rôle privilégié, de désactiver CloudTrail puis d'exfiltrer des données.
+
+ Objectif : identifier l'événement pivot (l'AssumeRole non autorisé / l'acteur
+ malveillant) et récupérer le flag au format PCE{...}.
+
+ Pistes :
+   1) Compter les IP sources pour repérer l'intruse :
+        jq -r '.Records[].sourceIPAddress' cloudtrail-events.json | sort | uniq -c
+   2) Repérer les user-agents inhabituels (ex. "kali") :
+        jq -r '.Records[] | "\(.sourceIPAddress) \(.userAgent)"' cloudtrail-events.json
+   3) Isoler les actions sensibles de l'attaquant :
+        jq '.Records[] | select(.sourceIPAddress=="203.0.113.66")' cloudtrail-events.json
+        grep -n "AssumeRole" cloudtrail-events.json
+   4) Confirmer le finding (révèle le flag) :
+        verify-finding 203.0.113.66
+
+ Astuce : l'événement AssumeRole non autorisé porte un champ "pceFinding" qui
+ contient le drapeau.
+==============================================================================

@@ -1,0 +1,23 @@
+==============================================================================
+ PCE Root Labs Cyber — Lab 3.3.1 : Scan Git (secrets dans l'historique)
+==============================================================================
+ Scénario : le dépôt "pce-billing-api" (présent dans ~/pce-billing-api) a vu
+ un développeur committer par erreur un fichier .env contenant une clé AWS.
+ Il l'a ensuite "retiré"... mais le secret reste dans l'HISTORIQUE git.
+
+ Objectif : retrouver le secret divulgué (façon truffleHog) et récupérer le
+ flag au format PCE{...} qui sert de SecretAccessKey.
+
+ Pistes :
+   1) Inspecter l'historique d'un fichier supprimé :
+        git log --oneline
+        git log -p -- .env
+   2) Chercher un motif de secret sur TOUT l'historique :
+        git log --all -p | grep -n "AWS_SECRET_ACCESS_KEY"
+        git grep -n "PCE{" $(git rev-list --all)
+   3) Lister les fichiers d'un ancien commit puis afficher le .env :
+        git show <commit>:.env
+
+ Astuce : `git rm` n'efface pas le passé. Le .env n'est plus dans le working
+ tree, mais `git rev-list --all` parcourt tous les commits.
+==============================================================================

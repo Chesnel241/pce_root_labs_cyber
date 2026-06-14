@@ -1,0 +1,13 @@
+{
+  "_comment": "Manifest simplifié de l'image pce-payments-api:1.4.2 (déballée via `docker save` puis `tar xf`). Chaque diffID correspond à un dossier layers/<NN>/ contenant le diff de cette couche. Le secret a été codé en dur dans une couche ENV (voir history.txt) ET via un fichier deploy-creds.env présent dans la couche 04 puis 'supprimé' (whiteout) dans la couche 06 — il reste lisible dans la couche 04.",
+  "image": "pce-payments-api:1.4.2",
+  "config": "blobs/sha256/3f9a1c0b7e21config.json",
+  "layers": [
+    { "id": "01", "diffID": "sha256:99baseimage...", "createdBy": "ADD alpine rootfs" },
+    { "id": "02", "diffID": "sha256:aacopyreq...", "createdBy": "COPY requirements.txt" },
+    { "id": "03", "diffID": "sha256:bbpipinstall...", "createdBy": "RUN pip install -r requirements.txt" },
+    { "id": "04", "diffID": "sha256:ccdeploycreds...", "createdBy": "COPY deploy-creds.env /app/deploy-creds.env" },
+    { "id": "05", "diffID": "sha256:ddcopyapp...", "createdBy": "COPY . /app" },
+    { "id": "06", "diffID": "sha256:eermcreds...", "createdBy": "RUN rm -f /app/deploy-creds.env (whiteout)" }
+  ]
+}

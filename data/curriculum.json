@@ -88,7 +88,7 @@
           "challenges": [
             { "id": "2.1.1", "title": "Utilisateurs IAM sans MFA", "description": "Détecter des utilisateurs IAM sans MFA activé.", "points": 50 },
             { "id": "2.1.2", "title": "Access keys dormantes (> 90j)", "description": "Identifier des access keys jamais utilisées (> 90 jours).", "points": 50 },
-            { "id": "2.1.3", "title": "Wildcard dangereux (Action:*)", "description": "Trouver une politique avec wildcard dangereux (Action:*).", "points": 50 },
+            { "id": "2.1.3", "title": "Wildcard dangereux (Action:*)", "description": "Trouver une politique avec wildcard dangereux (Action:*).", "points": 50, "lab": "iam-01-wildcard-policy" },
             { "id": "2.1.4", "title": "Access keys exposées dans Git", "description": "Détecter des access keys exposées dans un repo Git.", "points": 50 }
           ]
         },
@@ -160,7 +160,7 @@
           "xp": 200,
           "summary": "Détecter et gérer correctement les secrets applicatifs.",
           "challenges": [
-            { "id": "3.3.1", "title": "Scan Git avec truffleHog", "description": "Scanner un repo Git avec truffleHog (secrets dans l'historique).", "points": 70 },
+            { "id": "3.3.1", "title": "Scan Git avec truffleHog", "description": "Scanner un repo Git avec truffleHog (secrets dans l'historique).", "points": 70, "lab": "devsecops-01-git-secrets" },
             { "id": "3.3.2", "title": "Mot de passe en variable d'env", "description": "Extraire un mot de passe d'une variable d'environnement exposée.", "points": 65 },
             { "id": "3.3.3", "title": "Migrer vers Secrets Manager", "description": "Configurer AWS Secrets Manager au lieu de hardcoding.", "points": 65 }
           ]
@@ -199,7 +199,7 @@
             { "id": "4.1.1", "title": "Privileged container escape", "description": "Privileged container escape (monter le filesystem host).", "points": 75 },
             { "id": "4.1.2", "title": "Docker socket exposure (RCE)", "description": "Docker socket exposure exploitation (docker.sock RCE).", "points": 75 },
             { "id": "4.1.3", "title": "Breakout via mount namespace", "description": "Container breakout via mount namespace.", "points": 75 },
-            { "id": "4.1.4", "title": "Secrets cachés dans une image", "description": "Analyse d'image Docker pour trouver des secrets cachés.", "points": 75 }
+            { "id": "4.1.4", "title": "Secrets cachés dans une image", "description": "Analyse d'image Docker pour trouver des secrets cachés.", "points": 75, "lab": "container-01-image-secrets" }
           ]
         },
         {
@@ -258,7 +258,7 @@
           "xp": 200,
           "summary": "Repérer les traces d'intrusion dans les journaux cloud.",
           "challenges": [
-            { "id": "5.1.1", "title": "Intrusion dans CloudTrail", "description": "Analyser des CloudTrail logs et détecter une intrusion.", "points": 50 },
+            { "id": "5.1.1", "title": "Intrusion dans CloudTrail", "description": "Analyser des CloudTrail logs et détecter une intrusion.", "points": 50, "lab": "soc-01-cloudtrail-intrusion" },
             { "id": "5.1.2", "title": "Exfiltration via VPC Flow Logs", "description": "Identifier une exfiltration via VPC Flow Logs.", "points": 50 },
             { "id": "5.1.3", "title": "Escalade IAM dans les logs", "description": "Détecter une escalade de privilèges IAM dans les logs.", "points": 50 },
             { "id": "5.1.4", "title": "CloudTrail désactivé", "description": "Repérer un CloudTrail désactivé (tentative d'effacement de traces).", "points": 50 }
@@ -345,7 +345,7 @@
           "xp": 200,
           "summary": "Évaluer et améliorer la conformité d'un compte cloud.",
           "challenges": [
-            { "id": "6.3.1", "title": "Audit CIS Benchmark", "description": "Audit d'un compte AWS contre le CIS Benchmark (Score).", "points": 70 },
+            { "id": "6.3.1", "title": "Audit CIS Benchmark", "description": "Audit d'un compte AWS contre le CIS Benchmark (Score).", "points": 70, "lab": "arch-01-cis-audit" },
             { "id": "6.3.2", "title": "Findings Security Hub", "description": "Corriger les findings critiques de AWS Security Hub.", "points": 65 },
             { "id": "6.3.3", "title": "AWS Config + CloudTrail", "description": "Activer et configurer AWS Config + CloudTrail correctement.", "points": 65 }
           ]

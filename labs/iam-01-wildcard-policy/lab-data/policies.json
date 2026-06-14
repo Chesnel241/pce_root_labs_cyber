@@ -1,0 +1,123 @@
+{
+  "_comment": "État IAM simulé lu par awsmock. Le compte PCE Corp possède plusieurs policies managées locales. 'PCE-Deploy-FullAccess' accorde Action:* sur Resource:* (wildcard dangereux). `iam audit-policy --policy-arn <celle-ci>` révèle le flag.",
+  "account": "123456789012",
+  "flag": "PCE{iam_wildcard_admin_policy_2024}",
+  "policies": [
+    {
+      "name": "PCE-ReadOnly-Billing",
+      "arn": "arn:aws:iam::123456789012:policy/PCE-ReadOnly-Billing",
+      "defaultVersionId": "v1",
+      "attachmentCount": 4,
+      "versions": {
+        "v1": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "BillingRead",
+              "Effect": "Allow",
+              "Action": ["aws-portal:ViewBilling", "ce:GetCostAndUsage"],
+              "Resource": "*"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "PCE-S3-AppData",
+      "arn": "arn:aws:iam::123456789012:policy/PCE-S3-AppData",
+      "defaultVersionId": "v2",
+      "attachmentCount": 6,
+      "versions": {
+        "v1": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "S3App",
+              "Effect": "Allow",
+              "Action": ["s3:GetObject", "s3:PutObject"],
+              "Resource": "arn:aws:s3:::pce-app-data/*"
+            }
+          ]
+        },
+        "v2": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "S3App",
+              "Effect": "Allow",
+              "Action": ["s3:GetObject", "s3:PutObject", "s3:ListBucket"],
+              "Resource": [
+                "arn:aws:s3:::pce-app-data",
+                "arn:aws:s3:::pce-app-data/*"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "PCE-Deploy-FullAccess",
+      "arn": "arn:aws:iam::123456789012:policy/PCE-Deploy-FullAccess",
+      "defaultVersionId": "v3",
+      "attachmentCount": 2,
+      "versions": {
+        "v1": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Deploy",
+              "Effect": "Allow",
+              "Action": ["cloudformation:*", "ec2:*"],
+              "Resource": "*"
+            }
+          ]
+        },
+        "v2": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Deploy",
+              "Effect": "Allow",
+              "Action": ["cloudformation:*", "ec2:*", "iam:PassRole"],
+              "Resource": "*"
+            }
+          ]
+        },
+        "v3": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "DeployEverything",
+              "Effect": "Allow",
+              "Action": "*",
+              "Resource": "*"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "PCE-CloudWatch-Logs",
+      "arn": "arn:aws:iam::123456789012:policy/PCE-CloudWatch-Logs",
+      "defaultVersionId": "v1",
+      "attachmentCount": 9,
+      "versions": {
+        "v1": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Logs",
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource": "arn:aws:logs:*:123456789012:log-group:/pce/*"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

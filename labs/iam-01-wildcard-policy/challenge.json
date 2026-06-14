@@ -1,0 +1,20 @@
+{
+  "id": "2.1.3",
+  "title": "Wildcard dangereux (Action:*)",
+  "track": "iam-identity",
+  "module": "2.1",
+  "difficulty": "easy",
+  "points": 50,
+  "lab": "iam-01-wildcard-policy",
+  "flag": "PCE{iam_wildcard_admin_policy_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/sh",
+  "image": "pce-lab-iam-01-wildcard-policy:latest",
+  "objective": "Auditer les policies IAM managées du compte PCE Corp, repérer celle dont la version par défaut accorde Action:\"*\" sur Resource:\"*\" (équivalent AdministratorAccess) et révéler le flag via l'audit de cette policy.",
+  "vulnerability": "iam-wildcard",
+  "hints": [
+    "Listez les policies managées locales : `aws iam list-policies --scope Local`. Quatre policies existent — l'une porte un nom évocateur (FullAccess).",
+    "Inspectez la version par défaut de chaque policy : `aws iam get-policy-version --policy-arn <arn> --version-id <v>`. Cherchez \"Action\": \"*\" combiné à \"Resource\": \"*\".",
+    "Auditez la policy fautive (PCE-Deploy-FullAccess, version v3) : `aws iam audit-policy --policy-arn arn:aws:iam::123456789012:policy/PCE-Deploy-FullAccess`. L'audit signale le wildcard et révèle le flag PCE{...}."
+  ]
+}

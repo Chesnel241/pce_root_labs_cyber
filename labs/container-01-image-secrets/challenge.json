@@ -1,0 +1,20 @@
+{
+  "id": "4.1.4",
+  "title": "Secrets cachés dans une image",
+  "track": "container-k8s",
+  "module": "4.1",
+  "difficulty": "medium",
+  "points": 75,
+  "lab": "container-01-image-secrets",
+  "flag": "PCE{docker_layer_hardcoded_secret_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/bash",
+  "image": "pce-lab-container-01-image-secrets:latest",
+  "objective": "Analyser à froid l'image Docker pce-payments-api:1.4.2 (déballée en couches) : un jeton de registre a été codé en dur via ENV et via un deploy-creds.env 'supprimé' mais présent dans une couche antérieure. Récupérer ce secret (le flag).",
+  "vulnerability": "image-hardcoded-secret",
+  "hints": [
+    "Lisez l'historique de build (`cat history.txt`) et la config de l'image (`cat blobs/sha256/*config.json`) : la section Env révèle une variable REGISTRY_TOKEN codée en dur.",
+    "Le fichier deploy-creds.env a été supprimé par un `RUN rm` (whiteout dans la couche 06), mais reste lisible dans la couche où il a été copié : `cat layers/04/app/deploy-creds.env`.",
+    "Cherchez directement le motif dans toutes les couches : `grep -r \"PCE{\" .`. Le REGISTRY_TOKEN est le flag PCE{...}."
+  ]
+}

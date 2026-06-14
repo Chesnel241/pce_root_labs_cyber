@@ -1,0 +1,20 @@
+REPOSITORY            TAG     IMAGE ID       CREATED        SIZE
+pce-payments-api      1.4.2   3f9a1c0b7e21   3 weeks ago    142MB
+
+# Sortie de:  docker history --no-trunc pce-payments-api:1.4.2
+# (couches de la plus récente en haut a la plus ancienne en bas)
+
+IMAGE          CREATED        CREATED BY                                                                  SIZE      COMMENT
+3f9a1c0b7e21   3 weeks ago    CMD ["python" "app.py"]                                                     0B
+<missing>      3 weeks ago    EXPOSE map[8080/tcp:{}]                                                      0B
+<missing>      3 weeks ago    USER appuser                                                                0B
+<missing>      3 weeks ago    RUN /bin/sh -c rm -f /app/deploy-creds.env # buildkit                        0B
+<missing>      3 weeks ago    COPY . /app # buildkit                                                       18.4kB
+<missing>      3 weeks ago    COPY deploy-creds.env /app/deploy-creds.env # buildkit                       0.31kB
+<missing>      3 weeks ago    ENV REGISTRY_TOKEN=PCE{docker_layer_hardcoded_secret_2024}                   0B
+<missing>      3 weeks ago    ARG AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY            0B
+<missing>      3 weeks ago    RUN /bin/sh -c pip install -r requirements.txt # buildkit                    41.2MB
+<missing>      3 weeks ago    COPY requirements.txt /app/requirements.txt # buildkit                       0.04kB
+<missing>      3 weeks ago    WORKDIR /app                                                                 0B
+<missing>      4 weeks ago    /bin/sh -c #(nop)  CMD ["python3"]                                           0B
+<missing>      4 weeks ago    /bin/sh -c #(nop) ADD file:a1b2c3... in /                                    99.1MB

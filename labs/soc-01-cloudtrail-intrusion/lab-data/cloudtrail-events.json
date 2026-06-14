@@ -1,0 +1,95 @@
+{
+  "_comment": "Export CloudTrail (LookupEvents) simulé pour le lab. La majorité des événements sont bénins (activité légitime de l'utilisateur 'alice' et du rôle CI). Un acteur malveillant, après vol d'une clé d'accès (AKIA EXPOSÉE), s'authentifie depuis l'IP 203.0.113.66 (user-agent inhabituel), assume un rôle, désactive CloudTrail puis exfiltre des données S3. L'événement PIVOT est l'AssumeRole non autorisé : son champ 'pceFinding' encode le flag.",
+  "Records": [
+    {
+      "eventTime": "2024-05-10T08:02:11Z",
+      "eventName": "ConsoleLogin",
+      "eventSource": "signin.amazonaws.com",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "92.154.10.3",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+      "userIdentity": { "type": "IAMUser", "userName": "alice", "accessKeyId": "AKIAALICE0000LEGIT01" },
+      "responseElements": { "ConsoleLogin": "Success" }
+    },
+    {
+      "eventTime": "2024-05-10T08:05:44Z",
+      "eventName": "DescribeInstances",
+      "eventSource": "ec2.amazonaws.com",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "92.154.10.3",
+      "userAgent": "aws-cli/2.15.0 Python/3.11",
+      "userIdentity": { "type": "IAMUser", "userName": "alice", "accessKeyId": "AKIAALICE0000LEGIT01" }
+    },
+    {
+      "eventTime": "2024-05-10T09:14:00Z",
+      "eventName": "PutObject",
+      "eventSource": "s3.amazonaws.com",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "10.0.4.21",
+      "userAgent": "aws-sdk-go/1.49.0",
+      "userIdentity": { "type": "AssumedRole", "arn": "arn:aws:sts::123456789012:assumed-role/ci-build-role/ci", "accessKeyId": "ASIACIBUILD0000LEGIT" }
+    },
+    {
+      "eventTime": "2024-05-11T02:31:09Z",
+      "eventName": "GetCallerIdentity",
+      "eventSource": "sts.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "203.0.113.66",
+      "userAgent": "Boto3/1.26.0 Python/3.9 Linux/5.4 kali",
+      "userIdentity": { "type": "IAMUser", "userName": "billing-uploader", "accessKeyId": "AKIAY34FZKBOKMUTVV7A" },
+      "responseElements": null
+    },
+    {
+      "eventTime": "2024-05-11T02:33:52Z",
+      "eventName": "ListBuckets",
+      "eventSource": "s3.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "203.0.113.66",
+      "userAgent": "Boto3/1.26.0 Python/3.9 Linux/5.4 kali",
+      "userIdentity": { "type": "IAMUser", "userName": "billing-uploader", "accessKeyId": "AKIAY34FZKBOKMUTVV7A" }
+    },
+    {
+      "eventTime": "2024-05-11T02:40:17Z",
+      "eventName": "AssumeRole",
+      "eventSource": "sts.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "203.0.113.66",
+      "userAgent": "Boto3/1.26.0 Python/3.9 Linux/5.4 kali",
+      "userIdentity": { "type": "IAMUser", "userName": "billing-uploader", "accessKeyId": "AKIAY34FZKBOKMUTVV7A" },
+      "requestParameters": { "roleArn": "arn:aws:iam::123456789012:role/OrganizationAccountAccessRole", "roleSessionName": "s3-sync" },
+      "responseElements": { "credentials": { "accessKeyId": "ASIAATTACKER000PWNED" } },
+      "errorCode": null,
+      "pceFinding": "Acteur non autorise: billing-uploader depuis 203.0.113.66 a assume OrganizationAccountAccessRole. FLAG=PCE{cloudtrail_unauthorized_assumerole_2024}"
+    },
+    {
+      "eventTime": "2024-05-11T02:41:30Z",
+      "eventName": "StopLogging",
+      "eventSource": "cloudtrail.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "203.0.113.66",
+      "userAgent": "Boto3/1.26.0 Python/3.9 Linux/5.4 kali",
+      "userIdentity": { "type": "AssumedRole", "arn": "arn:aws:sts::123456789012:assumed-role/OrganizationAccountAccessRole/s3-sync", "accessKeyId": "ASIAATTACKER000PWNED" },
+      "requestParameters": { "name": "pce-org-trail" }
+    },
+    {
+      "eventTime": "2024-05-11T02:44:58Z",
+      "eventName": "GetObject",
+      "eventSource": "s3.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "203.0.113.66",
+      "userAgent": "Boto3/1.26.0 Python/3.9 Linux/5.4 kali",
+      "userIdentity": { "type": "AssumedRole", "arn": "arn:aws:sts::123456789012:assumed-role/OrganizationAccountAccessRole/s3-sync", "accessKeyId": "ASIAATTACKER000PWNED" },
+      "requestParameters": { "bucketName": "pce-customer-pii", "key": "exports/customers-full.csv" }
+    },
+    {
+      "eventTime": "2024-05-11T07:58:03Z",
+      "eventName": "ConsoleLogin",
+      "eventSource": "signin.amazonaws.com",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "92.154.10.3",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+      "userIdentity": { "type": "IAMUser", "userName": "alice", "accessKeyId": "AKIAALICE0000LEGIT01" },
+      "responseElements": { "ConsoleLogin": "Success" }
+    }
+  ]
+}

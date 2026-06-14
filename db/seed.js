@@ -59,6 +59,11 @@ const REAL_LAB_FLAGS = {
   '1.2.1': 'PCE{s3_exfil_hidden_prefix_2024}',
   '1.3.1': 'PCE{passrole_createaccesskey_escalation_2024}',
   '1.4.1': 'PCE{imds_ssrf_stolen_role_creds_2024}',
+  '2.1.3': 'PCE{iam_wildcard_admin_policy_2024}',
+  '3.3.1': 'PCE{git_history_leaked_aws_key_2024}',
+  '4.1.4': 'PCE{docker_layer_hardcoded_secret_2024}',
+  '5.1.1': 'PCE{cloudtrail_unauthorized_assumerole_2024}',
+  '6.3.1': 'PCE{cis_public_s3_block_2024}',
 };
 
 if (!DATABASE_URL) {

@@ -1,0 +1,28 @@
+{
+  "_comment": "Configuration 'as-code' du compte PCE Corp (état exporté). C'est la cible de l'audit CIS. Le contrôle CRITIQUE en échec : s3.blockPublicAccess.accountLevel est false -> corrigez-le en true pour que tous les contrôles critiques passent et révéler le flag.",
+  "account": "123456789012",
+  "region": "eu-west-3",
+  "iam": {
+    "rootMfaEnabled": true,
+    "passwordPolicy": { "minimumLength": 14, "requireSymbols": true, "maxPasswordAgeDays": 90 },
+    "accessKeysRotatedDays": 80
+  },
+  "s3": {
+    "blockPublicAccess": {
+      "accountLevel": false,
+      "_hint": "CIS 2.1.5 — Block Public Access doit etre active au niveau du compte (true)."
+    }
+  },
+  "cloudtrail": {
+    "enabled": true,
+    "multiRegion": true,
+    "logFileValidation": true
+  },
+  "ec2": {
+    "defaultSecurityGroupRestricted": true,
+    "ebsEncryptionByDefault": true
+  },
+  "config": {
+    "recorderEnabled": true
+  }
+}

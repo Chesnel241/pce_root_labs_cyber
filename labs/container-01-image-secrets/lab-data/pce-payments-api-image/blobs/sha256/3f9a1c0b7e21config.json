@@ -1,0 +1,33 @@
+{
+  "architecture": "amd64",
+  "os": "linux",
+  "config": {
+    "User": "appuser",
+    "ExposedPorts": { "8080/tcp": {} },
+    "Env": [
+      "PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/bin",
+      "LANG=C.UTF-8",
+      "PYTHON_VERSION=3.12.3",
+      "REGISTRY_TOKEN=PCE{docker_layer_hardcoded_secret_2024}",
+      "APP_ENV=production"
+    ],
+    "Cmd": ["python", "app.py"],
+    "WorkingDir": "/app"
+  },
+  "rootfs": {
+    "type": "layers",
+    "diff_ids": [
+      "sha256:99baseimage0000000000000000000000000000000000000000000000000000",
+      "sha256:aacopyreq00000000000000000000000000000000000000000000000000000000",
+      "sha256:bbpipinstall000000000000000000000000000000000000000000000000000000",
+      "sha256:ccdeploycreds0000000000000000000000000000000000000000000000000000",
+      "sha256:ddcopyapp0000000000000000000000000000000000000000000000000000000",
+      "sha256:eermcreds00000000000000000000000000000000000000000000000000000000"
+    ]
+  },
+  "history": [
+    { "created_by": "ENV REGISTRY_TOKEN=PCE{docker_layer_hardcoded_secret_2024}", "empty_layer": true },
+    { "created_by": "COPY deploy-creds.env /app/deploy-creds.env" },
+    { "created_by": "RUN rm -f /app/deploy-creds.env" }
+  ]
+}

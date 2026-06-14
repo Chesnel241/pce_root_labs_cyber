@@ -1,0 +1,20 @@
+{
+  "id": "6.3.1",
+  "title": "Audit CIS Benchmark",
+  "track": "cloud-architecture",
+  "module": "6.3",
+  "difficulty": "medium",
+  "points": 70,
+  "lab": "arch-01-cis-audit",
+  "flag": "PCE{cis_public_s3_block_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/bash",
+  "image": "pce-lab-arch-01-cis-audit:latest",
+  "objective": "Auditer la configuration du compte AWS PCE Corp contre le CIS Benchmark via cis-audit.py, identifier le contrôle critique en échec (CIS 2.1.5 — S3 Block Public Access désactivé), le corriger dans account-config.json, puis relancer l'audit pour révéler le flag.",
+  "vulnerability": "cis-misconfig",
+  "hints": [
+    "Lancez l'audit : `python3 cis-audit.py`. Un contrôle CRITIQUE est en FAIL — repérez la ligne marquée 'A CORRIGER'.",
+    "Le finding critique est CIS 2.1.5 : S3 Block Public Access désactivé au niveau du compte. Corrigez la config : `sed -i 's/\"accountLevel\": false/\"accountLevel\": true/' account-config.json`.",
+    "Relancez `python3 cis-audit.py`. Quand le score critique atteint 100%, l'audit affiche le flag PCE{...}. (Corrigez la config, pas le script.)"
+  ]
+}

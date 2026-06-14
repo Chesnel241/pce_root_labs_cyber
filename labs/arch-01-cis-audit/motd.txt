@@ -1,0 +1,26 @@
+==============================================================================
+ PCE Root Labs Cyber — Lab 6.3.1 : Audit CIS Benchmark
+==============================================================================
+ Scénario : vous auditez le compte AWS "PCE Corp" contre le CIS AWS Foundations
+ Benchmark. Sa configuration est exportée "as-code" dans ~/cis-audit :
+   - account-config.json : l'état du compte à auditer ;
+   - s3.tf               : extrait d'IaC pour le contexte ;
+   - cis-audit.py        : l'outil d'audit (calcule un score).
+
+ Objectif : exécuter l'audit, identifier le contrôle CRITIQUE en échec, le
+ corriger dans la configuration, puis relancer l'audit. Lorsque tous les
+ contrôles critiques passent, l'audit révèle le flag au format PCE{...}.
+
+ Pistes :
+   1) Lancer l'audit :
+        python3 cis-audit.py
+   2) Repérer le FAIL critique (CIS 2.1.5 — S3 Block Public Access).
+   3) Corriger la config :
+        sed -i 's/"accountLevel": false/"accountLevel": true/' account-config.json
+      (ou éditez account-config.json à la main)
+   4) Relancer l'audit -> score critique 100% -> le flag s'affiche :
+        python3 cis-audit.py
+
+ Astuce : la conformité se fait en CORRIGEANT account-config.json, pas en
+ modifiant le script d'audit.
+==============================================================================

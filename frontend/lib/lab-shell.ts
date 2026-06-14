@@ -423,6 +423,416 @@ function ssrfImdsScenario(): ShellScenario {
   };
 }
 
+/** Scénario du lab 2.1.3 — wildcard IAM dangereux (Action:* / Resource:*). */
+function iamWildcardScenario(): ShellScenario {
+  const arnBase = "arn:aws:iam::123456789012:policy";
+  const fullAccessArn = `${arnBase}/PCE-Deploy-FullAccess`;
+
+  return {
+    prompt: "analyst@pce-lab:~$ ",
+    banner: [
+      "\x1b[1mPCE Root Labs — Lab 2.1.3 · Wildcard IAM (mode démo)\x1b[0m",
+      "Objectif : repérer la policy managée qui accorde Action:\"*\" sur Resource:\"*\".",
+      "Indice : inspectez la VERSION PAR DÉFAUT de chaque policy.",
+      "Tapez \x1b[36mhelp\x1b[0m pour la liste des commandes.",
+      "",
+    ],
+    run(input) {
+      const cmd = input.trim();
+      if (!cmd) return { lines: [] };
+      if (cmd === "clear") return { clear: true };
+      if (cmd === "whoami") return { lines: ["analyst"] };
+
+      if (cmd === "help") {
+        return {
+          lines: [
+            "Commandes :",
+            "  aws iam list-policies --scope Local",
+            "  aws iam list-policy-versions --policy-arn <arn>",
+            "  aws iam get-policy-version  --policy-arn <arn> --version-id <v>",
+            "  aws iam audit-policy        --policy-arn <arn>",
+          ],
+        };
+      }
+
+      if (cmd.includes("list-policies")) {
+        return {
+          lines: [
+            "PolicyName                 DefaultVersion  AttachmentCount",
+            "PCE-ReadOnly-Billing      v1              4",
+            "PCE-S3-AppData            v2              6",
+            "\x1b[33mPCE-Deploy-FullAccess     v3              2\x1b[0m",
+            "PCE-CloudWatch-Logs       v1              9",
+            "",
+            "Astuce : la version par défaut compte. Inspectez PCE-Deploy-FullAccess (v3).",
+          ],
+        };
+      }
+
+      if (cmd.includes("list-policy-versions")) {
+        if (cmd.includes("PCE-Deploy-FullAccess")) {
+          return { lines: ["v1   v2   \x1b[33mv3 (par défaut)\x1b[0m"] };
+        }
+        return { lines: ["v1 (par défaut)"] };
+      }
+
+      if (cmd.includes("get-policy-version")) {
+        if (cmd.includes("PCE-Deploy-FullAccess")) {
+          return {
+            lines: [
+              '"Statement": [{',
+              '  "Sid": "DeployEverything",',
+              '  "Effect": "Allow",',
+              '  \x1b[31m"Action": "*"\x1b[0m,',
+              '  \x1b[31m"Resource": "*"\x1b[0m',
+              "}]",
+              "",
+              "\x1b[36mAction:* + Resource:* = équivalent AdministratorAccess. Auditez cette policy.\x1b[0m",
+            ],
+          };
+        }
+        return { lines: ['"Action": ["s3:GetObject", ...], "Resource": "arn:aws:s3:::pce-app-data/*"  (OK)'] };
+      }
+
+      if (cmd.includes("audit-policy")) {
+        if (cmd.includes(fullAccessArn) || cmd.includes("PCE-Deploy-FullAccess")) {
+          return {
+            lines: [
+              "Audit IAM — policy PCE-Deploy-FullAccess (version v3)",
+              "  \x1b[31m[CRITIQUE]\x1b[0m Action:\"*\" sur Resource:\"*\" -> équivalent AdministratorAccess.",
+              "  Remédiation : restreindre actions/ressources au strict nécessaire.",
+              "",
+              "  Drapeau du lab : \x1b[32mPCE{iam_wildcard_admin_policy_2024}\x1b[0m",
+              "",
+              "Bien joué — copiez le flag et soumettez-le à droite.",
+            ],
+          };
+        }
+        return {
+          lines: [
+            "  [OK] Aucun wildcard Action:* + Resource:* sur la version par défaut.",
+            "  Continuez l'audit (cherchez la policy FullAccess).",
+          ],
+        };
+      }
+
+      return { lines: [`${cmd.split(" ")[0]}: commande non trouvée`] };
+    },
+  };
+}
+
+/** Scénario du lab 3.3.1 — secret AWS dans l'historique git. */
+function gitSecretsScenario(): ShellScenario {
+  return {
+    prompt: "analyst@pce-billing-api$ ",
+    banner: [
+      "\x1b[1mPCE Root Labs — Lab 3.3.1 · Secrets Git (mode démo)\x1b[0m",
+      "Dépôt : pce-billing-api. Un .env avec une clé AWS a été committé puis 'retiré'.",
+      "Objectif : retrouver le secret dans l'historique git (le SecretAccessKey = flag).",
+      "Tapez \x1b[36mhelp\x1b[0m pour la liste des commandes.",
+      "",
+    ],
+    run(input) {
+      const cmd = input.trim();
+      if (!cmd) return { lines: [] };
+      if (cmd === "clear") return { clear: true };
+      if (cmd === "whoami") return { lines: ["analyst"] };
+
+      if (cmd === "help") {
+        return {
+          lines: [
+            "Commandes : help, clear, whoami, ls, git log --oneline,",
+            "  git log -p -- .env, git grep \"PCE{\" $(git rev-list --all),",
+            "  git show <commit>:.env",
+          ],
+        };
+      }
+
+      if (cmd === "ls") {
+        return { lines: ["README.md  app.py  requirements.txt  .gitignore  .env.example"] };
+      }
+
+      if (cmd === "cat .env" || cmd === "ls -a") {
+        return { lines: ["(.env absent du working tree — il a été supprimé. Cherchez dans l'historique.)"] };
+      }
+
+      if (cmd.includes("git log") && cmd.includes("--oneline")) {
+        return {
+          lines: [
+            "a1b2c3d Retrait du .env du suivi git + ajout .gitignore et .env.example",
+            "9f8e7d6 Ajout endpoint /version",
+            "\x1b[33m4c5b6a7 Ajout config locale .env (creds uploader S3)\x1b[0m",
+            "0011223 Initial commit: squelette pce-billing-api (Flask + boto3)",
+          ],
+        };
+      }
+
+      if (cmd.includes("git log") && cmd.includes(".env")) {
+        return {
+          lines: [
+            "commit 4c5b6a7 — Ajout config locale .env",
+            "+AWS_ACCESS_KEY_ID=AKIAY34FZKBOKMUTVV7A",
+            "+AWS_SECRET_ACCESS_KEY=\x1b[32mPCE{git_history_leaked_aws_key_2024}\x1b[0m",
+            "",
+            "Le secret vit dans l'historique même si .env a été supprimé au HEAD.",
+          ],
+        };
+      }
+
+      if (cmd.includes("git grep") || (cmd.includes("git log") && cmd.includes("grep"))) {
+        return {
+          lines: [
+            "4c5b6a7:.env:AWS_SECRET_ACCESS_KEY=\x1b[32mPCE{git_history_leaked_aws_key_2024}\x1b[0m",
+            "",
+            "Bien joué — le SecretAccessKey est le flag. Soumettez-le à droite.",
+          ],
+        };
+      }
+
+      if (cmd.includes("git show") && cmd.includes(".env")) {
+        return {
+          lines: [
+            "APP_ENV=staging",
+            "AWS_ACCESS_KEY_ID=AKIAY34FZKBOKMUTVV7A",
+            "AWS_SECRET_ACCESS_KEY=\x1b[32mPCE{git_history_leaked_aws_key_2024}\x1b[0m",
+            "AWS_DEFAULT_REGION=eu-west-3",
+          ],
+        };
+      }
+
+      return { lines: [`${cmd.split(" ")[0]}: commande non trouvée`] };
+    },
+  };
+}
+
+/** Scénario du lab 4.1.4 — secret codé en dur dans une image Docker. */
+function imageSecretsScenario(): ShellScenario {
+  return {
+    prompt: "analyst@pce-payments-api-image$ ",
+    banner: [
+      "\x1b[1mPCE Root Labs — Lab 4.1.4 · Secrets dans une image (mode démo)\x1b[0m",
+      "Image déballée : pce-payments-api:1.4.2 (couches + config à analyser).",
+      "Objectif : retrouver le REGISTRY_TOKEN codé en dur (le flag).",
+      "Tapez \x1b[36mhelp\x1b[0m pour la liste des commandes.",
+      "",
+    ],
+    run(input) {
+      const cmd = input.trim();
+      if (!cmd) return { lines: [] };
+      if (cmd === "clear") return { clear: true };
+      if (cmd === "whoami") return { lines: ["analyst"] };
+
+      if (cmd === "help") {
+        return {
+          lines: [
+            "Commandes : help, clear, whoami, ls,",
+            "  cat history.txt, cat blobs/sha256/*config.json,",
+            "  cat layers/04/app/deploy-creds.env, grep -r \"PCE{\" .",
+          ],
+        };
+      }
+
+      if (cmd === "ls") {
+        return { lines: ["history.txt  manifest.json  blobs/  layers/"] };
+      }
+
+      if (cmd.includes("history.txt")) {
+        return {
+          lines: [
+            "ENV REGISTRY_TOKEN=\x1b[32mPCE{docker_layer_hardcoded_secret_2024}\x1b[0m",
+            "COPY deploy-creds.env /app/deploy-creds.env",
+            "RUN rm -f /app/deploy-creds.env   <- 'supprimé' mais reste dans la couche 04",
+            "",
+            "Le secret est codé en dur via ENV (et via deploy-creds.env).",
+          ],
+        };
+      }
+
+      if (cmd.includes("config.json")) {
+        return {
+          lines: [
+            '"Env": [',
+            '  "PYTHON_VERSION=3.12.3",',
+            '  "REGISTRY_TOKEN=\x1b[32mPCE{docker_layer_hardcoded_secret_2024}\x1b[0m",',
+            '  "APP_ENV=production"',
+            "]",
+          ],
+        };
+      }
+
+      if (cmd.includes("deploy-creds.env") || (cmd.includes("layers/04"))) {
+        return {
+          lines: [
+            "REGISTRY_TOKEN=\x1b[32mPCE{docker_layer_hardcoded_secret_2024}\x1b[0m",
+            "AWS_ACCESS_KEY_ID=AKIAY34FZKBOKMUTVV7A",
+            "",
+            "Le fichier 'supprimé' reste lisible dans sa couche d'origine.",
+          ],
+        };
+      }
+
+      if (cmd.includes("grep") && cmd.includes("PCE{")) {
+        return {
+          lines: [
+            "blobs/sha256/3f9a1c0b7e21config.json:  \"REGISTRY_TOKEN=PCE{docker_layer_hardcoded_secret_2024}\"",
+            "layers/04/app/deploy-creds.env:REGISTRY_TOKEN=\x1b[32mPCE{docker_layer_hardcoded_secret_2024}\x1b[0m",
+            "",
+            "Bien joué — le REGISTRY_TOKEN est le flag. Soumettez-le à droite.",
+          ],
+        };
+      }
+
+      return { lines: [`${cmd.split(" ")[0]}: commande non trouvée`] };
+    },
+  };
+}
+
+/** Scénario du lab 5.1.1 — détection d'intrusion dans CloudTrail. */
+function cloudtrailIntrusionScenario(): ShellScenario {
+  const attackerIp = "203.0.113.66";
+
+  return {
+    prompt: "analyst@pce-lab:~$ ",
+    banner: [
+      "\x1b[1mPCE Root Labs — Lab 5.1.1 · Intrusion CloudTrail (mode démo)\x1b[0m",
+      "Export : cloudtrail-events.json. Une clé volée a permis une intrusion.",
+      "Objectif : repérer l'acteur malveillant et l'AssumeRole non autorisé (le flag).",
+      "Tapez \x1b[36mhelp\x1b[0m pour la liste des commandes.",
+      "",
+    ],
+    run(input) {
+      const cmd = input.trim();
+      if (!cmd) return { lines: [] };
+      if (cmd === "clear") return { clear: true };
+      if (cmd === "whoami") return { lines: ["analyst"] };
+
+      if (cmd === "help") {
+        return {
+          lines: [
+            "Commandes : help, clear, whoami,",
+            "  jq -r '.Records[].sourceIPAddress' cloudtrail-events.json | sort | uniq -c",
+            "  jq '.Records[] | select(.sourceIPAddress==\"203.0.113.66\")' cloudtrail-events.json",
+            "  grep pceFinding cloudtrail-events.json | verify-finding 203.0.113.66",
+          ],
+        };
+      }
+
+      if (cmd.includes("sourceIPAddress") && cmd.includes("uniq")) {
+        return {
+          lines: [
+            "      3 92.154.10.3       (alice, légitime)",
+            "      1 10.0.4.21         (rôle CI, légitime)",
+            `      \x1b[33m5 ${attackerIp}      (?? user-agent 'kali')\x1b[0m`,
+            "",
+            `Une IP détonne : ${attackerIp}. Examinez ses actions.`,
+          ],
+        };
+      }
+
+      if (cmd.includes(attackerIp) && cmd.startsWith("jq")) {
+        return {
+          lines: [
+            "GetCallerIdentity  (clé volée AKIAY34FZKBOKMUTVV7A / billing-uploader)",
+            "ListBuckets",
+            "\x1b[31mAssumeRole -> OrganizationAccountAccessRole\x1b[0m  (non autorisé)",
+            "StopLogging  (désactive CloudTrail)",
+            "GetObject    (exfil s3://pce-customer-pii/exports/customers-full.csv)",
+            "",
+            "L'AssumeRole non autorisé est l'événement pivot.",
+          ],
+        };
+      }
+
+      if (cmd.includes("pceFinding") || cmd.includes("verify-finding")) {
+        return {
+          lines: [
+            "[+] IP attaquante confirmée : 203.0.113.66",
+            "Acteur non autorisé: billing-uploader depuis 203.0.113.66 a assumé OrganizationAccountAccessRole.",
+            "FLAG=\x1b[32mPCE{cloudtrail_unauthorized_assumerole_2024}\x1b[0m",
+            "",
+            "Bien joué — copiez le flag et soumettez-le à droite.",
+          ],
+        };
+      }
+
+      return { lines: [`${cmd.split(" ")[0]}: commande non trouvée`] };
+    },
+  };
+}
+
+/** Scénario du lab 6.3.1 — audit CIS Benchmark (S3 Block Public Access). */
+function cisAuditScenario(): ShellScenario {
+  let remediated = false;
+
+  return {
+    prompt: "analyst@cis-audit$ ",
+    banner: [
+      "\x1b[1mPCE Root Labs — Lab 6.3.1 · Audit CIS (mode démo)\x1b[0m",
+      "Compte audité : account-config.json. Un contrôle critique échoue.",
+      "Objectif : corriger le finding (CIS 2.1.5) puis relancer l'audit pour le flag.",
+      "Tapez \x1b[36mhelp\x1b[0m pour la liste des commandes.",
+      "",
+    ],
+    run(input) {
+      const cmd = input.trim();
+      if (!cmd) return { lines: [] };
+      if (cmd === "clear") return { clear: true };
+      if (cmd === "whoami") return { lines: ["analyst"] };
+
+      if (cmd === "help") {
+        return {
+          lines: [
+            "Commandes : help, clear, whoami, ls,",
+            "  python3 cis-audit.py",
+            "  sed -i 's/\"accountLevel\": false/\"accountLevel\": true/' account-config.json",
+          ],
+        };
+      }
+
+      if (cmd === "ls") {
+        return { lines: ["account-config.json  s3.tf  cis-audit.py"] };
+      }
+
+      if (cmd.includes("sed") && cmd.includes("accountLevel")) {
+        remediated = true;
+        return { lines: ["account-config.json corrigé : s3 Block Public Access activé (accountLevel=true)."] };
+      }
+
+      if (cmd.includes("cis-audit.py")) {
+        if (!remediated) {
+          return {
+            lines: [
+              "=== Audit CIS AWS Foundations Benchmark — compte 123456789012 ===",
+              "  [PASS] CIS 1.5    (CRITIQUE) MFA root activé",
+              "  \x1b[31m[FAIL] CIS 2.1.5  (CRITIQUE) S3 Block Public Access  <== A CORRIGER\x1b[0m",
+              "  [PASS] CIS 3.1    (CRITIQUE) CloudTrail multi-régions",
+              "",
+              "  Contrôles critiques au vert : 2/3  (score critique : 67%)",
+              "  [!] Audit NON conforme : corrigez S3 Block Public Access (accountLevel=true).",
+            ],
+          };
+        }
+        return {
+          lines: [
+            "=== Audit CIS AWS Foundations Benchmark — compte 123456789012 ===",
+            "  [PASS] CIS 1.5    (CRITIQUE) MFA root activé",
+            "  \x1b[32m[PASS] CIS 2.1.5  (CRITIQUE) S3 Block Public Access\x1b[0m",
+            "  [PASS] CIS 3.1    (CRITIQUE) CloudTrail multi-régions",
+            "",
+            "  Contrôles critiques au vert : 3/3  (score critique : 100%)",
+            "  [OK] Tous les contrôles CRITIQUES sont conformes. Audit validé.",
+            "  Drapeau du lab : \x1b[32mPCE{cis_public_s3_block_2024}\x1b[0m",
+            "",
+            "Bien joué — copiez le flag et soumettez-le à droite.",
+          ],
+        };
+      }
+
+      return { lines: [`${cmd.split(" ")[0]}: commande non trouvée`] };
+    },
+  };
+}
+
 export function getScenario(
   challengeId: string,
   labSlug?: string,
@@ -438,6 +848,21 @@ export function getScenario(
   }
   if (labSlug === "pentest-04-ssrf-imds" || challengeId === "1.4.1") {
     return ssrfImdsScenario();
+  }
+  if (labSlug === "iam-01-wildcard-policy" || challengeId === "2.1.3") {
+    return iamWildcardScenario();
+  }
+  if (labSlug === "devsecops-01-git-secrets" || challengeId === "3.3.1") {
+    return gitSecretsScenario();
+  }
+  if (labSlug === "container-01-image-secrets" || challengeId === "4.1.4") {
+    return imageSecretsScenario();
+  }
+  if (labSlug === "soc-01-cloudtrail-intrusion" || challengeId === "5.1.1") {
+    return cloudtrailIntrusionScenario();
+  }
+  if (labSlug === "arch-01-cis-audit" || challengeId === "6.3.1") {
+    return cisAuditScenario();
   }
   return genericScenario(challengeId);
 }

@@ -1,0 +1,20 @@
+{
+  "id": "3.3.1",
+  "title": "Scan Git avec truffleHog",
+  "track": "devsecops",
+  "module": "3.3",
+  "difficulty": "easy",
+  "points": 70,
+  "lab": "devsecops-01-git-secrets",
+  "flag": "PCE{git_history_leaked_aws_key_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/bash",
+  "image": "pce-lab-devsecops-01-git-secrets:latest",
+  "objective": "Dans le dépôt git 'pce-billing-api', retrouver une clé AWS divulguée : elle a été committée dans un .env puis 'retirée', mais reste dans l'historique. Le SecretAccessKey est le flag.",
+  "vulnerability": "git-secret-history",
+  "hints": [
+    "Le fichier sensible n'est plus dans le working tree. Listez l'historique : `git log --oneline` puis suivez le .env supprimé avec `git log -p -- .env`.",
+    "Cherchez le motif sur TOUS les commits, façon truffleHog : `git grep -n \"PCE{\" $(git rev-list --all)` ou `git log --all -p | grep AWS_SECRET_ACCESS_KEY`.",
+    "Affichez le .env d'un ancien commit : `git show <commit>:.env`. La valeur de AWS_SECRET_ACCESS_KEY est le flag PCE{...}."
+  ]
+}

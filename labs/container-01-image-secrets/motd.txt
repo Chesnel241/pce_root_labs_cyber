@@ -1,0 +1,28 @@
+==============================================================================
+ PCE Root Labs Cyber — Lab 4.1.4 : Secrets cachés dans une image
+==============================================================================
+ Scénario : l'image "pce-payments-api:1.4.2" a été déballée pour analyse à
+ froid (~/pce-payments-api-image). Un secret y a été codé en dur de DEUX
+ façons classiques :
+   - via une instruction ENV (visible dans la config de l'image) ;
+   - via un fichier deploy-creds.env copié puis "supprimé" (RUN rm) mais
+     toujours présent dans une couche antérieure.
+
+ Objectif : retrouver le secret (le jeton de registre) et récupérer le flag
+ au format PCE{...}.
+
+ Pistes :
+   1) Lire l'historique de build (comme `docker history`) :
+        cat history.txt
+   2) Inspecter la config de l'image (section Env) :
+        cat blobs/sha256/3f9a1c0b7e21config.json
+   3) Chercher le motif dans toutes les couches extraites :
+        grep -r "PCE{" .
+        grep -r "REGISTRY_TOKEN" layers/
+   4) Le fichier "supprimé" reste lisible dans sa couche d'origine :
+        cat layers/04/app/deploy-creds.env
+        strings layers/04/app/deploy-creds.env | grep PCE
+
+ Astuce : `rm` dans un Dockerfile ne supprime pas le contenu des couches
+ précédentes (overlay whiteout). Le secret survit dans la couche 04.
+==============================================================================

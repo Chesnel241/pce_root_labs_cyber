@@ -1,0 +1,170 @@
+#!/bin/sh
+# =============================================================================
+# awsmock — simulateur IAM hors-ligne pour iam-01-wildcard-policy.
+#
+# Objectif pédagogique : reproduire l'audit d'hygiène IAM consistant à repérer
+# une policy managée trop permissive (Action:* + Resource:* = équivalent
+# AdministratorAccess). Aucune dépendance réseau ni AWS réel : l'état est lu
+# dans lab-data/policies.json.
+#
+# Sous-commandes simulées :
+#   iam list-policies                  [--scope Local]
+#   iam list-policy-versions           --policy-arn <arn>
+#   iam get-policy                     --policy-arn <arn>
+#   iam get-policy-version             --policy-arn <arn> --version-id <v>
+#   iam audit-policy                   --policy-arn <arn>   (extension du lab)
+#
+# Le flag n'est révélé que par `iam audit-policy` ciblant la policy dont la
+# version par défaut accorde Action:"*" sur Resource:"*".
+# =============================================================================
+
+set -eu
+
+DATA_DIR="${LAB_DATA_DIR:-/srv/lab-data}"
+STATE="$DATA_DIR/policies.json"
+
+run_py() {
+  _src="$1"; shift
+  printf '%s' "$_src" | sed "s#__STATE__#$STATE#g" | python3 - "$@"
+}
+
+# --- parse: service, subcommand, et options --name value -> OPT_<NAME>=value --
+SERVICE=""
+SUBCMD=""
+set_opt() {
+  _k="$(printf '%s' "$1" | sed 's/^--//; s/-/_/g' | tr '[:lower:]' '[:upper:]')"
+  eval "OPT_$_k=\"\$2\""
+  export "OPT_$_k"
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --region|--region=*|--output|--output=*)
+      case "$1" in *=*) : ;; *) shift ;; esac ;;
+    --*)
+      _key="$1"
+      if [ $# -ge 2 ] && [ "${2#--}" = "$2" ]; then
+        set_opt "$_key" "$2"; shift
+      else
+        set_opt "$_key" "true"
+      fi
+      ;;
+    iam)
+      if [ -z "$SERVICE" ]; then
+        SERVICE="$1"
+        shift
+        [ $# -gt 0 ] && SUBCMD="${1:-}"
+      fi
+      ;;
+    *) : ;;
+  esac
+  shift || true
+done
+
+case "$SERVICE.$SUBCMD" in
+  iam.list-policies)
+    run_py 'import json
+d = json.load(open("__STATE__"))
+out = {"Policies": [
+    {"PolicyName": p["name"], "Arn": p["arn"],
+     "DefaultVersionId": p["defaultVersionId"],
+     "AttachmentCount": p.get("attachmentCount", 0)}
+    for p in d["policies"]]}
+print(json.dumps(out, indent=4))'
+    ;;
+
+  iam.get-policy)
+    run_py 'import json, os, sys
+d = json.load(open("__STATE__"))
+arn = os.environ.get("OPT_POLICY_ARN", "")
+for p in d["policies"]:
+    if p["arn"] == arn:
+        print(json.dumps({"Policy": {
+            "PolicyName": p["name"], "Arn": p["arn"],
+            "DefaultVersionId": p["defaultVersionId"],
+            "AttachmentCount": p.get("attachmentCount", 0)}}, indent=4))
+        break
+else:
+    sys.stderr.write("An error occurred (NoSuchEntity): policy %s not found\n" % arn); sys.exit(255)'
+    ;;
+
+  iam.list-policy-versions)
+    run_py 'import json, os, sys
+d = json.load(open("__STATE__"))
+arn = os.environ.get("OPT_POLICY_ARN", "")
+for p in d["policies"]:
+    if p["arn"] == arn:
+        versions = [{"VersionId": v, "IsDefaultVersion": (v == p["defaultVersionId"])}
+                    for v in p["versions"].keys()]
+        print(json.dumps({"Versions": versions}, indent=4))
+        break
+else:
+    sys.stderr.write("An error occurred (NoSuchEntity): policy %s not found\n" % arn); sys.exit(255)'
+    ;;
+
+  iam.get-policy-version)
+    run_py 'import json, os, sys
+d = json.load(open("__STATE__"))
+arn = os.environ.get("OPT_POLICY_ARN", "")
+ver = os.environ.get("OPT_VERSION_ID", "")
+for p in d["policies"]:
+    if p["arn"] == arn:
+        ver = ver or p["defaultVersionId"]
+        doc = p["versions"].get(ver)
+        if doc is None:
+            sys.stderr.write("An error occurred (NoSuchEntity): version %s not found\n" % ver); sys.exit(255)
+        print(json.dumps({"PolicyVersion": {
+            "VersionId": ver, "IsDefaultVersion": (ver == p["defaultVersionId"]),
+            "Document": doc}}, indent=4))
+        break
+else:
+    sys.stderr.write("An error occurred (NoSuchEntity): policy %s not found\n" % arn); sys.exit(255)'
+    ;;
+
+  iam.audit-policy)
+    # Extension pédagogique du lab : audite la version par défaut d'une policy
+    # et signale un wildcard dangereux (Action:* + Resource:*). Le flag n'est
+    # révélé que pour la policy réellement fautive.
+    run_py 'import json, os, sys
+d = json.load(open("__STATE__"))
+arn = os.environ.get("OPT_POLICY_ARN", "")
+target = None
+for p in d["policies"]:
+    if p["arn"] == arn:
+        target = p
+        break
+if target is None:
+    sys.stderr.write("An error occurred (NoSuchEntity): policy %s not found\n" % arn); sys.exit(255)
+doc = target["versions"][target["defaultVersionId"]]
+dangerous = False
+for st in doc.get("Statement", []):
+    if st.get("Effect") != "Allow":
+        continue
+    acts = st.get("Action", [])
+    acts = acts if isinstance(acts, list) else [acts]
+    res = st.get("Resource", [])
+    res = res if isinstance(res, list) else [res]
+    if "*" in acts and "*" in res:
+        dangerous = True
+print("Audit IAM — policy %s (version %s)" % (target["name"], target["defaultVersionId"]))
+if dangerous:
+    print("  [CRITIQUE] Action:\"*\" sur Resource:\"*\" -> equivalent AdministratorAccess.")
+    print("  Cette policy est attachee a %d principal(aux)." % target.get("attachmentCount", 0))
+    print("  Remediation : restreindre les actions/ressources au strict necessaire.")
+    print("")
+    print("  Drapeau du lab : " + d["flag"])
+else:
+    print("  [OK] Aucun wildcard Action:* + Resource:* detecte sur la version par defaut.")
+    print("  Continuez l audit des autres policies (iam list-policies).")'
+    ;;
+
+  .*|*.)
+    echo "awsmock: indiquez un service et une sous-commande (iam)." >&2
+    exit 2
+    ;;
+  *)
+    echo "awsmock: '$SERVICE $SUBCMD' n'est pas simulé dans ce lab." >&2
+    echo "Essayez: iam list-policies | iam get-policy-version | iam audit-policy" >&2
+    exit 2
+    ;;
+esac

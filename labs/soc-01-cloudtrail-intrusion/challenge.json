@@ -1,0 +1,20 @@
+{
+  "id": "5.1.1",
+  "title": "Intrusion dans CloudTrail",
+  "track": "cloud-soc",
+  "module": "5.1",
+  "difficulty": "easy",
+  "points": 50,
+  "lab": "soc-01-cloudtrail-intrusion",
+  "flag": "PCE{cloudtrail_unauthorized_assumerole_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/bash",
+  "image": "pce-lab-soc-01-cloudtrail-intrusion:latest",
+  "objective": "Analyser un export CloudTrail (jq/grep), repérer l'acteur malveillant (IP/user-agent inhabituels, clé volée) et l'événement pivot AssumeRole non autorisé. Le finding révèle le flag.",
+  "vulnerability": "cloudtrail-intrusion",
+  "hints": [
+    "Comptez les IP sources pour isoler l'intruse : `jq -r '.Records[].sourceIPAddress' cloudtrail-events.json | sort | uniq -c`. Une IP (203.0.113.66) et un user-agent 'kali' détonnent.",
+    "Filtrez les actions de l'attaquant : `jq '.Records[] | select(.sourceIPAddress==\"203.0.113.66\")' cloudtrail-events.json`. Repérez l'AssumeRole vers OrganizationAccountAccessRole, puis StopLogging et GetObject.",
+    "L'événement AssumeRole non autorisé porte un champ \"pceFinding\" avec le flag. Confirmez : `verify-finding 203.0.113.66` (ou `grep pceFinding cloudtrail-events.json`). Le flag est PCE{...}."
+  ]
+}
