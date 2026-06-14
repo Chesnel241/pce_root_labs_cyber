@@ -16,8 +16,8 @@ LABEL com.pceroot.lab="true" \
       com.pceroot.lab.challenge="3.3.1" \
       com.pceroot.lab.slug="devsecops-01-git-secrets"
 
+# Dates/identité figées -> historique git reproductible (hashes stables).
 ENV PS1="pce-lab:\w$ " \
-    # Dates/identité figées -> historique git reproductible (hash stables).
     GIT_AUTHOR_NAME="Dev Intern" \
     GIT_AUTHOR_EMAIL="intern@pce-corp.fr" \
     GIT_COMMITTER_NAME="Dev Intern" \
