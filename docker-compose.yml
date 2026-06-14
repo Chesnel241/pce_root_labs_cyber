@@ -1,0 +1,116 @@
+# =============================================================================
+# PCE Root Labs Cyber — orchestration (production-ish)
+# -----------------------------------------------------------------------------
+# Services : backend (API + WS), postgres (avec volume + healthcheck), traefik
+# (reverse proxy 80/443 + TLS). Le frontend est déployé séparément sur Vercel ;
+# il figure en service OPTIONNEL commenté en bas.
+#
+# Démarrage :  docker compose up -d --build
+# =============================================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pce-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pce}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pce}
+      POSTGRES_DB: ${POSTGRES_DB:-pce_labs}
+    volumes:
+      - pce-pgdata:/var/lib/postgresql/data
+      # Applique automatiquement le schéma au premier démarrage du volume.
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pce} -d ${POSTGRES_DB:-pce_labs}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pce-net
+
+  backend:
+    build:
+      context: ./backend
+    container_name: pce-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-pce}:${POSTGRES_PASSWORD:-pce}@postgres:5432/${POSTGRES_DB:-pce_labs}
+      JWT_SECRET: ${JWT_SECRET:?Définissez JWT_SECRET dans .env}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://app.example.com}
+      DOCKER_SOCKET: /var/run/docker.sock
+      LAB_TTL_MINUTES: ${LAB_TTL_MINUTES:-60}
+      FLAG_PREFIX: ${FLAG_PREFIX:-PCE}
+      CURRICULUM_PATH: /data/curriculum.json
+    volumes:
+      # Permet au backend d'orchestrer les conteneurs de lab via dockerode.
+      # ATTENTION : monter le socket Docker accorde des privilèges élevés.
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Le curriculum (source unique de vérité) est monté en lecture seule ;
+      # CURRICULUM_PATH (ci-dessous) pointe vers ce chemin dans le conteneur.
+      - ./data:/data:ro
+    expose:
+      - "4000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`${API_HOST:-api.example.com}`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.backend.middlewares=security-headers@file"
+      - "traefik.http.services.backend.loadbalancer.server.port=4000"
+    networks:
+      - pce-net
+
+  traefik:
+    image: traefik:v3.1
+    container_name: pce-traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - ./traefik/acme.json:/etc/traefik/acme.json
+      # Socket Docker en lecture seule : provider Docker de Traefik.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - pce-net
+
+  # ---------------------------------------------------------------------------
+  # Frontend — déployé sur Vercel (séparément). Service OPTIONNEL pour un
+  # déploiement self-hosted. Décommentez si vous souhaitez l'embarquer ici.
+  # ---------------------------------------------------------------------------
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #   container_name: pce-frontend
+  #   restart: unless-stopped
+  #   environment:
+  #     NEXT_PUBLIC_API_URL: https://${API_HOST:-api.example.com}/api
+  #   expose:
+  #     - "3000"
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.frontend.rule=Host(`${APP_HOST:-app.example.com}`)"
+  #     - "traefik.http.routers.frontend.entrypoints=websecure"
+  #     - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+  #     - "traefik.http.routers.frontend.middlewares=security-headers@file"
+  #     - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+  #   networks:
+  #     - pce-net
+
+volumes:
+  pce-pgdata:
+    driver: local
+
+networks:
+  pce-net:
+    name: pce-net
+    driver: bridge

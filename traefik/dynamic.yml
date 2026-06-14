@@ -1,0 +1,40 @@
+# =============================================================================
+# Traefik — configuration dynamique (middlewares réutilisables)
+# -----------------------------------------------------------------------------
+# Référencez ces middlewares depuis les labels Docker des services, ex. :
+#   traefik.http.routers.backend.middlewares=security-headers@file
+# =============================================================================
+
+http:
+  middlewares:
+    # En-têtes de sécurité raisonnables pour une API/app web.
+    security-headers:
+      headers:
+        frameDeny: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        customResponseHeaders:
+          X-Powered-By: ""
+          Server: ""
+
+    # Redirection HTTP -> HTTPS (doublon de l'entryPoint, utile par routeur).
+    https-redirect:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+    # Limitation de débit basique (anti-abus).
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 50
+
+tls:
+  options:
+    modern:
+      minVersion: VersionTLS12
+      sniStrict: true
