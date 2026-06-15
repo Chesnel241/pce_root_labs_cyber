@@ -26,9 +26,18 @@ export function apiEnabled(): boolean {
  */
 export function terminalWsUrl(sessionId: string, token: string): string | null {
   if (!apiEnabled()) return null;
-  const base = API_URL.replace(/^http/i, "ws").replace(/\/$/, "");
-  const params = new URLSearchParams({ sessionId, token });
-  return `${base}/ws/terminal?${params.toString()}`;
+  try {
+    const url = new URL(API_URL);
+    url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+    url.pathname = "/ws/terminal";
+    const params = new URLSearchParams({ sessionId, token });
+    url.search = params.toString();
+    return url.toString();
+  } catch {
+    const base = API_URL.replace(/^http/i, "ws").replace(/\/api\/?$/, "").replace(/\/$/, "");
+    const params = new URLSearchParams({ sessionId, token });
+    return `${base}/ws/terminal?${params.toString()}`;
+  }
 }
 
 const TOKEN_KEY = "pce.token";
