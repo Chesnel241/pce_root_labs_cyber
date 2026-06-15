@@ -26,11 +26,16 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL,
     xp            INTEGER NOT NULL DEFAULT 0,
     is_admin      BOOLEAN NOT NULL DEFAULT false,
+    role          TEXT NOT NULL DEFAULT 'user',  -- 'user' | 'admin' (granted via ADMIN_EMAILS)
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_xp ON users (xp DESC);
+
+-- Additive: role column for the admin API. Idempotent for existing databases.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'user';
+CREATE INDEX IF NOT EXISTS idx_users_role ON users (role);
 
 -- ---------------------------------------------------------------------------
 -- Tracks (mirror of curriculum.json -> tracks[])
@@ -86,19 +91,29 @@ CREATE INDEX IF NOT EXISTS idx_challenges_track ON challenges (track_id);
 -- Submissions — one row per (user, challenge). Idempotent solves.
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS submissions (
-    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id        UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    challenge_id   TEXT NOT NULL REFERENCES challenges (id) ON DELETE CASCADE,
-    correct        BOOLEAN NOT NULL DEFAULT false,
-    points_awarded INTEGER NOT NULL DEFAULT 0,
-    submitted_flag TEXT,
-    created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id          UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    challenge_id     TEXT NOT NULL REFERENCES challenges (id) ON DELETE CASCADE,
+    correct          BOOLEAN NOT NULL DEFAULT false,
+    points_awarded   INTEGER NOT NULL DEFAULT 0,
+    submitted_flag   TEXT,
+    -- Temporal scoring (additive). duration_seconds is the time from the lab
+    -- session start to the correct solve (NULL when no lab session existed).
+    duration_seconds INTEGER,
+    time_bonus       INTEGER NOT NULL DEFAULT 0,
+    score            INTEGER NOT NULL DEFAULT 0,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT uq_submission_user_challenge UNIQUE (user_id, challenge_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_submissions_user ON submissions (user_id);
 CREATE INDEX IF NOT EXISTS idx_submissions_challenge ON submissions (challenge_id);
 CREATE INDEX IF NOT EXISTS idx_submissions_correct ON submissions (user_id, correct);
+
+-- Additive temporal-scoring columns (idempotent for existing databases).
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS duration_seconds INTEGER;
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS time_bonus INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS score INTEGER NOT NULL DEFAULT 0;
 
 -- ---------------------------------------------------------------------------
 -- Lab sessions — persisted record of orchestrated lab runs (audit/history).
@@ -138,3 +153,20 @@ CREATE TABLE IF NOT EXISTS user_badges (
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_badges_user ON user_badges (user_id);
+
+-- ---------------------------------------------------------------------------
+-- Hint reveals — anti-replay tracking + scoring penalty source of truth.
+-- One row per (user, challenge, hint_index). Revealing the same hint twice is
+-- a no-op (UNIQUE constraint), so the penalty is never double-counted.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS hint_reveals (
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id      UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    challenge_id TEXT NOT NULL REFERENCES challenges (id) ON DELETE CASCADE,
+    hint_index   INTEGER NOT NULL,
+    revealed_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_hint_reveal UNIQUE (user_id, challenge_id, hint_index)
+);
+
+CREATE INDEX IF NOT EXISTS idx_hint_reveals_user ON hint_reveals (user_id);
+CREATE INDEX IF NOT EXISTS idx_hint_reveals_user_challenge ON hint_reveals (user_id, challenge_id);

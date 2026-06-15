@@ -21,6 +21,17 @@ const envSchema = z.object({
   LAB_TTL_MINUTES: z.coerce.number().int().positive().default(60),
   FLAG_PREFIX: z.string().trim().default('PCE'),
   NODE_ENV: z.string().trim().default('development'),
+  // Comma-separated list of emails granted the 'admin' role at register/login.
+  ADMIN_EMAILS: z.string().trim().default(''),
+  // Temporal-scoring knobs. Par time (minutes): full time bonus when solved at
+  // or under par; linear decay to 0 over the decay window after par.
+  LAB_PAR_MINUTES: z.coerce.number().nonnegative().default(15),
+  TIME_BONUS_MAX: z.coerce.number().int().nonnegative().default(50),
+  TIME_BONUS_DECAY_MINUTES: z.coerce.number().positive().default(45),
+  // Score penalty deducted from a solve's score per revealed hint (floored at 0).
+  HINT_PENALTY: z.coerce.number().int().nonnegative().default(10),
+  // How often (seconds) the reaper scans for expired lab sessions.
+  REAPER_INTERVAL_SECONDS: z.coerce.number().int().positive().default(60),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -61,6 +72,14 @@ const corsOrigin =
     ? '*'
     : raw.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean);
 
+/**
+ * Lower-cased set of emails granted the 'admin' role. Empty when unset.
+ * @type {string[]}
+ */
+const adminEmails = raw.ADMIN_EMAILS
+  ? raw.ADMIN_EMAILS.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
+  : [];
+
 /** Immutable application configuration. */
 export const config = Object.freeze({
   port: raw.PORT,
@@ -73,5 +92,11 @@ export const config = Object.freeze({
   flagPrefix: raw.FLAG_PREFIX,
   nodeEnv: raw.NODE_ENV,
   isProduction: raw.NODE_ENV === 'production',
+  adminEmails,
+  labParMinutes: raw.LAB_PAR_MINUTES,
+  timeBonusMax: raw.TIME_BONUS_MAX,
+  timeBonusDecayMinutes: raw.TIME_BONUS_DECAY_MINUTES,
+  hintPenalty: raw.HINT_PENALTY,
+  reaperIntervalSeconds: raw.REAPER_INTERVAL_SECONDS,
   version: '0.1.0',
 });

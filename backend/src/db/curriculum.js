@@ -135,3 +135,27 @@ export function flattenChallenges() {
 export function totalChallenges() {
   return flattenChallenges().length;
 }
+
+/**
+ * All challenge ids belonging to a given module id.
+ * @param {string} moduleId e.g. "1.1"
+ * @returns {string[]} empty array when the module is unknown
+ */
+export function getModuleChallengeIds(moduleId) {
+  for (const track of curriculum.tracks) {
+    const module = track.modules.find((m) => m.id === moduleId);
+    if (module) return module.challenges.map((c) => c.id);
+  }
+  return [];
+}
+
+/**
+ * All challenge ids belonging to a given track id.
+ * @param {string} trackId
+ * @returns {string[]} empty array when the track is unknown
+ */
+export function getTrackChallengeIds(trackId) {
+  const track = curriculum.tracks.find((t) => t.id === trackId);
+  if (!track) return [];
+  return track.modules.flatMap((m) => m.challenges.map((c) => c.id));
+}

@@ -28,12 +28,20 @@ export async function getSolvedChallengeIds(userId) {
 
 /**
  * Annotate the full curriculum with per-challenge `solved` flags and
- * per-module / per-track progress percentages. Never leaks flags.
+ * per-module / per-track progress percentages, plus progression-gate state
+ * (`locked` + `unlockRequirement`). Never leaks flags.
+ *
+ * Gate semantics: anonymous callers (userId null) see every track unlocked.
+ * Authenticated callers have track N locked unless the previous track (by order)
+ * is >= 70% complete; the first track is always unlocked.
  * @param {string | null} userId
- * @returns {Promise<object[]>} tracks decorated with progress
+ * @returns {Promise<object[]>} tracks decorated with progress + lock state
  */
 export async function getAnnotatedTracks(userId) {
   const solved = await getSolvedChallengeIds(userId);
+  // Lazy import avoids a static cycle (gates -> progress -> gates).
+  const { computeTrackLocksFromSolved } = await import('./gates.service.js');
+  const locks = userId ? computeTrackLocksFromSolved(solved) : null;
 
   return getTracks().map((track) => {
     let trackTotal = 0;
@@ -70,6 +78,8 @@ export async function getAnnotatedTracks(userId) {
       };
     });
 
+    const lock = locks?.get(track.id) ?? null;
+
     return {
       id: track.id,
       order: track.order,
@@ -83,6 +93,9 @@ export async function getAnnotatedTracks(userId) {
       progress: percent(trackSolved, trackTotal),
       solvedCount: trackSolved,
       challengeCount: trackTotal,
+      // Progression gates (additive). Anonymous => unlocked everywhere.
+      locked: lock ? lock.locked : false,
+      unlockRequirement: lock ? lock.unlockRequirement : null,
     };
   });
 }
@@ -120,6 +133,21 @@ export async function getUserProgress(userId) {
   const rank = await getUserRank(userId);
   const streak = await getStreak(userId);
 
+  // Additive: unlocked tracks (progression gates) + a badge summary. Lazy
+  // imports keep module dependencies acyclic.
+  const { computeTrackLocksFromSolved } = await import('./gates.service.js');
+  const locks = computeTrackLocksFromSolved(solved);
+  const unlockedTracks = [];
+  for (const [id, info] of locks) if (!info.locked) unlockedTracks.push(id);
+
+  let badges = { earned: 0, total: 0, recent: [] };
+  try {
+    const { getBadgeSummary } = await import('./badges.service.js');
+    badges = await getBadgeSummary(userId);
+  } catch {
+    /* best-effort; keep the default empty summary */
+  }
+
   return {
     totalXp,
     rank,
@@ -127,6 +155,8 @@ export async function getUserProgress(userId) {
     totalChallenges: totalChallenges(),
     byTrack,
     streak,
+    unlockedTracks,
+    badges,
   };
 }
 

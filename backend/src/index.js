@@ -10,6 +10,7 @@ import { createApp } from './app.js';
 import { attachTerminal } from './ws/terminal.js';
 import { isConfigured as dbConfigured, close as dbClose, ping as dbPing } from './db/pool.js';
 import { isDockerAvailable, shutdown as dockerShutdown } from './services/docker.service.js';
+import { startReaper, stopReaper } from './services/reaper.service.js';
 
 const app = createApp();
 const server = http.createServer(app);
@@ -26,6 +27,9 @@ server.listen(config.port, async () => {
   const docker = await isDockerAvailable().catch(() => false);
   logger.info(`Base de données : ${db ? 'connectée' : dbConfigured() ? 'configurée mais injoignable' : 'non configurée (mode dégradé)'}`);
   logger.info(`Docker : ${docker ? 'disponible' : 'indisponible (labs désactivés)'}`);
+
+  // Periodic auto-reset reaper for expired lab sessions (safe without Docker).
+  startReaper();
 });
 
 server.on('error', (err) => {
@@ -51,6 +55,8 @@ async function shutdown(signal) {
   if (typeof timeout.unref === 'function') timeout.unref();
 
   server.close(() => logger.info('Serveur HTTP fermé.'));
+
+  stopReaper();
 
   try {
     await dockerShutdown();

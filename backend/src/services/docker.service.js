@@ -247,6 +247,57 @@ export function getSessionRaw(sessionId) {
 }
 
 /**
+ * Number of currently-running lab sessions (in-memory registry). Used by
+ * /api/health and the admin stats endpoint. Never throws.
+ * @returns {number}
+ */
+export function labsRunningCount() {
+  let n = 0;
+  for (const s of sessions.values()) if (s.status === 'running') n += 1;
+  return n;
+}
+
+/**
+ * Find the active (running) session start time for a (user, challenge), if any.
+ * Used by temporal scoring to compute solve duration.
+ * @param {string} userId
+ * @param {string} challengeId
+ * @returns {Date | null} the session's createdAt, or null when none is running
+ */
+export function getActiveSessionStart(userId, challengeId) {
+  for (const s of sessions.values()) {
+    if (s.userId === userId && s.challengeId === challengeId && s.status === 'running') {
+      return s.createdAt;
+    }
+  }
+  return null;
+}
+
+/**
+ * Auto-reset reaper: stop & remove containers for any running session whose TTL
+ * has elapsed, marking them 'expired'. Best-effort and safe when Docker is
+ * absent (stopLab no-ops the container ops). Logs each reap.
+ * @returns {Promise<{ reaped:number }>}
+ */
+export async function reapExpiredSessions() {
+  const now = Date.now();
+  const expired = [...sessions.values()].filter(
+    (s) => s.status === 'running' && s.expiresAt instanceof Date && s.expiresAt.getTime() <= now,
+  );
+  let reaped = 0;
+  for (const s of expired) {
+    try {
+      await stopLab({ sessionId: s.sessionId, userId: s.userId, reason: 'expired' });
+      reaped += 1;
+      logger.info(`Reaper : session de lab expirée arrêtée — session=${s.sessionId} challenge=${s.challengeId}`);
+    } catch (err) {
+      logger.warn('Reaper : échec de l\'arrêt d\'une session expirée :', err instanceof Error ? err.message : err);
+    }
+  }
+  return { reaped };
+}
+
+/**
  * Stop and remove a lab container.
  * @param {{ sessionId:string, userId:string, reason?:string }} input
  * @returns {Promise<{sessionId:string, status:string}>}

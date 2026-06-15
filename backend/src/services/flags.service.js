@@ -10,6 +10,11 @@
 
 import { getClient, isConfigured, query } from '../db/pool.js';
 import { getChallenge, expectedFlag } from '../db/curriculum.js';
+import { getActiveSessionStart } from './docker.service.js';
+import { getRevealedHintCount } from './hints.service.js';
+import { computeScore } from './scoring.service.js';
+import { evaluateAndAwardBadges } from './badges.service.js';
+import { logger } from '../utils/logger.js';
 
 /** Error with HTTP status for flag-submission failures. */
 export class FlagError extends Error {
@@ -53,8 +58,17 @@ export function flagsMatch(submitted, expected) {
 /**
  * Submit a flag for a challenge on behalf of a user. Requires a DB to persist
  * solves and award XP. Idempotent.
+ *
+ * Backward-compatible response (existing fields unchanged): `correct`,
+ * `awardedPoints` (= base challenge points, the authoritative XP), `totalXp`,
+ * `alreadySolved`. Additive fields:
+ *   - `durationSeconds`: time from the active lab session start to this solve
+ *     (null when no running session existed for this user+challenge).
+ *   - `timeBonus`: temporal bonus (see scoring.service.js).
+ *   - `score`: richer per-solve score = base + timeBonus - hintPenalty (>= 0).
+ *   - `newBadges`: badges newly awarded by this submission (idempotent).
  * @param {{ userId:string, challengeId:string, flag:string }} input
- * @returns {Promise<{ correct:boolean, awardedPoints:number, totalXp:number, alreadySolved:boolean }>}
+ * @returns {Promise<{ correct:boolean, awardedPoints:number, totalXp:number, alreadySolved:boolean, durationSeconds:number|null, timeBonus:number, score:number, newBadges:Array<{id:string,name:string}> }>}
  */
 export async function submitFlag({ userId, challengeId, flag }) {
   const found = getChallenge(challengeId);
@@ -68,17 +82,28 @@ export async function submitFlag({ userId, challengeId, flag }) {
   try {
     await client.query('BEGIN');
 
-    // Has this user already solved this challenge?
+    // Has this user already solved this challenge? Read stored scoring too so a
+    // duplicate solve echoes the original (stable) numbers.
     const existing = await client.query(
-      `SELECT correct FROM submissions WHERE user_id = $1 AND challenge_id = $2`,
+      `SELECT correct, duration_seconds, time_bonus, score
+       FROM submissions WHERE user_id = $1 AND challenge_id = $2`,
       [userId, challengeId],
     );
-    const alreadySolved = existing.rows.some((r) => r.correct === true);
+    const prior = existing.rows.find((r) => r.correct === true);
 
-    if (alreadySolved) {
+    if (prior) {
       await client.query('COMMIT');
       const totalXp = await currentXp(client, userId);
-      return { correct: true, awardedPoints: 0, totalXp, alreadySolved: true };
+      return {
+        correct: true,
+        awardedPoints: 0,
+        totalXp,
+        alreadySolved: true,
+        durationSeconds: prior.duration_seconds == null ? null : Number(prior.duration_seconds),
+        timeBonus: Number(prior.time_bonus ?? 0),
+        score: Number(prior.score ?? 0),
+        newBadges: [],
+      };
     }
 
     if (!correct) {
@@ -92,27 +117,68 @@ export async function submitFlag({ userId, challengeId, flag }) {
       );
       await client.query('COMMIT');
       const totalXp = await currentXp(client, userId);
-      return { correct: false, awardedPoints: 0, totalXp, alreadySolved: false };
+      return {
+        correct: false,
+        awardedPoints: 0,
+        totalXp,
+        alreadySolved: false,
+        durationSeconds: null,
+        timeBonus: 0,
+        score: 0,
+        newBadges: [],
+      };
     }
 
-    // Correct & first solve: upsert the submission as correct, award XP.
+    // Correct & first solve: compute temporal score from the lab session start
+    // (if any) and the number of hints revealed.
+    const startedAt = getActiveSessionStart(userId, challengeId);
+    const durationSeconds = startedAt
+      ? Math.max(0, Math.round((Date.now() - startedAt.getTime()) / 1000))
+      : null;
+    const revealedHints = await getRevealedHintCount(userId, challengeId);
+    const { score, timeBonus } = computeScore({ basePoints: points, durationSeconds, revealedHints });
+
+    // Upsert the submission as correct, award XP (base points only — unchanged).
     await client.query(
-      `INSERT INTO submissions (user_id, challenge_id, correct, points_awarded, submitted_flag)
-       VALUES ($1, $2, true, $3, $4)
+      `INSERT INTO submissions
+         (user_id, challenge_id, correct, points_awarded, submitted_flag, duration_seconds, time_bonus, score)
+       VALUES ($1, $2, true, $3, $4, $5, $6, $7)
        ON CONFLICT (user_id, challenge_id)
        DO UPDATE SET correct = true,
                      points_awarded = EXCLUDED.points_awarded,
                      submitted_flag = EXCLUDED.submitted_flag,
+                     duration_seconds = EXCLUDED.duration_seconds,
+                     time_bonus = EXCLUDED.time_bonus,
+                     score = EXCLUDED.score,
                      created_at = now()
        WHERE submissions.correct = false`,
-      [userId, challengeId, points, flag.slice(0, 256)],
+      [userId, challengeId, points, flag.slice(0, 256), durationSeconds, timeBonus, score],
     );
 
     await client.query(`UPDATE users SET xp = xp + $1 WHERE id = $2`, [points, userId]);
 
     await client.query('COMMIT');
     const totalXp = await currentXp(client, userId);
-    return { correct: true, awardedPoints: points, totalXp, alreadySolved: false };
+
+    // Evaluate badges AFTER the solve is committed (badge criteria read solve
+    // state). Best-effort: never fail the submit because of badge evaluation.
+    let newBadges = [];
+    try {
+      newBadges = await evaluateAndAwardBadges(userId);
+    } catch (err) {
+      logger.warn('Évaluation des badges échouée :', err instanceof Error ? err.message : err);
+    }
+
+    return {
+      correct: true,
+      awardedPoints: points,
+      totalXp,
+      alreadySolved: false,
+      durationSeconds,
+      timeBonus,
+      score,
+      newBadges,
+    };
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     throw err;

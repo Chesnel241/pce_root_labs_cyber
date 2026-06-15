@@ -11,7 +11,7 @@ import morgan from 'morgan';
 
 import { config } from './config/env.js';
 import { ping as dbPing, isConfigured as dbConfigured } from './db/pool.js';
-import { isDockerAvailable } from './services/docker.service.js';
+import { isDockerAvailable, labsRunningCount } from './services/docker.service.js';
 
 import { authRouter } from './routes/auth.routes.js';
 import { tracksRouter } from './routes/tracks.routes.js';
@@ -19,6 +19,7 @@ import { challengesRouter } from './routes/challenges.routes.js';
 import { leaderboardRouter } from './routes/leaderboard.routes.js';
 import { meRouter } from './routes/me.routes.js';
 import { labsRouter } from './routes/labs.routes.js';
+import { adminRouter } from './routes/admin.routes.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
 /**
@@ -55,6 +56,8 @@ export function createApp() {
       db,
       docker,
       version: config.version,
+      // Additive: number of currently-running lab sessions (in-memory registry).
+      labsRunning: labsRunningCount(),
     });
   });
 
@@ -65,6 +68,7 @@ export function createApp() {
   app.use('/api/leaderboard', leaderboardRouter);
   app.use('/api/me', meRouter);
   app.use('/api/labs', labsRouter);
+  app.use('/api/admin', adminRouter);
 
   // 404 + central error handler (must be last).
   app.use(notFound);
