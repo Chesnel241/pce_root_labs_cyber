@@ -59,7 +59,7 @@ export function attachTerminal(server) {
       return;
     }
 
-    if (url.pathname !== WS_PATH) {
+    if (!url.pathname.endsWith(WS_PATH)) {
       // Let other upgrade handlers (if any) deal with it; otherwise close.
       return;
     }
