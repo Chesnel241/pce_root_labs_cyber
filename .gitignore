@@ -46,3 +46,11 @@ __pycache__/
 **/_*.mjs
 **/_scratch*
 
+# --- Fixtures de labs : TOUJOURS versionnées (override les règles ci-dessus) ---
+# Les données de lab (logs S3, node_modules de démo contenant un paquet
+# malveillant volontaire, clés factices) doivent être committées, sinon elles
+# manquent sur un clone frais (VPS) -> build/exécution des labs cassés.
+!labs/**/lab-data/**
+!labs/**/lab-data/**/node_modules
+!labs/**/lab-data/**/node_modules/**
+
