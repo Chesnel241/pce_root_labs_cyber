@@ -8,7 +8,7 @@
 COMPOSE := docker compose
 
 .DEFAULT_GOAL := help
-.PHONY: help env acme config up down logs ps health schema seed backup labs-clean
+.PHONY: help env acme config up down logs ps health schema seed migrate backup deploy labs-clean
 
 help: ## Affiche cette aide
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -37,18 +37,23 @@ logs: ## Suit les logs du backend
 ps: ## État des services
 	$(COMPOSE) ps
 
-health: ## Vérifie l'endpoint de santé interne du backend
-	$(COMPOSE) exec backend wget -qO- http://127.0.0.1:4000/api/health || true
+health: ## Vérifie /api/health (scripts/healthcheck.sh, sort != 0 si KO)
+	./scripts/healthcheck.sh
 
 schema: ## (Ré)applique db/schema.sql à PostgreSQL
 	$(COMPOSE) exec -T postgres psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" < db/schema.sql
 
-seed: ## Seede la base (curriculum/challenges)
-	$(COMPOSE) exec backend node ../db/seed.js
+seed: ## Seede la base (curriculum/challenges) via scripts/migrate.sh
+	./scripts/migrate.sh --seed-only
 
-backup: ## Sauvegarde compressée de la base
-	$(COMPOSE) exec -T postgres pg_dump -U "$$POSTGRES_USER" "$$POSTGRES_DB" \
-		| gzip > backup-$$(date +%F).sql.gz
+migrate: ## Applique le schéma puis seede (scripts/migrate.sh, idempotent)
+	./scripts/migrate.sh
+
+backup: ## Sauvegarde compressée + horodatée de la base (scripts/backup-db.sh)
+	./scripts/backup-db.sh
+
+deploy: ## Déploiement de bout en bout sur le VPS (scripts/deploy.sh)
+	./scripts/deploy.sh
 
 labs-clean: ## Supprime de force les conteneurs de lab orphelins
 	@docker ps -aq --filter "label=pce.lab" | xargs -r docker rm -f

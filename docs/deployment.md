@@ -1,262 +1,301 @@
-# Déploiement — PCE Root Labs Cyber
+# Deployment Runbook — PCE Root Labs Cyber
 
-Runbook de déploiement de bout en bout. Topologie cible :
+End-to-end, numbered runbook to take the platform live. Read it top to bottom the
+first time; later deploys are just `./scripts/deploy.sh` (step 7).
+
+> Companion docs:
+> [operations.md](./operations.md) (day-2 ops, backups, lab hygiene, monitoring)
+> and [go-live-checklist.md](./go-live-checklist.md) (final sign-off checklist).
+
+## Target topology
 
 ```
                                 Internet
                                    │
                  ┌─────────────────┴──────────────────┐
                  │                                     │
-          app.exemple.tld                       api.exemple.tld
+            app.<domain>                          api.<domain>
                  │                                     │
         ┌────────▼─────────┐                  ┌────────▼─────────┐
-        │   Vercel (CDN)   │   HTTPS + WSS    │   VPS Hetzner    │
+        │   Vercel (CDN)   │   HTTPS + WSS    │   Hetzner VPS    │
         │  Frontend Next14 │ ───────────────► │  Traefik :80/443 │
-        └──────────────────┘                  │   TLS (LE)       │
+        └──────────────────┘                  │   TLS (Let'sEnc) │
                                               └────────┬─────────┘
-                                                       │ pce-net (interne)
+                                                       │ pce-net (internal)
                                          ┌─────────────┼──────────────┐
                                          │             │              │
                                    ┌─────▼─────┐ ┌─────▼─────┐  ┌─────▼──────┐
                                    │  backend  │ │ postgres  │  │ labs Docker│
-                                   │  :4000    │ │  :5432    │  │ (éphémères │
-                                   │  API + WS │ │ (interne) │  │  isolés)   │
+                                   │  :4000    │ │  :5432    │  │ (ephemeral │
+                                   │  API + WS │ │ (internal)│  │  isolated) │
                                    └───────────┘ └───────────┘  └────────────┘
 ```
 
-- **Frontend** : Next.js 14 sur **Vercel** (build/CDN gérés, HTTPS automatique).
-- **Backend** : Node/Express + WebSocket terminal + orchestrateur de labs
-  (dockerode), conteneurisé sur un **VPS** derrière **Traefik** (TLS Let's Encrypt).
-- **PostgreSQL** : conteneur sur le même VPS, **jamais exposé publiquement**.
-- **Labs** : conteneurs Docker **éphémères et isolés**, créés à la demande par le
-  backend (voir [Durcissement sécurité](#f-durcissement-securité)).
+- **Frontend** — Next.js 14 on **Vercel** (build + CDN + automatic HTTPS).
+- **Backend** — Node/Express + WebSocket terminal + lab orchestrator (dockerode),
+  containerized on a **Hetzner VPS** behind **Traefik** (Let's Encrypt HTTP-01).
+- **PostgreSQL** — container on the same VPS, **never publicly exposed**.
+- **Labs** — **ephemeral, isolated** Docker containers, created on demand by the
+  backend. They are intentionally vulnerable — see
+  [Hardening](#9-security-hardening-recap) and operations.md.
 
-Le frontend dialogue avec le backend via `NEXT_PUBLIC_API_URL` (HTTPS) et le
-terminal WebSocket via `wss://<api>/ws/terminal`.
+Compose services (`docker-compose.yml`): **`postgres`**, **`backend`**,
+**`traefik`**. The frontend ships separately on Vercel.
 
----
+The user-supplied inputs you need before starting (gather these now):
 
-## a. Frontend — déploiement Vercel
-
-1. Sur [vercel.com](https://vercel.com), **New Project** → importez le dépôt Git.
-2. **Root Directory** : `frontend` (le projet ne contient pas l'app à la racine).
-   La configuration `frontend/vercel.json` fixe déjà le framework Next.js et les
-   commandes `npm ci` / `npm run build`.
-3. **Environment Variables** (Project Settings → Environment Variables) :
-
-   | Variable              | Valeur                                  | Portée            |
-   | --------------------- | --------------------------------------- | ----------------- |
-   | `NEXT_PUBLIC_API_URL` | `https://api.votre-domaine.tld`         | Production (+ Preview) |
-
-   > Sans cette variable, le frontend démarre en **mode démo** (données locales
-   > issues de `data/curriculum.json`) et n'appelle pas l'API.
-
-4. **Deploy**. Vercel attribue un domaine `*.vercel.app` ; ajoutez ensuite votre
-   domaine custom (ex. `app.votre-domaine.tld`) dans **Settings → Domains**.
-5. **Important** : notez le domaine Vercel final — il devra être reporté côté
-   backend dans `CORS_ORIGIN` (étape c).
+| Input | Example | Used in |
+| ----- | ------- | ------- |
+| Root domain | `example.com` | DNS, CORS, ACME |
+| Frontend host | `app.example.com` | Vercel domain, `APP_HOST`, `CORS_ORIGIN` |
+| API host | `api.example.com` | DNS A record, `API_HOST`, `NEXT_PUBLIC_API_URL` |
+| ACME e-mail | `ops@example.com` | `ACME_EMAIL` **and** `traefik/traefik.yml` |
+| `JWT_SECRET` | `openssl rand -hex 32` | `.env` (required at runtime) |
+| `POSTGRES_PASSWORD` | `openssl rand -hex 24` | `.env` |
+| Admin e-mail(s) | `owner@example.com` | `ADMIN_EMAILS` |
 
 ---
 
-## b. Provisioning du VPS (Hetzner)
+## 1. Prerequisites
 
-1. **Créer le serveur** : Hetzner Cloud → un **CX22** (2 vCPU / 4 Go / ~€6/mois)
-   suffit pour démarrer. Image **Ubuntu 24.04 LTS**, clé SSH ajoutée.
-2. **DNS** — créez deux enregistrements **A** pointant vers l'IP du VPS :
+- A registered **domain** with access to its DNS zone (to add A records).
+- A **Vercel** account connected to the Git repository.
+- A **Hetzner Cloud** account (or any VPS provider) and an **SSH key pair**.
+- Locally: `git`, an SSH client, and `openssl` (to generate secrets).
+- Decide the two hostnames up front: `app.<domain>` (frontend) and
+  `api.<domain>` (backend). They appear in DNS, `.env`, Vercel, and Traefik.
 
-   | Type | Nom   | Valeur            |
-   | ---- | ----- | ----------------- |
-   | A    | `api` | `<IP_DU_VPS>`     |
-   | A    | `app` | `<IP_DU_VPS>` *(uniquement si frontend self-hosté ; sinon CNAME Vercel)* |
+---
 
-   Attendez la propagation DNS avant l'émission TLS (étape e).
-3. **Durcissement de base de l'hôte** :
+## 2. Frontend — deploy on Vercel
+
+1. Go to <https://vercel.com> → **Add New… → Project** → import this Git repo.
+2. Set **Root Directory** to **`frontend`** (the Next.js app is not at the repo
+   root). `frontend/vercel.json` already pins the framework and the
+   `npm ci` / `npm run build` commands.
+3. Add the environment variable (Project → Settings → Environment Variables):
+
+   | Variable | Value | Environments |
+   | -------- | ----- | ------------ |
+   | `NEXT_PUBLIC_API_URL` | `https://api.<domain>` | Production (+ Preview) |
+
+   > Without it the frontend falls back to **demo mode** (local data from
+   > `data/curriculum.json`) and never calls the API.
+
+4. Click **Deploy**. Vercel assigns a `*.vercel.app` URL.
+5. Add your custom domain in **Settings → Domains**: `app.<domain>`. Vercel shows
+   the DNS record to create (usually a CNAME to `cname.vercel-dns.com`, or an A
+   record — follow Vercel's instructions for `app.<domain>`).
+6. Note the exact final origin (`https://app.<domain>`) — it must match
+   `CORS_ORIGIN` on the backend (step 5).
+
+---
+
+## 3. Hetzner VPS — create and prepare the host
+
+1. **Create the server**: Hetzner Cloud → New Project → Add Server.
+   - Type **CX22** (2 vCPU / 4 GB, ~€6/mo) is the recommended baseline; **CX21**
+     works for light use. Bump to CX32/CX42 if many labs run concurrently.
+   - Image **Ubuntu 24.04 LTS**, attach your SSH key.
+2. **SSH in** and create a non-root deploy user + firewall (only SSH/HTTP/HTTPS):
    ```bash
-   ssh root@<IP_DU_VPS>
-   adduser deploy && usermod -aG sudo deploy        # utilisateur non-root
-   # Pare-feu : n'autoriser que SSH + HTTP + HTTPS
+   ssh root@<VPS_IP>
+   adduser deploy && usermod -aG sudo deploy
    ufw allow OpenSSH && ufw allow 80 && ufw allow 443 && ufw enable
-   # Désactiver le login root SSH et l'auth par mot de passe (clé SSH only)
+   # Then disable root SSH login + password auth (key-only) in sshd_config.
    ```
-4. **Installer Docker + plugin compose** (officiel) :
+3. **Install Docker engine + compose plugin** (official convenience script):
    ```bash
    curl -fsSL https://get.docker.com | sh
-   sudo usermod -aG docker deploy        # reconnectez-vous ensuite
+   sudo usermod -aG docker deploy        # log out/in for group to apply
    docker --version && docker compose version
    ```
-5. **Récupérer le code** :
+4. **Clone the repo** as the deploy user:
    ```bash
    sudo -iu deploy
-   git clone <URL_DU_DEPOT> pce_root_labs_cyber
+   git clone <REPO_URL> pce_root_labs_cyber
    cd pce_root_labs_cyber
    ```
 
 ---
 
-## c. Configuration `.env.production`
+## 4. DNS — A records
 
-Le compose lit un fichier `.env` à la racine (jamais committé, déjà gitignoré).
+Create these records in your DNS zone (TTL 300 is fine during setup):
+
+| Type  | Name  | Value | Purpose |
+| ----- | ----- | ----- | ------- |
+| A     | `api` | `<VPS_IP>` | Backend behind Traefik on the VPS |
+| A/CNAME | `app` | per Vercel | Frontend (Vercel; usually a CNAME — see step 2.5) |
+
+- `api.<domain>` **must** resolve to the VPS IP **before** Traefik tries to issue
+  a certificate (Let's Encrypt validates over HTTP-01 on port 80).
+- Verify propagation: `dig +short api.<domain>` should print the VPS IP.
+
+---
+
+## 5. `.env` — backend configuration
+
+The compose stack reads a root **`.env`** (git-ignored; never committed). Create
+it from the template on the VPS and fill in real values:
 
 ```bash
 cp .env.production.example .env
+chmod 600 .env
 nano .env
 ```
 
-Renseignez au minimum :
+Set **every** variable below (placeholders + comments live in the template):
 
-| Variable            | Détail                                                              |
-| ------------------- | ------------------------------------------------------------------- |
-| `POSTGRES_PASSWORD` | Mot de passe DB fort. `openssl rand -hex 24`                        |
-| `JWT_SECRET`        | Secret de signature JWT. `openssl rand -hex 32`. **Requis en prod.** |
-| `CORS_ORIGIN`       | Le **domaine Vercel exact** du frontend (ex. `https://app.votre-domaine.tld`). |
-| `API_HOST`          | Hôte public de l'API (ex. `api.votre-domaine.tld`).                 |
-| `ACME_EMAIL`        | E-mail Let's Encrypt (à reporter aussi dans `traefik/traefik.yml`). |
-| `LAB_TTL_MINUTES`   | TTL d'une session de lab (auto-stop). Défaut `60`.                  |
+| Variable | What to set | How |
+| -------- | ----------- | --- |
+| `POSTGRES_USER` | DB role (default `pce` is fine) | — |
+| `POSTGRES_PASSWORD` | Strong random DB password | `openssl rand -hex 24` |
+| `POSTGRES_DB` | DB name (default `pce_labs`) | — |
+| `DATABASE_URL` | **Leave commented** — compose derives it from `POSTGRES_*` (internal host `postgres`). Set only for an external DB. | — |
+| `JWT_SECRET` | **Required at runtime.** Long random secret | `openssl rand -hex 32` |
+| `JWT_EXPIRES_IN` | Token lifetime (default `7d`) | — |
+| `CORS_ORIGIN` | The **exact** Vercel origin, no trailing slash | `https://app.<domain>` |
+| `ADMIN_EMAILS` | CSV of admin account e-mails | `owner@<domain>` |
+| `ACME_EMAIL` | Let's Encrypt contact e-mail | also set in step 6 |
+| `API_HOST` | Public API hostname (= DNS A record) | `api.<domain>` |
+| `APP_HOST` | Public frontend hostname | `app.<domain>` |
+| `LAB_TTL_MINUTES` | Lab session auto-stop TTL (default `60`) | — |
+| `FLAG_PREFIX` | CTF flag prefix (default `PCE`) | — |
 
-`DATABASE_URL` est dérivé automatiquement par le compose à partir des variables
-`POSTGRES_*` (hôte interne `postgres`). Ne le surchargez que pour une base externe.
-
-> **`API_HOST` doit correspondre à l'enregistrement DNS A** créé à l'étape b, et
-> figure dans le label de routage Traefik du backend.
-
----
-
-## d. Démarrage des services
-
-1. **Préparer le stockage ACME** (certificats TLS) :
-   ```bash
-   touch traefik/acme.json && chmod 600 traefik/acme.json
-   ```
-   > Permissions 600 obligatoires, sinon Traefik refuse de l'utiliser.
-2. **Valider la configuration** sans rien démarrer :
-   ```bash
-   docker compose config        # doit s'afficher sans erreur
-   ```
-3. **Démarrer** :
-   ```bash
-   docker compose up -d --build
-   docker compose ps            # tous les services "healthy"
-   docker compose logs -f backend
-   ```
-4. **Schéma de base** : appliqué automatiquement au **premier** démarrage du
-   volume Postgres (montage `db/schema.sql` → `docker-entrypoint-initdb.d`).
-   Pour le (ré)appliquer manuellement :
-   ```bash
-   docker compose exec -T postgres \
-     psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" < db/schema.sql
-   ```
-5. **Seed** (données curriculum/challenges en base) — depuis le conteneur backend :
-   ```bash
-   docker compose exec backend node ../db/seed.js
-   # (équivaut au script `npm run seed` du backend)
-   ```
-   > Le seed nécessite que `DATABASE_URL` soit accessible depuis le backend, ce
-   > qui est le cas via le réseau interne `pce-net`.
-6. **Vérifier la santé** :
-   ```bash
-   curl -s https://api.votre-domaine.tld/api/health | jq
-   # → {"status":"ok","db":...,"docker":...,"version":...}
-   ```
+> `CORS_ORIGIN` must match the Vercel origin **character for character** or the
+> browser will block API calls. `API_HOST` must equal the `api` A record from
+> step 4 (it drives the Traefik router rule for the backend).
 
 ---
 
-## e. TLS Traefik (Let's Encrypt)
+## 6. Traefik — set the ACME e-mail
 
-- Traefik émet et renouvelle les certificats via le **challenge HTTP-01** sur
-  l'entrypoint `web` (:80), puis sert tout en HTTPS sur `websecure` (:443). La
-  redirection HTTP→HTTPS est permanente (cf. `traefik/traefik.yml`).
-- **Pré-requis** : le DNS `api.*` doit déjà pointer vers le VPS et le port **80**
-  être ouvert/accessible publiquement (Let's Encrypt valide via HTTP).
-- Le certificat est stocké dans `traefik/acme.json` (persistant, chmod 600).
-- **Pour tester sans atteindre le rate-limit Let's Encrypt**, pointez d'abord sur
-  le serveur de staging :
-  ```yaml
-  # traefik/traefik.yml, sous certificatesResolvers.letsencrypt.acme :
-  caServer: https://acme-staging-v02.api.letsencrypt.org/directory
-  ```
-  Retirez cette ligne (et supprimez `acme.json`) pour passer en production.
-- En-têtes de sécurité (HSTS, nosniff, frameDeny…) et limitation de débit
-  optionnelle sont fournis dans `traefik/dynamic.yml`. Le tableau de bord Traefik
-  reste `insecure: false` (non exposé tel quel).
-
----
-
-## f. Durcissement sécurité
-
-> Cette plateforme exécute des conteneurs de lab **intentionnellement vulnérables**.
-> Un lab compromis ne doit JAMAIS pouvoir atteindre l'API, la base, l'hôte, ni
-> Internet. Traitez chaque lab comme hostile.
-
-**Isolation réseau**
-- Les labs sont lancés par le backend (dockerode) avec `NetworkMode: none` par
-  défaut : pas d'accès réseau sortant ni latéral. Ne les attachez **jamais** au
-  réseau `pce-net` ni à un réseau routable.
-- **N'exposez jamais** un port de lab publiquement. L'unique voie d'accès est le
-  terminal WebSocket du backend (`/ws/terminal`), authentifié par JWT et lié à la
-  session/propriétaire.
-- Seul Traefik publie des ports (80/443). Backend et Postgres restent sur le
-  réseau interne (`expose:` / pas de `ports:`), inatteignables depuis l'extérieur.
-
-**Limites de ressources (anti-DoS)**
-- Chaque conteneur de lab tourne avec des plafonds mémoire / CPU / PIDs (appliqués
-  côté backend). Cela évite qu'un lab épuise les ressources du VPS.
-- Le service `backend` lui-même a une limite CPU/mémoire dans le compose.
-- Activez la limitation de débit Traefik (`rate-limit@file`) sur le routeur
-  backend en cas d'abus.
-
-**TTL et nettoyage des labs**
-- `LAB_TTL_MINUTES` (défaut 60) provoque l'**arrêt automatique** des sessions de
-  lab expirées : aucun conteneur vulnérable ne reste indéfiniment en vie.
-- Vérifiez périodiquement l'absence de conteneurs orphelins :
-  ```bash
-  docker ps --filter "label=pce.lab" --format '{{.Names}}\t{{.Status}}'
-  # nettoyage manuel d'urgence :
-  docker ps -aq --filter "label=pce.lab" | xargs -r docker rm -f
-  ```
-- Planifiez un nettoyage des images/volumes inutilisés : `docker system prune -f`.
-
-**Socket Docker**
-- Le backend monte `/var/run/docker.sock` (en lecture/écriture) — c'est
-  équivalent à un **accès root sur l'hôte**. C'est nécessaire à l'orchestration,
-  mais cela fait du backend une surface critique : gardez l'image à jour, limitez
-  les origines CORS, et n'exposez aucun endpoint d'administration non authentifié.
-- Traefik ne monte le socket qu'en **lecture seule** (`:ro`).
-
-**Secrets**
-- `JWT_SECRET` et `POSTGRES_PASSWORD` vivent uniquement dans le `.env` (chmod 600,
-  jamais committé). Faites-les tourner en cas de compromission présumée.
-- N'exposez jamais la base : pas de `ports:` sur le service `postgres`.
-
-**Sauvegardes**
-- Le volume `pce-pgdata` contient utilisateurs, progression et flags. Sauvegardez :
-  ```bash
-  docker compose exec -T postgres pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" \
-    | gzip > backup-$(date +%F).sql.gz
-  ```
-
----
-
-## g. Coûts (ordre de grandeur)
-
-| Poste              | Solution           | Coût indicatif      |
-| ------------------ | ------------------ | ------------------- |
-| Frontend           | Vercel (Hobby)     | **€0** (usage perso) |
-| VPS backend + DB   | Hetzner CX22       | **~€6 / mois**       |
-| TLS                | Let's Encrypt      | €0                  |
-| Domaine            | Registrar          | ~€10 / an           |
-
-> Total typique : **~€6–7/mois**. Montez en gamme (CX32/CX42) si beaucoup de
-> labs concurrents tournent simultanément.
-
----
-
-## Mise à jour / rollback
+Traefik does **not** substitute `${ACME_EMAIL}` inside the static
+`traefik/traefik.yml`. Edit it once and put a **real** address:
 
 ```bash
-git pull
-docker compose up -d --build        # reconstruit le backend, conserve la DB
-docker compose logs -f backend
+nano traefik/traefik.yml
+# certificatesResolvers.letsencrypt.acme.email: "ops@<domain>"
 ```
 
-Le volume `pce-pgdata` survit aux redéploiements. Pour repartir de zéro (efface
-les données !) : `docker compose down -v`.
+(Use the same address you put in `ACME_EMAIL`.) Then prepare the ACME cert store
+(required permissions, or Traefik refuses it):
+
+```bash
+touch traefik/acme.json && chmod 600 traefik/acme.json
+```
+
+> Tip: to avoid Let's Encrypt rate limits while testing, temporarily set
+> `caServer: https://acme-staging-v02.api.letsencrypt.org/directory` under
+> `certificatesResolvers.letsencrypt.acme`, then remove it (and delete
+> `acme.json`) for the real certificate. Details in step 8 / operations.md.
+
+---
+
+## 7. Deploy
+
+Validate compose, then run the one-shot deploy script:
+
+```bash
+docker compose config        # prints merged config with no errors
+./scripts/deploy.sh          # build → up → wait health → migrate → verify
+```
+
+`scripts/deploy.sh` is idempotent and safe to re-run. It:
+
+1. `git pull --ff-only` (skip with `--no-pull`),
+2. `docker compose build`,
+3. `docker compose up -d` (postgres, backend, traefik),
+4. waits for the **postgres** healthcheck to report *healthy*,
+5. runs `scripts/migrate.sh` (apply `db/schema.sql`, then seed `db/seed.js` —
+   both idempotent; skip the seed with `--no-seed`),
+6. verifies `/api/health` returns `{"status":"ok",...}` from inside the network.
+
+> Schema also auto-applies on the **first** postgres boot (`db/schema.sql` is
+> mounted into `docker-entrypoint-initdb.d`). `migrate.sh` re-applies it safely
+> (`CREATE … IF NOT EXISTS`) and always runs the seed. To run migration on its
+> own later: `./scripts/migrate.sh` (or `make migrate`).
+
+---
+
+## 8. Verify — TLS, health, WSS terminal
+
+1. **TLS + public health** (after DNS is live, give Traefik ~30–60s on first run
+   to obtain the certificate):
+   ```bash
+   curl -sS https://api.<domain>/api/health | jq
+   # → {"status":"ok","db":...,"docker":...,"version":...}
+   ./scripts/healthcheck.sh          # exits 0 only if status:ok
+   ```
+   Confirm the certificate chain (issuer should be Let's Encrypt, not the
+   self-signed default):
+   ```bash
+   curl -sSI https://api.<domain>/api/health | head -1     # HTTP/2 200
+   ```
+2. **HTTP→HTTPS redirect** is permanent:
+   ```bash
+   curl -sSI http://api.<domain>/api/health | grep -i location   # → https://...
+   ```
+3. **Frontend**: open `https://app.<domain>` — it should load and talk to the API
+   (register/login work, tracks load from the DB, not demo mode).
+4. **WSS terminal**: in the app, start a lab on a challenge and open its terminal.
+   The browser connects to `wss://api.<domain>/ws/terminal?sessionId=…&token=…`
+   (JWT-authenticated). A working interactive shell confirms the full path
+   (Traefik → backend WS → lab container) is up.
+
+If anything fails: `docker compose ps` and `docker compose logs -f traefik backend`
+(see operations.md → Troubleshooting).
+
+---
+
+## 9. Security hardening (recap)
+
+> This platform runs **intentionally vulnerable** lab containers. A compromised
+> lab must NEVER reach the API, the database, the host, or the Internet. Treat
+> every lab as hostile. Full operational detail is in **operations.md → Lab
+> container hygiene**.
+
+- **Network isolation** — labs launch with `NetworkMode: none` (no egress, no
+  lateral movement). Never attach a lab to `pce-net` or any routable network, and
+  **never expose a lab port publicly**. The only access path is the
+  JWT-authenticated WebSocket terminal on the backend.
+- **Resource limits** — each lab is capped (memory/CPU/PIDs) by the backend; the
+  backend service itself has CPU/memory limits in compose.
+- **TTL reaper** — `LAB_TTL_MINUTES` (default 60) auto-stops expired lab sessions
+  so no vulnerable container lingers. Sweep orphans with `scripts/reset-labs.sh`.
+- **No public DB** — postgres has no `ports:`, only `pce-net`. Only Traefik
+  publishes ports (80/443).
+- **Docker socket** — the backend mounts `/var/run/docker.sock` (root-equivalent)
+  to orchestrate labs; Traefik mounts it read-only. Keep the backend image
+  patched and CORS tight.
+- **Secrets** — `JWT_SECRET` and `POSTGRES_PASSWORD` live only in `.env`
+  (chmod 600). Rotate them on suspected compromise (operations.md → Incident
+  response).
+
+---
+
+## 10. Cost (ballpark)
+
+| Item | Solution | Indicative cost |
+| ---- | -------- | --------------- |
+| Frontend | Vercel (Hobby) | **€0** (personal use) |
+| VPS (backend + DB) | Hetzner CX22 | **~€6 / month** |
+| TLS | Let's Encrypt | €0 |
+| Domain | Registrar | ~€10 / year |
+
+> Typical total: **~€6–7/month**. Scale up (CX32/CX42) for many concurrent labs.
+
+---
+
+## 11. Update / rollback
+
+```bash
+./scripts/deploy.sh                 # pull + rebuild + migrate + verify
+# or, manually:
+git pull && docker compose up -d --build && docker compose logs -f backend
+```
+
+The `pce-pgdata` volume and `traefik/acme.json` survive redeploys. Back up the DB
+first (`./scripts/backup-db.sh`). To wipe everything (destroys data!):
+`docker compose down -v`. See operations.md for restore and rollback detail.
