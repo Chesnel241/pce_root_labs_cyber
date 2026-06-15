@@ -135,7 +135,7 @@
           "xp": 300,
           "summary": "Découvrir et corriger les failles des pipelines d'intégration.",
           "challenges": [
-            { "id": "3.1.1", "title": "Secrets hardcodés (Jenkinsfile)", "description": "Trouver des secrets hardcodés dans un Jenkinsfile.", "points": 75 },
+            { "id": "3.1.1", "title": "Secrets hardcodés (Jenkinsfile)", "description": "Trouver des secrets hardcodés dans un Jenkinsfile.", "points": 75, "lab": "devsecops-02-jenkins-secrets" },
             { "id": "3.1.2", "title": "Pipeline injection attack", "description": "Pipeline injection attack via un paramètre non sanitisé.", "points": 75 },
             { "id": "3.1.3", "title": "Secrets GitHub Actions dans les logs", "description": "Vol de secrets GitHub Actions exposés dans les logs.", "points": 75 },
             { "id": "3.1.4", "title": "Audit pipeline Jenkins + correctif", "description": "Audit d'un pipeline Jenkins vulnérable et correctif.", "points": 75 }
@@ -209,7 +209,7 @@
           "xp": 400,
           "summary": "Exploiter et corriger les autorisations Kubernetes.",
           "challenges": [
-            { "id": "4.2.1", "title": "ClusterRoleBinding trop permissif", "description": "RBAC misconfiguration (ClusterRoleBinding trop permissif).", "points": 100 },
+            { "id": "4.2.1", "title": "ClusterRoleBinding trop permissif", "description": "RBAC misconfiguration (ClusterRoleBinding trop permissif).", "points": 100, "lab": "container-02-k8s-rbac" },
             { "id": "4.2.2", "title": "Dashboard K8s sans auth", "description": "Accès au Dashboard Kubernetes exposé sans auth.", "points": 100 },
             { "id": "4.2.3", "title": "Etcd data exposure", "description": "Etcd data exposure (lire les secrets non chiffrés).", "points": 100 },
             { "id": "4.2.4", "title": "Service Account token abuse", "description": "Service Account token abuse pour escalade de privilèges.", "points": 100 }

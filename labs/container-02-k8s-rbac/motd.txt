@@ -1,0 +1,12 @@
+PCE Root Labs — Lab 4.2.1 · ClusterRoleBinding trop permissif
+-------------------------------------------------------------
+Objectif : repérer la liaison RBAC qui accorde les droits d'administration du
+cluster (cluster-admin : verbs:* / resources:*) a un ServiceAccount.
+
+L'état RBAC est interrogeable via le shim `kubectl` (hors-ligne) :
+  kubectl get clusterrolebindings
+  kubectl get clusterroles
+  kubectl describe clusterrolebinding <name>
+  kubectl audit-rbac      # détecte la liaison fautive et révèle le flag
+
+Le flag est au format PCE{...}.

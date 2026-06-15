@@ -1,0 +1,64 @@
+// =============================================================================
+// pce-billing-api — pipeline de déploiement Jenkins (déclaratif)
+//
+// MAUVAISE PRATIQUE (volontaire) : les credentials sont codés EN DUR dans le
+// pipeline au lieu d'utiliser le Credentials Store de Jenkins / withCredentials.
+// N'importe qui ayant accès au Jenkinsfile (donc au dépôt) lit les secrets.
+// =============================================================================
+pipeline {
+    agent any
+
+    environment {
+        // --- Credentials AWS du compte de service "billing-deployer" ---------
+        // À NE JAMAIS committer : à migrer vers withCredentials([...]).
+        AWS_ACCESS_KEY_ID     = "AKIAY34FZKBOKMUTVV7A"
+        AWS_SECRET_ACCESS_KEY = "PCE{jenkins_plaintext_aws_creds_2024}"
+        AWS_DEFAULT_REGION    = "eu-west-3"
+
+        // Mot de passe de la base de prod (en clair lui aussi).
+        DB_PASSWORD = "Pr0d!Billing#2024"
+
+        ARTIFACT_BUCKET = "s3://pce-ci-artifacts/billing-api"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'pip install -r requirements.txt'
+                sh 'python -m pytest -q'
+            }
+        }
+
+        stage('Package & push artifact') {
+            steps {
+                // Les creds AWS en clair sont exportés tels quels vers l'env shell.
+                sh '''
+                    tar czf billing-api.tar.gz app/
+                    aws s3 cp billing-api.tar.gz ${ARTIFACT_BUCKET}/billing-api.tar.gz
+                '''
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh '''
+                    echo "Déploiement avec la clé ${AWS_ACCESS_KEY_ID}"
+                    PGPASSWORD=${DB_PASSWORD} psql -h db.internal -U billing -c "select 1"
+                    ./deploy.sh
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline terminé pour pce-billing-api."
+        }
+    }
+}

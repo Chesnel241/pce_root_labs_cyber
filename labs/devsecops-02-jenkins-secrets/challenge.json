@@ -1,0 +1,12 @@
+{
+  "id": "3.1.1",
+  "title": "Secrets en clair dans Jenkins",
+  "flag": "PCE{jenkins_plaintext_aws_creds_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/bash",
+  "hints": [
+    "Les artefacts du pipeline sont dans /srv/jenkins : listez-les (ls) puis lisez le pipeline (cat Jenkinsfile).",
+    "Le bloc environment { } du Jenkinsfile et le job-config.xml déclarent des credentials AWS en dur. Cherchez-les : grep -ri \"AWS_SECRET\" /srv/jenkins.",
+    "La valeur de AWS_SECRET_ACCESS_KEY est le flag PCE{...} (le même secret apparaît en defaultValue dans job-config.xml)."
+  ]
+}

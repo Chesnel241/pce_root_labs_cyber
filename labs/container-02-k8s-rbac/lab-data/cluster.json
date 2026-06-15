@@ -1,0 +1,74 @@
+{
+  "_comment": "État RBAC Kubernetes simulé, lu par le shim kubectl. Le namespace 'prod' héberge une application. Une ClusterRoleBinding ('ci-bot-cluster-admin') lie le ClusterRole 'cluster-admin' (verbs:* / resources:* / apiGroups:*) au ServiceAccount 'ci-bot' du namespace 'ci'. C'est une escalade de privilèges critique : ce SA peut tout faire sur tout le cluster. `kubectl audit-rbac` révèle le flag.",
+  "flag": "PCE{k8s_clusteradmin_binding_2024}",
+  "serviceAccounts": [
+    { "namespace": "kube-system", "name": "default" },
+    { "namespace": "prod", "name": "default" },
+    { "namespace": "prod", "name": "payments-api" },
+    { "namespace": "ci", "name": "default" },
+    { "namespace": "ci", "name": "ci-bot" }
+  ],
+  "clusterRoles": [
+    {
+      "name": "cluster-admin",
+      "rules": [
+        { "apiGroups": ["*"], "resources": ["*"], "verbs": ["*"] },
+        { "nonResourceURLs": ["*"], "verbs": ["*"] }
+      ]
+    },
+    {
+      "name": "view",
+      "rules": [
+        { "apiGroups": ["", "apps"], "resources": ["pods", "deployments", "services", "configmaps"], "verbs": ["get", "list", "watch"] }
+      ]
+    },
+    {
+      "name": "system:node",
+      "rules": [
+        { "apiGroups": [""], "resources": ["nodes", "pods"], "verbs": ["get", "list", "watch"] }
+      ]
+    }
+  ],
+  "roles": [
+    {
+      "namespace": "prod",
+      "name": "payments-reader",
+      "rules": [
+        { "apiGroups": [""], "resources": ["pods", "configmaps"], "verbs": ["get", "list"] }
+      ]
+    }
+  ],
+  "clusterRoleBindings": [
+    {
+      "name": "kube-system-admin",
+      "roleRef": { "kind": "ClusterRole", "name": "system:node" },
+      "subjects": [
+        { "kind": "ServiceAccount", "name": "default", "namespace": "kube-system" }
+      ]
+    },
+    {
+      "name": "prod-viewers",
+      "roleRef": { "kind": "ClusterRole", "name": "view" },
+      "subjects": [
+        { "kind": "ServiceAccount", "name": "payments-api", "namespace": "prod" }
+      ]
+    },
+    {
+      "name": "ci-bot-cluster-admin",
+      "roleRef": { "kind": "ClusterRole", "name": "cluster-admin" },
+      "subjects": [
+        { "kind": "ServiceAccount", "name": "ci-bot", "namespace": "ci" }
+      ]
+    }
+  ],
+  "roleBindings": [
+    {
+      "namespace": "prod",
+      "name": "payments-reader-binding",
+      "roleRef": { "kind": "Role", "name": "payments-reader" },
+      "subjects": [
+        { "kind": "ServiceAccount", "name": "default", "namespace": "prod" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<!--
+  config.xml du job Jenkins "pce-billing-api-deploy".
+
+  MAUVAISE PRATIQUE : des paramètres "password" sont stockés avec une valeur
+  par défaut EN CLAIR dans le XML du job. Le config.xml est lisible par tout
+  utilisateur ayant un accès Job/Configure (ou un accès disque au master).
+-->
+<flow-definition plugin="workflow-job@1400.v7fd111b_ec82f">
+  <description>Déploiement de pce-billing-api vers AWS.</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>AWS_ACCESS_KEY_ID</name>
+          <description>Clé d'accès AWS du déployeur</description>
+          <defaultValue>AKIAY34FZKBOKMUTVV7A</defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.PasswordParameterDefinition>
+          <name>AWS_SECRET_ACCESS_KEY</name>
+          <description>Secret AWS du déployeur (devrait être un credential, pas un param)</description>
+          <defaultValue>PCE{jenkins_plaintext_aws_creds_2024}</defaultValue>
+        </hudson.model.PasswordParameterDefinition>
+        <hudson.model.PasswordParameterDefinition>
+          <name>DB_PASSWORD</name>
+          <description>Mot de passe Postgres prod</description>
+          <defaultValue>Pr0d!Billing#2024</defaultValue>
+        </hudson.model.PasswordParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@3826.v0">
+    <scm class="hudson.plugins.git.GitSCM" plugin="git@5.2.0">
+      <userRemoteConfigs>
+        <hudson.plugins.git.UserRemoteConfig>
+          <url>git@github.com:pce-corp/pce-billing-api.git</url>
+        </hudson.plugins.git.UserRemoteConfig>
+      </userRemoteConfigs>
+      <branches>
+        <hudson.plugins.git.BranchSpec>
+          <name>*/main</name>
+        </hudson.plugins.git.BranchSpec>
+      </branches>
+    </scm>
+    <scriptPath>Jenkinsfile</scriptPath>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

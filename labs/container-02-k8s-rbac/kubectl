@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+"""Mock `kubectl` HORS-LIGNE pour le lab RBAC.
+
+Lit l'état RBAC simulé depuis cluster.json (aucun cluster réel) et répond à un
+sous-ensemble de commandes : get/describe des (cluster)rolebindings & roles,
+plus une commande maison `audit-rbac` qui détecte les liaisons vers un rôle
+d'administration du cluster et révèle le flag.
+"""
+import json
+import os
+import sys
+
+SEARCH = (
+    "./cluster.json",
+    "./lab-data/cluster.json",
+    "/srv/k8s/cluster.json",
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), "cluster.json"),
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), "lab-data", "cluster.json"),
+)
+
+
+def load():
+    for path in SEARCH:
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as handle:
+                return json.load(handle)
+    sys.stderr.write("kubectl: impossible de joindre le cluster (cluster.json introuvable)\n")
+    sys.exit(1)
+
+
+def is_admin_rule(rule):
+    star = lambda xs: "*" in (xs or [])
+    return star(rule.get("verbs")) and (star(rule.get("resources")) or star(rule.get("apiGroups")))
+
+
+def cluster_admin_roles(data):
+    names = set()
+    for role in data.get("clusterRoles", []):
+        if any(is_admin_rule(r) for r in role.get("rules", [])):
+            names.add(role["name"])
+    return names
+
+
+def fmt_subject(s):
+    return f"{s.get('kind')}/{s.get('name')} (ns={s.get('namespace', '-')})"
+
+
+def main():
+    data = load()
+    args = sys.argv[1:]
+    if not args:
+        print("usage: kubectl [get|describe|audit-rbac] ...")
+        return
+
+    verb, rest = args[0], args[1:]
+
+    if verb == "audit-rbac":
+        admin_roles = cluster_admin_roles(data)
+        offenders = [
+            b for b in data.get("clusterRoleBindings", [])
+            if b.get("roleRef", {}).get("name") in admin_roles
+        ]
+        # On ignore la liaison système légitime kube-system/default -> system:node.
+        print("== Audit RBAC : liaisons vers un rôle d'administration du cluster ==\n")
+        critical = []
+        for b in offenders:
+            for s in b.get("subjects", []):
+                if s.get("namespace") == "kube-system":
+                    continue
+                critical.append((b, s))
+        if not critical:
+            print("Aucune liaison cluster-admin suspecte.")
+            return
+        for b, s in critical:
+            print(f"[CRITIQUE] ClusterRoleBinding '{b['name']}'")
+            print(f"           roleRef  -> ClusterRole/{b['roleRef']['name']} (verbs:* resources:*)")
+            print(f"           subject  -> {fmt_subject(s)}")
+            print("           => ce compte de service peut TOUT faire sur l'ensemble du cluster.\n")
+        print(f"FLAG: {data['flag']}")
+        return
+
+    if verb == "get":
+        if not rest:
+            print("usage: kubectl get <resource>")
+            return
+        res = rest[0].lower()
+        as_json = "-o" in rest and "json" in rest
+        if res in ("clusterrolebindings", "clusterrolebinding", "crb"):
+            items = data.get("clusterRoleBindings", [])
+            named = [a for a in rest[1:] if not a.startswith("-")]
+            if named:
+                items = [b for b in items if b["name"] in named]
+            if as_json:
+                print(json.dumps(items, indent=2))
+                return
+            print(f"{'NAME':32}{'ROLE':22}SUBJECTS")
+            for b in items:
+                subs = ", ".join(fmt_subject(s) for s in b.get("subjects", []))
+                print(f"{b['name']:32}{'ClusterRole/' + b['roleRef']['name']:22}{subs}")
+            return
+        if res in ("clusterroles", "clusterrole"):
+            for r in data.get("clusterRoles", []):
+                print(r["name"])
+            return
+        if res in ("serviceaccounts", "sa"):
+            print(f"{'NAMESPACE':16}NAME")
+            for s in data.get("serviceAccounts", []):
+                print(f"{s['namespace']:16}{s['name']}")
+            return
+        if res in ("rolebindings", "rolebinding"):
+            for b in data.get("roleBindings", []):
+                print(f"{b['namespace']}/{b['name']} -> Role/{b['roleRef']['name']}")
+            return
+        print(f"kubectl: ressource inconnue '{res}'")
+        return
+
+    if verb == "describe":
+        if len(rest) >= 2 and rest[0].startswith("clusterrolebinding"):
+            for b in data.get("clusterRoleBindings", []):
+                if b["name"] == rest[1]:
+                    print(json.dumps(b, indent=2))
+                    return
+            print(f"kubectl: clusterrolebinding '{rest[1]}' introuvable")
+            return
+        print("usage: kubectl describe clusterrolebinding <name>")
+        return
+
+    print(f"kubectl: commande inconnue '{verb}'")
+
+
+if __name__ == "__main__":
+    main()

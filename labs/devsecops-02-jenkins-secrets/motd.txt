@@ -1,0 +1,11 @@
+PCE Root Labs — Lab 3.1.1 · Secrets en clair dans Jenkins
+---------------------------------------------------------
+Objectif : extraire le credential AWS codé EN DUR dans les artefacts du
+pipeline Jenkins du projet "pce-billing-api".
+
+Les fichiers du job se trouvent dans /srv/jenkins :
+  - Jenkinsfile      (pipeline déclaratif)
+  - job-config.xml   (config.xml du job Jenkins)
+
+Indice : grep -ri "AWS_SECRET" /srv/jenkins
+Le flag est la valeur de AWS_SECRET_ACCESS_KEY (format PCE{...}).

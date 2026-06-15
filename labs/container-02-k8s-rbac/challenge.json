@@ -1,0 +1,12 @@
+{
+  "id": "4.2.1",
+  "title": "ClusterRoleBinding trop permissif",
+  "flag": "PCE{k8s_clusteradmin_binding_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/bash",
+  "hints": [
+    "Énumérez les liaisons de cluster : kubectl get clusterrolebindings. Une liaison cible le ClusterRole 'cluster-admin'.",
+    "Inspectez-la : kubectl describe clusterrolebinding ci-bot-cluster-admin. Elle lie cluster-admin (verbs:* / resources:*) au ServiceAccount ci/ci-bot.",
+    "Confirmez l'escalade et récupérez le flag : kubectl audit-rbac. Le flag est au format PCE{...}."
+  ]
+}

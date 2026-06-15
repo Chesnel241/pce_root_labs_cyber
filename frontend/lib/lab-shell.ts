@@ -833,10 +833,145 @@ function cisAuditScenario(): ShellScenario {
   };
 }
 
+/** Scénario du lab 3.1.1 — secrets en clair dans les artefacts Jenkins. */
+function jenkinsSecretsScenario(): ShellScenario {
+  const flag = "PCE{jenkins_plaintext_aws_creds_2024}";
+  return {
+    prompt: "analyst@pce-lab:/srv/jenkins$ ",
+    banner: [
+      "\x1b[1mPCE Root Labs — Lab 3.1.1 · Secrets en clair dans Jenkins (mode démo)\x1b[0m",
+      "Objectif : extraire le credential AWS codé en dur dans le pipeline.",
+      "Indice : les artefacts du job sont ici (Jenkinsfile, job-config.xml).",
+      "Tapez \x1b[36mhelp\x1b[0m pour la liste des commandes.",
+      "",
+    ],
+    run(input) {
+      const cmd = input.trim();
+      if (!cmd) return { lines: [] };
+      if (cmd === "clear") return { clear: true };
+      if (cmd === "whoami") return { lines: ["analyst"] };
+      if (cmd === "help") {
+        return {
+          lines: [
+            "Commandes : help, clear, whoami, ls, cat <fichier>, grep -ri <motif> .",
+            "Astuce : cherchez les credentials AWS codés en dur.",
+          ],
+        };
+      }
+      if (cmd === "ls") return { lines: ["Jenkinsfile  job-config.xml"] };
+      if (cmd.startsWith("cat") && cmd.includes("Jenkinsfile")) {
+        return {
+          lines: [
+            "pipeline {",
+            "  environment {",
+            '    AWS_ACCESS_KEY_ID     = "AKIAY34FZKBOKMUTVV7A"',
+            `    AWS_SECRET_ACCESS_KEY = "\x1b[32m${flag}\x1b[0m"`,
+            '    DB_PASSWORD           = "Pr0d!Billing#2024"',
+            "  }",
+            "  /* ... stages ... */",
+            "}",
+          ],
+        };
+      }
+      if (cmd.startsWith("cat") && cmd.includes("job-config")) {
+        return {
+          lines: [
+            "<PasswordParameterDefinition>",
+            "  <name>AWS_SECRET_ACCESS_KEY</name>",
+            `  <defaultValue>\x1b[32m${flag}\x1b[0m</defaultValue>`,
+            "</PasswordParameterDefinition>",
+          ],
+        };
+      }
+      if (cmd.startsWith("grep") && /aws_secret/i.test(cmd)) {
+        return {
+          lines: [
+            `Jenkinsfile:    AWS_SECRET_ACCESS_KEY = "\x1b[32m${flag}\x1b[0m"`,
+            `job-config.xml: <defaultValue>\x1b[32m${flag}\x1b[0m</defaultValue>`,
+            "",
+            "Bien joué — soumettez ce flag à droite.",
+          ],
+        };
+      }
+      return { lines: [`${cmd.split(" ")[0]}: commande non trouvée`] };
+    },
+  };
+}
+
+/** Scénario du lab 4.2.1 — ClusterRoleBinding trop permissif (RBAC). */
+function k8sRbacScenario(): ShellScenario {
+  const flag = "PCE{k8s_clusteradmin_binding_2024}";
+  return {
+    prompt: "analyst@pce-lab:~$ ",
+    banner: [
+      "\x1b[1mPCE Root Labs — Lab 4.2.1 · ClusterRoleBinding trop permissif (mode démo)\x1b[0m",
+      "Objectif : repérer la liaison RBAC qui accorde cluster-admin à un ServiceAccount.",
+      "Indice : interrogez le cluster via kubectl (get/describe/audit-rbac).",
+      "Tapez \x1b[36mhelp\x1b[0m pour la liste des commandes.",
+      "",
+    ],
+    run(input) {
+      const cmd = input.trim();
+      if (!cmd) return { lines: [] };
+      if (cmd === "clear") return { clear: true };
+      if (cmd === "whoami") return { lines: ["analyst"] };
+      if (cmd === "help") {
+        return {
+          lines: [
+            "Commandes : help, clear, kubectl get clusterrolebindings,",
+            "  kubectl describe clusterrolebinding <name>, kubectl audit-rbac",
+          ],
+        };
+      }
+      if (cmd.startsWith("kubectl get clusterrolebinding")) {
+        return {
+          lines: [
+            "NAME                  ROLE                       SUBJECTS",
+            "kube-system-admin     ClusterRole/system:node    SA/default (kube-system)",
+            "prod-viewers          ClusterRole/view           SA/payments-api (prod)",
+            "ci-bot-cluster-admin  ClusterRole/cluster-admin  SA/ci-bot (ci)",
+          ],
+        };
+      }
+      if (cmd.startsWith("kubectl describe") && cmd.includes("ci-bot-cluster-admin")) {
+        return {
+          lines: [
+            "Name:        ci-bot-cluster-admin",
+            "Role:        ClusterRole/cluster-admin  (verbs:* resources:* apiGroups:*)",
+            "Subjects:    ServiceAccount  ci-bot  (namespace ci)",
+            "\x1b[33m=> ce ServiceAccount peut TOUT faire sur l'ensemble du cluster.\x1b[0m",
+          ],
+        };
+      }
+      if (cmd.startsWith("kubectl audit-rbac")) {
+        return {
+          lines: [
+            "== Audit RBAC : liaisons vers un rôle d'administration ==",
+            "[CRITIQUE] ci-bot-cluster-admin -> cluster-admin -> SA/ci-bot (ci)",
+            "",
+            `FLAG: \x1b[32m${flag}\x1b[0m`,
+            "Bien joué — soumettez ce flag à droite.",
+          ],
+        };
+      }
+      if (cmd.startsWith("kubectl")) {
+        return { lines: ["Essayez : kubectl get clusterrolebindings, puis kubectl audit-rbac"] };
+      }
+      return { lines: [`${cmd.split(" ")[0]}: commande non trouvée`] };
+    },
+  };
+}
+
 export function getScenario(
   challengeId: string,
   labSlug?: string,
 ): ShellScenario {
+  if (labSlug === "devsecops-02-jenkins-secrets" || challengeId === "3.1.1") {
+    return jenkinsSecretsScenario();
+  }
+  if (labSlug === "container-02-k8s-rbac" || challengeId === "4.2.1") {
+    return k8sRbacScenario();
+  }
   if (labSlug === "pentest-01-s3-recon" || challengeId === "1.1.1") {
     return s3ReconScenario();
   }

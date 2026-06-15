@@ -46,6 +46,16 @@ const specific: Record<string, string[]> = {
     "Le finding critique est CIS 2.1.5 (S3 Block Public Access désactivé). Corrigez la config : sed -i 's/\"accountLevel\": false/\"accountLevel\": true/' account-config.json.",
     "Relancez python3 cis-audit.py : quand le score critique atteint 100%, l'audit affiche le flag PCE{...}. Corrigez la config, pas le script.",
   ],
+  "3.1.1": [
+    "Les artefacts du pipeline sont dans /srv/jenkins : listez-les (ls) puis lisez le pipeline (cat Jenkinsfile).",
+    "Le bloc environment { } du Jenkinsfile et le job-config.xml déclarent des credentials AWS en dur. Cherchez-les : grep -ri \"AWS_SECRET\" /srv/jenkins.",
+    "La valeur de AWS_SECRET_ACCESS_KEY est le flag PCE{...} (même secret en defaultValue dans job-config.xml).",
+  ],
+  "4.2.1": [
+    "Énumérez les liaisons de cluster : kubectl get clusterrolebindings. Une liaison cible le ClusterRole 'cluster-admin'.",
+    "Inspectez-la : kubectl describe clusterrolebinding ci-bot-cluster-admin. Elle lie cluster-admin (verbs:* / resources:*) au ServiceAccount ci/ci-bot.",
+    "Confirmez l'escalade et récupérez le flag : kubectl audit-rbac. Le flag est au format PCE{...}.",
+  ],
 };
 
 const generic = [
@@ -68,8 +78,10 @@ const realFlags: Record<string, string> = {
   "1.3.1": "PCE{passrole_createaccesskey_escalation_2024}",
   "1.4.1": "PCE{imds_ssrf_stolen_role_creds_2024}",
   "2.1.3": "PCE{iam_wildcard_admin_policy_2024}",
+  "3.1.1": "PCE{jenkins_plaintext_aws_creds_2024}",
   "3.3.1": "PCE{git_history_leaked_aws_key_2024}",
   "4.1.4": "PCE{docker_layer_hardcoded_secret_2024}",
+  "4.2.1": "PCE{k8s_clusteradmin_binding_2024}",
   "5.1.1": "PCE{cloudtrail_unauthorized_assumerole_2024}",
   "6.3.1": "PCE{cis_public_s3_block_2024}",
 };
