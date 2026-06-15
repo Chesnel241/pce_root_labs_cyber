@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Logo } from "./logo";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
 
 const nav = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
@@ -29,6 +30,7 @@ const nav = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-surface lg:flex">
@@ -38,6 +40,8 @@ export function Sidebar() {
 
       <nav className="flex-1 space-y-1 px-3 py-4">
         {nav.map((item) => {
+          if (item.href === "/admin" && user?.role !== "admin") return null;
+
           const active =
             pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
