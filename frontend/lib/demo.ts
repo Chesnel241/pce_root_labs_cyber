@@ -26,21 +26,7 @@ export const currentUser: DemoUser = {
 };
 
 /** Challenges considérés comme résolus dans la démo (par id). */
-export const solvedChallengeIds = new Set<string>([
-  "1.1.1",
-  "1.1.2",
-  "1.1.3",
-  "1.1.4",
-  "1.2.1",
-  "1.2.2",
-  "1.2.3",
-  "2.1.1",
-  "2.1.2",
-  "2.1.3",
-  "3.3.1",
-  "5.1.1",
-  "5.1.2",
-]);
+export const solvedChallengeIds = new Set<string>();
 
 export function isSolved(challengeId: string): boolean {
   return solvedChallengeIds.has(challengeId);
@@ -97,22 +83,7 @@ export interface LeaderboardRow {
   isCurrentUser?: boolean;
 }
 
-export const leaderboard: LeaderboardRow[] = [
-  { rank: 1, username: "nyx.0xff", xp: 6480, solved: 58 },
-  { rank: 2, username: "m.dubois", xp: 5920, solved: 53 },
-  { rank: 3, username: "cloud_raptor", xp: 5310, solved: 49 },
-  { rank: 4, username: "a.benali", xp: 4870, solved: 44 },
-  { rank: 5, username: "svc-blue", xp: 4120, solved: 39 },
-  {
-    rank: 6,
-    username: currentUser.username,
-    xp: earnedXp(),
-    solved: solvedChallengeIds.size,
-    isCurrentUser: true,
-  },
-  { rank: 7, username: "l.moreau", xp: 1180, solved: 11 },
-  { rank: 8, username: "k8s_ninja", xp: 980, solved: 9 },
-].sort((a, b) => b.xp - a.xp).map((row, i) => ({ ...row, rank: i + 1 }));
+export const leaderboard: LeaderboardRow[] = [];
 
 export function currentRank(): number {
   return (
@@ -130,36 +101,7 @@ export interface ActivityItem {
   at: string;
 }
 
-export const recentActivity: ActivityItem[] = [
-  {
-    id: "a1",
-    type: "solved",
-    label: "Challenge résolu",
-    detail: "Security Group trop permissif (+75 XP)",
-    at: "Il y a 2 h",
-  },
-  {
-    id: "a2",
-    type: "badge",
-    label: "Badge débloqué",
-    detail: "Recon Master — module 1.1 complété",
-    at: "Hier",
-  },
-  {
-    id: "a3",
-    type: "solved",
-    label: "Challenge résolu",
-    detail: "RDS exposée sur internet (+75 XP)",
-    at: "Hier",
-  },
-  {
-    id: "a4",
-    type: "started",
-    label: "Lab démarré",
-    detail: "PrivEsc via PassRole + CreateAccessKey",
-    at: "Il y a 2 j",
-  },
-];
+export const recentActivity: ActivityItem[] = [];
 
 /* ------------------------------ Badges ---------------------------------- */
 
@@ -177,14 +119,14 @@ export const badges: Badge[] = [
     name: "First Blood",
     description: "Résoudre votre premier challenge.",
     icon: "Flag",
-    earned: true,
+    earned: false,
   },
   {
     id: "recon-master",
     name: "Recon Master",
     description: "Compléter le module Reconnaissance & Énumération.",
     icon: "Crosshair",
-    earned: true,
+    earned: false,
   },
   {
     id: "key-keeper",
@@ -198,7 +140,7 @@ export const badges: Badge[] = [
     name: "Série de 7 jours",
     description: "S'entraîner 7 jours d'affilée.",
     icon: "Flame",
-    earned: true,
+    earned: false,
   },
   {
     id: "container-breaker",
@@ -216,4 +158,4 @@ export const badges: Badge[] = [
   },
 ];
 
-export const streakDays = 7;
+export const streakDays = 0;
