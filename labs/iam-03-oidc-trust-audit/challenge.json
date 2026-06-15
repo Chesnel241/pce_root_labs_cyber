@@ -1,0 +1,12 @@
+{
+  "id": "2.3.1",
+  "title": "Trust OIDC GitHub Actions trop large (sub wildcard)",
+  "flag": "PCE{oidc_trust_wildcard_sub_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/sh",
+  "hints": [
+    "Listez les rôles et le provider OIDC : `aws iam list-roles` puis `aws iam list-open-id-connect-providers`. Cherchez les rôles qui font confiance à token.actions.githubusercontent.com.",
+    "Lisez la trust policy : `aws iam get-role --role-name gha-deploy-prod`. Examinez la condition sur `token.actions.githubusercontent.com:sub` — `repo:*` n'est PAS scopé à un dépôt précis.",
+    "Auditez le rôle fautif : `aws iam audit-trust --role-name gha-deploy-prod`. L'audit signale le sub trop large et révèle le flag PCE{...}."
+  ]
+}

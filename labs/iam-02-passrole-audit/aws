@@ -1,0 +1,5 @@
+#!/bin/sh
+# Wrapper "aws" du lab : délègue au simulateur IAM hors-ligne (awsmock).
+# Permet d'utiliser les commandes habituelles `aws iam list-users`, etc.,
+# comme si l'AWS CLI était installée, sans aucun accès réseau ni AWS réel.
+exec /usr/local/bin/awsmock "$@"

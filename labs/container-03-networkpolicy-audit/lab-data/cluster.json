@@ -1,0 +1,41 @@
+{
+  "_comment": "État réseau Kubernetes simulé, lu par le shim kubectl. Trois namespaces applicatifs (prod, payments, dev). Le namespace 'payments' (qui héberge des pods sensibles 'pci-vault' et 'payments-api') NE possède AUCUNE NetworkPolicy : par défaut Kubernetes autorise TOUT le trafic (modèle 'allow-all'). N'importe quel pod compromis dans 'dev' ou 'prod' peut donc joindre 'pci-vault' en cross-namespace (pivot latéral). Le namespace 'prod' possède bien une politique default-deny + une allow ciblée (modèle correct, à imiter). `kubectl audit-netpol` détecte le gap et révèle le flag.",
+  "flag": "PCE{k8s_networkpolicy_gap_2024}",
+  "namespaces": [
+    { "name": "kube-system", "labels": { "kubernetes.io/metadata.name": "kube-system" } },
+    { "name": "prod", "labels": { "kubernetes.io/metadata.name": "prod", "tier": "frontend" } },
+    { "name": "payments", "labels": { "kubernetes.io/metadata.name": "payments", "tier": "sensitive", "pci": "true" } },
+    { "name": "dev", "labels": { "kubernetes.io/metadata.name": "dev", "tier": "sandbox" } }
+  ],
+  "pods": [
+    { "namespace": "prod", "name": "web-frontend-7d9c", "labels": { "app": "web-frontend" }, "podIP": "10.20.1.11" },
+    { "namespace": "prod", "name": "web-frontend-7d9d", "labels": { "app": "web-frontend" }, "podIP": "10.20.1.12" },
+    { "namespace": "payments", "name": "payments-api-5f8b", "labels": { "app": "payments-api" }, "podIP": "10.20.2.21" },
+    { "namespace": "payments", "name": "pci-vault-0", "labels": { "app": "pci-vault", "store": "cardholder-data" }, "podIP": "10.20.2.31" },
+    { "namespace": "dev", "name": "scratch-debug-abc1", "labels": { "app": "scratch-debug" }, "podIP": "10.20.3.41" }
+  ],
+  "networkPolicies": [
+    {
+      "namespace": "prod",
+      "name": "prod-default-deny-ingress",
+      "_note": "Politique default-deny correcte : sélectionne TOUS les pods (podSelector vide) et n'autorise aucun ingress par défaut.",
+      "spec": {
+        "podSelector": {},
+        "policyTypes": ["Ingress"],
+        "ingress": []
+      }
+    },
+    {
+      "namespace": "prod",
+      "name": "prod-allow-frontend-from-same-ns",
+      "_note": "Allow ciblée : seuls les pods du même namespace 'prod' peuvent joindre web-frontend.",
+      "spec": {
+        "podSelector": { "matchLabels": { "app": "web-frontend" } },
+        "policyTypes": ["Ingress"],
+        "ingress": [
+          { "from": [ { "namespaceSelector": { "matchLabels": { "kubernetes.io/metadata.name": "prod" } } } ] }
+        ]
+      }
+    }
+  ]
+}

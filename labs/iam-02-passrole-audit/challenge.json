@@ -1,0 +1,12 @@
+{
+  "id": "2.2.1",
+  "title": "PassRole + RunInstances (escalade de privilèges)",
+  "flag": "PCE{passrole_runinstances_privesc_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/sh",
+  "hints": [
+    "Listez les utilisateurs et leurs policies inline : `aws iam list-users` puis `aws iam list-user-policies --user-name svc-ci-deployer`. Quatre utilisateurs existent.",
+    "Lisez le document de policy : `aws iam get-user-policy --user-name svc-ci-deployer --policy-name ci-deploy-inline`. Cherchez le couple `iam:PassRole` (Resource:\"*\", sans condition) ET `ec2:RunInstances`.",
+    "Auditez l'utilisateur fautif : `aws iam audit-user --user-name svc-ci-deployer`. L'audit confirme l'escalade PassRole+RunInstances et révèle le flag PCE{...}."
+  ]
+}

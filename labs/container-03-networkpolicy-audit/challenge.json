@@ -1,0 +1,12 @@
+{
+  "id": "4.3.1",
+  "title": "Gap de NetworkPolicy (trafic cross-namespace)",
+  "flag": "PCE{k8s_networkpolicy_gap_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/sh",
+  "hints": [
+    "Listez les namespaces puis les politiques réseau : kubectl get namespaces, puis kubectl get networkpolicies -A. Un namespace sensible n'a aucune NetworkPolicy.",
+    "Comparez avec le namespace 'prod' : kubectl describe networkpolicy prod-default-deny-ingress montre un default-deny (podSelector vide + ingress vide). Le namespace 'payments' n'a pas l'équivalent.",
+    "Confirmez le gap et récupérez le flag : kubectl audit-netpol. Le flag est au format PCE{...}."
+  ]
+}

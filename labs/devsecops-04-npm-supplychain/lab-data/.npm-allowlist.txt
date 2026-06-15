@@ -1,0 +1,9 @@
+# Allowlist des dépendances approuvées par l'équipe sécurité PCE.
+# Tout paquet absent de cette liste DOIT être revu avant installation.
+# (Le scanner npm-audit.py compare les dépendances de package.json à cette liste.)
+express
+dotenv
+stripe
+cross-env
+lodash
+cross-spawn

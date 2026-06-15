@@ -1,0 +1,197 @@
+#!/bin/sh
+# =============================================================================
+# awsmock — simulateur IAM hors-ligne pour iam-02-passrole-audit.
+#
+# Objectif pédagogique : reproduire un audit IAM consistant à repérer un
+# utilisateur dont la policy combine iam:PassRole + ec2:RunInstances sur des
+# ressources larges — un chemin d'escalade de privilèges (un attaquant lance
+# une instance EC2 portant un profil d'instance lié à un rôle admin, puis
+# en récupère les credentials). Aucune dépendance réseau ni AWS réel :
+# l'état est lu dans lab-data/iam.json.
+#
+# Sous-commandes simulées :
+#   iam list-users
+#   iam list-user-policies            --user-name <name>
+#   iam get-user-policy               --user-name <name> --policy-name <p>
+#   iam list-roles
+#   iam audit-user                    --user-name <name>   (extension du lab)
+#   iam audit-policy                  --user-name <name>   (alias d'audit-user)
+#
+# Le flag n'est révélé que par l'audit de l'utilisateur dont une policy
+# autorise iam:PassRole ET ec2:RunInstances (couple d'escalade), sans
+# restreindre PassRole (Resource:* / pas de condition iam:PassedToService).
+# =============================================================================
+
+set -eu
+
+DATA_DIR="${LAB_DATA_DIR:-/srv/lab-data}"
+STATE="$DATA_DIR/iam.json"
+
+run_py() {
+  _src="$1"; shift
+  printf '%s' "$_src" | sed "s#__STATE__#$STATE#g" | python3 - "$@"
+}
+
+# --- parse: service, subcommand, et options --name value -> OPT_<NAME>=value --
+SERVICE=""
+SUBCMD=""
+set_opt() {
+  _k="$(printf '%s' "$1" | sed 's/^--//; s/-/_/g' | tr '[:lower:]' '[:upper:]')"
+  eval "OPT_$_k=\"\$2\""
+  export "OPT_$_k"
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --region|--region=*|--output|--output=*)
+      case "$1" in *=*) : ;; *) shift ;; esac ;;
+    --*)
+      _key="$1"
+      if [ $# -ge 2 ] && [ "${2#--}" = "$2" ]; then
+        set_opt "$_key" "$2"; shift
+      else
+        set_opt "$_key" "true"
+      fi
+      ;;
+    iam)
+      if [ -z "$SERVICE" ]; then
+        SERVICE="$1"
+        shift
+        [ $# -gt 0 ] && SUBCMD="${1:-}"
+      fi
+      ;;
+    *) : ;;
+  esac
+  shift || true
+done
+
+case "$SERVICE.$SUBCMD" in
+  iam.list-users)
+    run_py 'import json
+d = json.load(open("__STATE__"))
+out = {"Users": [
+    {"UserName": u["name"], "Arn": u["arn"],
+     "InlinePolicyCount": len(u.get("inlinePolicies", {}))}
+    for u in d["users"]]}
+print(json.dumps(out, indent=4))'
+    ;;
+
+  iam.list-roles)
+    run_py 'import json
+d = json.load(open("__STATE__"))
+out = {"Roles": [
+    {"RoleName": r["name"], "Arn": r["arn"],
+     "AttachedManagedPolicies": r.get("attachedManagedPolicies", [])}
+    for r in d.get("roles", [])]}
+print(json.dumps(out, indent=4))'
+    ;;
+
+  iam.list-user-policies)
+    run_py 'import json, os, sys
+d = json.load(open("__STATE__"))
+name = os.environ.get("OPT_USER_NAME", "")
+for u in d["users"]:
+    if u["name"] == name:
+        print(json.dumps({"PolicyNames": list(u.get("inlinePolicies", {}).keys())}, indent=4))
+        break
+else:
+    sys.stderr.write("An error occurred (NoSuchEntity): user %s not found\n" % name); sys.exit(255)'
+    ;;
+
+  iam.get-user-policy)
+    run_py 'import json, os, sys
+d = json.load(open("__STATE__"))
+name = os.environ.get("OPT_USER_NAME", "")
+pol = os.environ.get("OPT_POLICY_NAME", "")
+for u in d["users"]:
+    if u["name"] == name:
+        doc = u.get("inlinePolicies", {}).get(pol)
+        if doc is None:
+            sys.stderr.write("An error occurred (NoSuchEntity): policy %s not found on user %s\n" % (pol, name)); sys.exit(255)
+        print(json.dumps({"UserName": name, "PolicyName": pol, "PolicyDocument": doc}, indent=4))
+        break
+else:
+    sys.stderr.write("An error occurred (NoSuchEntity): user %s not found\n" % name); sys.exit(255)'
+    ;;
+
+  iam.audit-user|iam.audit-policy)
+    # Extension pedagogique du lab : audite les policies inline d'un utilisateur
+    # et signale la combinaison dangereuse iam:PassRole (non restreint) +
+    # ec2:RunInstances = chemin d'escalade de privileges. Le flag n'est revele
+    # que pour l'utilisateur reellement fautif.
+    run_py 'import json, os, sys, fnmatch
+d = json.load(open("__STATE__"))
+name = os.environ.get("OPT_USER_NAME", "")
+target = None
+for u in d["users"]:
+    if u["name"] == name:
+        target = u
+        break
+if target is None:
+    sys.stderr.write("An error occurred (NoSuchEntity): user %s not found\n" % name); sys.exit(255)
+
+def as_list(x):
+    return x if isinstance(x, list) else [x]
+
+def action_matches(actions, wanted):
+    for a in actions:
+        if a == "*" or fnmatch.fnmatch(wanted.lower(), a.lower()):
+            return True
+    return False
+
+has_passrole = False
+passrole_unrestricted = False
+has_runinstances = False
+
+for pname, doc in target.get("inlinePolicies", {}).items():
+    for st in doc.get("Statement", []):
+        if st.get("Effect") != "Allow":
+            continue
+        acts = as_list(st.get("Action", []))
+        res = as_list(st.get("Resource", []))
+        cond = st.get("Condition", {})
+        if action_matches(acts, "iam:PassRole"):
+            has_passrole = True
+            # PassRole est dangereux s il n est PAS restreint :
+            # Resource large (*) ET pas de condition iam:PassedToService.
+            scoped_by_service = any(
+                "iam:PassedToService" in v for v in cond.values()
+            ) if isinstance(cond, dict) else False
+            broad_resource = "*" in res
+            if broad_resource and not scoped_by_service:
+                passrole_unrestricted = True
+        if action_matches(acts, "ec2:RunInstances"):
+            has_runinstances = True
+
+print("Audit IAM — utilisateur %s" % target["name"])
+print("  iam:PassRole          : %s" % ("OUI" if has_passrole else "non"))
+print("  PassRole non restreint : %s" % ("OUI (Resource:* sans condition iam:PassedToService)" if passrole_unrestricted else "non"))
+print("  ec2:RunInstances      : %s" % ("OUI" if has_runinstances else "non"))
+print("")
+if has_passrole and has_runinstances and passrole_unrestricted:
+    print("  [CRITIQUE] iam:PassRole (non restreint) + ec2:RunInstances détectés.")
+    print("  -> Chemin d escalade : lancer une EC2 avec un profil d instance lié")
+    print("     à un rôle privilégié (ex: ec2-admin-role -> AdministratorAccess),")
+    print("     puis récupérer les credentials du rôle via l IMDS.")
+    print("  Remédiation : séparer les responsabilités ; restreindre iam:PassRole")
+    print("     à un ARN de rôle précis + condition iam:PassedToService.")
+    print("")
+    print("  Drapeau du lab : " + d["flag"])
+elif has_passrole and has_runinstances:
+    print("  [INFO] PassRole + RunInstances présents, mais PassRole est restreint")
+    print("         (ARN précis et/ou condition iam:PassedToService). Risque maîtrisé.")
+else:
+    print("  [OK] Pas de couple iam:PassRole (non restreint) + ec2:RunInstances.")
+    print("  Continuez l audit des autres utilisateurs (iam list-users).")'
+    ;;
+
+  .*|*.)
+    echo "awsmock: indiquez un service et une sous-commande (iam)." >&2
+    exit 2
+    ;;
+  *)
+    echo "awsmock: '$SERVICE $SUBCMD' n'est pas simulé dans ce lab." >&2
+    echo "Essayez: iam list-users | iam get-user-policy | iam audit-user" >&2
+    exit 2
+    ;;
+esac

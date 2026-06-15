@@ -1,0 +1,12 @@
+{
+  "id": "5.3.2",
+  "title": "Forensics S3 — Quel acteur a exfiltré quel objet",
+  "flag": "PCE{s3_forensics_exfil_actor_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/sh",
+  "hints": [
+    "Cherchez les téléchargements (REST.GET.OBJECT) dans le journal d'accès S3 et triez par volume (le timestamp [date] occupe 2 champs awk, donc principal=$6, clé=$9, bytes_sent=$15) : `awk '$8 ~ /GET.OBJECT/ {print $15, $6, $9}' s3-access.log | sort -rn`. Un objet est énorme (exports/customers-full.csv, ~48 Mo) et téléchargé par 'svc-reporting' depuis 203.0.113.66 (user-agent 'kali').",
+    "Corrélez avec CloudTrail pour confirmer l'acteur et la région anormale : `jq -r '.Records[] | select(.eventName==\"GetObject\") | \"\\(.userIdentity.userName) \\(.awsRegion) \\(.sourceIPAddress) \\(.requestParameters.key)\"' cloudtrail-events.json`. svc-reporting est un compte de service censé rester interne (eu-west-3), pas télécharger des PII depuis us-east-1.",
+    "L'événement GetObject d'exfiltration porte un champ \"pceFinding\". Confirmez l'acteur : `verify-finding svc-reporting` (ou `grep pceFinding cloudtrail-events.json`). Le flag est PCE{...}."
+  ]
+}

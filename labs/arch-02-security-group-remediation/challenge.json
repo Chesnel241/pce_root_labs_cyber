@@ -1,0 +1,12 @@
+{
+  "id": "6.1.2",
+  "title": "Security Group : moindre exposition",
+  "flag": "PCE{security_group_least_exposure_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/sh",
+  "hints": [
+    "Lancez l'audit : `python3 sg-audit.py`. La règle ingress[0] est en FAIL : elle ouvre 0.0.0.0/0 sur tous les ports. Le fichier à corriger est `security-group.json`.",
+    "Éditez `security-group.json` : remplacez la règle ingress par une règle de moindre exposition, par ex. `{ \"protocol\": \"tcp\", \"fromPort\": 443, \"toPort\": 443, \"cidr\": \"10.0.0.0/16\" }`. Surtout pas de 0.0.0.0/0, pas de protocole -1, pas de plage 0-65535.",
+    "Relancez `python3 sg-audit.py`. Quand toutes les règles ingress sont conformes, l'audit affiche le flag PCE{...}. (Corrigez la config, pas le script.)"
+  ]
+}

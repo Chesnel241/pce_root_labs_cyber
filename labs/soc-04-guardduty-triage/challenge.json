@@ -1,0 +1,12 @@
+{
+  "id": "5.4.2",
+  "title": "Triage GuardDuty — Isoler le vrai positif",
+  "flag": "PCE{guardduty_true_positive_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/sh",
+  "hints": [
+    "Triez les findings par sévérité décroissante pour prioriser : `jq -r '.Findings[] | \"\\(.Severity) \\(.Type) \\(.Id)\"' guardduty-findings.json | sort -rn`. Le plus sévère (8.0) est un UnauthorizedAccess:IAMUser/MaliciousIPCaller.",
+    "Ne vous fiez pas qu'à la sévérité : lisez le contexte. Comparez les descriptions/IP : `jq -r '.Findings[] | \"[\\(.Id)] \\(.Type) ip=\\(.Service.Action.AwsApiCallAction.RemoteIpDetails.IpAddressV4 // .Service.Action.RemoteIpDetails.IpAddressV4) org=\\(.Service.Action.AwsApiCallAction.RemoteIpDetails.Organization.Org // .Service.Action.RemoteIpDetails.Organization.Org)\"' guardduty-findings.json`. Scanner de vuln, RedTeam, backup et watchlist interne mal réglée = faux positifs (IP internes/autorisées). Seul 203.0.113.66 (threat-list ProofPoint, TOR, us-east-1) est non expliqué.",
+    "Le vrai positif porte un champ \"pceFinding\". Confirmez avec son Id : `verify-finding 5ec0a1b2c3d4e5f6a7b8c9d0e1f2beef` (ou `grep pceFinding guardduty-findings.json`). Le flag est PCE{...}."
+  ]
+}

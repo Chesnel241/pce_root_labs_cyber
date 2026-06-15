@@ -1,0 +1,82 @@
+{
+  "_comment": "État IAM simulé lu par awsmock. Le compte PCE Corp possède des rôles dont la trust policy fait confiance au provider OIDC GitHub Actions (token.actions.githubusercontent.com). Le rôle 'gha-deploy-prod' a une condition sub trop large (wildcard repo:* / pas de scoping de dépôt), permettant à N'IMPORTE QUEL dépôt GitHub d'assumer le rôle. `aws iam audit-trust --role-name gha-deploy-prod` (ou `aws iam audit-role`) révèle le flag.",
+  "account": "123456789012",
+  "flag": "PCE{oidc_trust_wildcard_sub_2024}",
+  "oidcProviders": [
+    {
+      "arn": "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com",
+      "url": "token.actions.githubusercontent.com",
+      "clientIDList": ["sts.amazonaws.com"]
+    }
+  ],
+  "roles": [
+    {
+      "name": "gha-deploy-prod",
+      "arn": "arn:aws:iam::123456789012:role/gha-deploy-prod",
+      "attachedManagedPolicies": ["arn:aws:iam::aws:policy/PowerUserAccess"],
+      "assumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "GitHubActionsOIDC",
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+              },
+              "StringLike": {
+                "token.actions.githubusercontent.com:sub": "repo:*"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "gha-deploy-staging",
+      "arn": "arn:aws:iam::123456789012:role/gha-deploy-staging",
+      "attachedManagedPolicies": ["arn:aws:iam::123456789012:policy/PCE-Staging-Deploy"],
+      "assumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "GitHubActionsOIDC",
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+                "token.actions.githubusercontent.com:sub": "repo:pce-corp/pce-app:ref:refs/heads/main"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ec2-app-role",
+      "arn": "arn:aws:iam::123456789012:role/ec2-app-role",
+      "attachedManagedPolicies": ["arn:aws:iam::123456789012:policy/PCE-S3-AppData"],
+      "assumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "Ec2Trust",
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "ec2.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+    }
+  ]
+}

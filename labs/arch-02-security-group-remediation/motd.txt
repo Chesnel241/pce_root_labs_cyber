@@ -1,0 +1,28 @@
+==============================================================================
+ PCE Root Labs Cyber — Lab 6.1.2 : Security Group, moindre exposition
+==============================================================================
+ Scénario : vous auditez le Security Group du tier web "PCE Corp". Sa
+ configuration est exportée "as-code" dans ~/sg-remediation :
+   - security-group.json : l'état du Security Group à corriger ;
+   - sg-audit.py         : l'outil d'audit des règles ingress.
+
+ PROBLEME : une règle d'entrée (ingress) ouvre 0.0.0.0/0 (tout Internet) sur
+ TOUS les ports (protocole -1, 0-65535). Exposition maximale.
+
+ Objectif : ré-écrire la règle en MOINDRE EXPOSITION (un seul port utile, un
+ protocole précis, un CIDR de confiance), puis relancer l'audit. Lorsque toutes
+ les règles ingress sont conformes, l'audit révèle le flag au format PCE{...}.
+
+ Pistes :
+   1) Lancer l'audit :
+        python3 sg-audit.py
+   2) Repérer la règle ingress en FAIL (0.0.0.0/0 / tous ports).
+   3) Corriger la config — éditez security-group.json, par ex. la règle ingress :
+        { "protocol": "tcp", "fromPort": 443, "toPort": 443, "cidr": "10.0.0.0/16" }
+      (surtout PAS 0.0.0.0/0, PAS protocole -1, PAS plage 0-65535)
+   4) Relancer l'audit -> règles conformes -> le flag s'affiche :
+        python3 sg-audit.py
+
+ Astuce : la conformité se fait en CORRIGEANT security-group.json, pas en
+ modifiant le script d'audit.
+==============================================================================

@@ -1,0 +1,108 @@
+{
+  "_comment": "État IAM simulé lu par awsmock. Le compte PCE Corp possède plusieurs utilisateurs avec des policies inline. L'utilisateur 'svc-ci-deployer' combine iam:PassRole + ec2:RunInstances sur des ressources larges — chemin d'escalade de privilèges classique. `aws iam audit-user --user-name svc-ci-deployer` (ou `aws iam audit-policy --user-name ...`) révèle le flag.",
+  "account": "123456789012",
+  "flag": "PCE{passrole_runinstances_privesc_2024}",
+  "roles": [
+    {
+      "name": "ec2-admin-role",
+      "arn": "arn:aws:iam::123456789012:role/ec2-admin-role",
+      "attachedManagedPolicies": ["arn:aws:iam::aws:policy/AdministratorAccess"]
+    }
+  ],
+  "users": [
+    {
+      "name": "alice-readonly",
+      "arn": "arn:aws:iam::123456789012:user/alice-readonly",
+      "inlinePolicies": {
+        "readonly-billing": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "BillingRead",
+              "Effect": "Allow",
+              "Action": ["aws-portal:ViewBilling", "ce:GetCostAndUsage"],
+              "Resource": "*"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "bob-ec2-operator",
+      "arn": "arn:aws:iam::123456789012:user/bob-ec2-operator",
+      "inlinePolicies": {
+        "ec2-operate": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Ec2Operate",
+              "Effect": "Allow",
+              "Action": [
+                "ec2:RunInstances",
+                "ec2:DescribeInstances",
+                "ec2:StartInstances",
+                "ec2:StopInstances"
+              ],
+              "Resource": "*"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "svc-ci-deployer",
+      "arn": "arn:aws:iam::123456789012:user/svc-ci-deployer",
+      "inlinePolicies": {
+        "ci-deploy-inline": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Deploy",
+              "Effect": "Allow",
+              "Action": [
+                "ec2:RunInstances",
+                "ec2:DescribeInstances",
+                "ec2:CreateTags"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Sid": "PassAnyRole",
+              "Effect": "Allow",
+              "Action": "iam:PassRole",
+              "Resource": "*"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "carol-passrole-scoped",
+      "arn": "arn:aws:iam::123456789012:user/carol-passrole-scoped",
+      "inlinePolicies": {
+        "lambda-deploy-scoped": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "PassLambdaRoleOnly",
+              "Effect": "Allow",
+              "Action": "iam:PassRole",
+              "Resource": "arn:aws:iam::123456789012:role/lambda-exec-pce-app",
+              "Condition": {
+                "StringEquals": {
+                  "iam:PassedToService": "lambda.amazonaws.com"
+                }
+              }
+            },
+            {
+              "Sid": "LambdaUpdate",
+              "Effect": "Allow",
+              "Action": ["lambda:UpdateFunctionCode", "lambda:GetFunction"],
+              "Resource": "arn:aws:lambda:*:123456789012:function:pce-app-*"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

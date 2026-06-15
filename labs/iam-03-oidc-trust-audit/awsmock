@@ -1,0 +1,205 @@
+#!/bin/sh
+# =============================================================================
+# awsmock — simulateur IAM hors-ligne pour iam-03-oidc-trust-audit.
+#
+# Objectif pédagogique : reproduire un audit de trust policy IAM. Un rôle fait
+# confiance au provider OIDC GitHub Actions (token.actions.githubusercontent.com)
+# pour `sts:AssumeRoleWithWebIdentity`. Si la condition sur le claim `sub` est
+# trop large (wildcard "repo:*", absence de scoping de dépôt), n'importe quel
+# dépôt GitHub — y compris un dépôt attaquant — peut assumer le rôle.
+# Aucune dépendance réseau ni AWS réel : l'état est lu dans lab-data/iam.json.
+#
+# Sous-commandes simulées :
+#   iam list-roles
+#   iam get-role                      --role-name <name>
+#   iam list-open-id-connect-providers
+#   iam audit-trust                   --role-name <name>   (extension du lab)
+#   iam audit-role                    --role-name <name>   (alias d'audit-trust)
+#
+# Le flag n'est révélé que par l'audit du rôle dont la trust policy OIDC
+# GitHub Actions porte une condition `sub` trop large (wildcard non scopé).
+# =============================================================================
+
+set -eu
+
+DATA_DIR="${LAB_DATA_DIR:-/srv/lab-data}"
+STATE="$DATA_DIR/iam.json"
+
+run_py() {
+  _src="$1"; shift
+  printf '%s' "$_src" | sed "s#__STATE__#$STATE#g" | python3 - "$@"
+}
+
+# --- parse: service, subcommand, et options --name value -> OPT_<NAME>=value --
+SERVICE=""
+SUBCMD=""
+set_opt() {
+  _k="$(printf '%s' "$1" | sed 's/^--//; s/-/_/g' | tr '[:lower:]' '[:upper:]')"
+  eval "OPT_$_k=\"\$2\""
+  export "OPT_$_k"
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --region|--region=*|--output|--output=*)
+      case "$1" in *=*) : ;; *) shift ;; esac ;;
+    --*)
+      _key="$1"
+      if [ $# -ge 2 ] && [ "${2#--}" = "$2" ]; then
+        set_opt "$_key" "$2"; shift
+      else
+        set_opt "$_key" "true"
+      fi
+      ;;
+    iam)
+      if [ -z "$SERVICE" ]; then
+        SERVICE="$1"
+        shift
+        [ $# -gt 0 ] && SUBCMD="${1:-}"
+      fi
+      ;;
+    *) : ;;
+  esac
+  shift || true
+done
+
+case "$SERVICE.$SUBCMD" in
+  iam.list-roles)
+    run_py 'import json
+d = json.load(open("__STATE__"))
+out = {"Roles": [
+    {"RoleName": r["name"], "Arn": r["arn"],
+     "AttachedManagedPolicies": r.get("attachedManagedPolicies", [])}
+    for r in d["roles"]]}
+print(json.dumps(out, indent=4))'
+    ;;
+
+  iam.list-open-id-connect-providers)
+    run_py 'import json
+d = json.load(open("__STATE__"))
+out = {"OpenIDConnectProviderList": [
+    {"Arn": p["arn"], "Url": p.get("url", "")}
+    for p in d.get("oidcProviders", [])]}
+print(json.dumps(out, indent=4))'
+    ;;
+
+  iam.get-role)
+    run_py 'import json, os, sys
+d = json.load(open("__STATE__"))
+name = os.environ.get("OPT_ROLE_NAME", "")
+for r in d["roles"]:
+    if r["name"] == name:
+        print(json.dumps({"Role": {
+            "RoleName": r["name"], "Arn": r["arn"],
+            "AssumeRolePolicyDocument": r["assumeRolePolicyDocument"],
+            "AttachedManagedPolicies": r.get("attachedManagedPolicies", [])}}, indent=4))
+        break
+else:
+    sys.stderr.write("An error occurred (NoSuchEntity): role %s not found\n" % name); sys.exit(255)'
+    ;;
+
+  iam.audit-trust|iam.audit-role)
+    # Extension pedagogique du lab : audite la trust policy d un role et signale
+    # une confiance OIDC GitHub Actions dont le claim `sub` est trop large
+    # (wildcard non scope a un depot precis). Le flag n est revele que pour le
+    # role reellement fautif.
+    run_py 'import json, os, sys
+d = json.load(open("__STATE__"))
+name = os.environ.get("OPT_ROLE_NAME", "")
+target = None
+for r in d["roles"]:
+    if r["name"] == name:
+        target = r
+        break
+if target is None:
+    sys.stderr.write("An error occurred (NoSuchEntity): role %s not found\n" % name); sys.exit(255)
+
+GHA = "token.actions.githubusercontent.com"
+doc = target["assumeRolePolicyDocument"]
+
+def as_list(x):
+    return x if isinstance(x, list) else [x]
+
+def sub_too_broad(sub):
+    # Un sub correctement scope cible un depot precis, ex :
+    #   repo:org/repo:ref:refs/heads/main
+    #   repo:org/repo:environment:production
+    # Trop large : "*", "repo:*", "repo:org/*" (pas de depot precis),
+    # ou un wildcard avant le nom de depot.
+    if sub in ("*", "repo:*"):
+        return True
+    if sub.startswith("repo:"):
+        rest = sub[len("repo:"):]
+        owner_repo = rest.split(":", 1)[0]  # "org/repo"
+        # Doit etre owner/repo sans wildcard dans owner ni repo.
+        if "*" in owner_repo:
+            return True
+        parts = owner_repo.split("/")
+        if len(parts) < 2 or parts[1] == "" :
+            return True
+        return False
+    # Forme inattendue -> a considerer comme suspecte.
+    return True
+
+is_github_oidc = False
+weak_sub = None
+sub_values_seen = []
+
+for st in doc.get("Statement", []):
+    if st.get("Effect") != "Allow":
+        continue
+    if "sts:AssumeRoleWithWebIdentity" not in as_list(st.get("Action", [])):
+        continue
+    principal = st.get("Principal", {})
+    fed = principal.get("Federated", "") if isinstance(principal, dict) else ""
+    if GHA not in (fed if isinstance(fed, str) else " ".join(as_list(fed))):
+        continue
+    is_github_oidc = True
+    cond = st.get("Condition", {})
+    sub_key = GHA + ":sub"
+    found_sub = None
+    for op, kv in cond.items():
+        if isinstance(kv, dict) and sub_key in kv:
+            found_sub = kv[sub_key]
+    if found_sub is None:
+        # Aucune condition sur le sub -> totalement ouvert.
+        weak_sub = "(aucune condition sub -> tout dépôt)"
+        sub_values_seen.append(weak_sub)
+    else:
+        for sv in as_list(found_sub):
+            sub_values_seen.append(sv)
+            if sub_too_broad(sv):
+                weak_sub = sv
+
+print("Audit IAM — trust policy du rôle %s" % target["name"])
+if not is_github_oidc:
+    print("  [OK] Aucune confiance OIDC GitHub Actions dans cette trust policy.")
+    print("  Continuez l audit des autres rôles (iam list-roles).")
+    sys.exit(0)
+
+print("  Provider OIDC de confiance : %s" % GHA)
+print("  Valeur(s) du claim sub      : %s" % ", ".join(sub_values_seen))
+print("")
+if weak_sub is not None:
+    print("  [CRITIQUE] La condition sur le claim sub est trop large : %s" % weak_sub)
+    print("  -> N importe quel dépôt GitHub (y compris un dépôt attaquant) peut")
+    print("     assumer ce rôle via sts:AssumeRoleWithWebIdentity.")
+    print("  Remédiation : scoper le sub à un dépôt précis, ex :")
+    print("     repo:pce-corp/pce-app:ref:refs/heads/main")
+    print("")
+    print("  Drapeau du lab : " + d["flag"])
+else:
+    print("  [OK] Le claim sub est correctement scopé à un dépôt précis.")
+    print("  Trust policy OIDC saine.")'
+    ;;
+
+  .*|*.)
+    echo "awsmock: indiquez un service et une sous-commande (iam)." >&2
+    exit 2
+    ;;
+  *)
+    echo "awsmock: '$SERVICE $SUBCMD' n'est pas simulé dans ce lab." >&2
+    echo "Essayez: iam list-roles | iam get-role | iam audit-trust" >&2
+    exit 2
+    ;;
+esac

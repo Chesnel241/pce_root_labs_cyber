@@ -66,6 +66,17 @@ const REAL_LAB_FLAGS = {
   '4.2.1': 'PCE{k8s_clusteradmin_binding_2024}',
   '5.1.1': 'PCE{cloudtrail_unauthorized_assumerole_2024}',
   '6.3.1': 'PCE{cis_public_s3_block_2024}',
+  '2.2.1': 'PCE{passrole_runinstances_privesc_2024}',
+  '2.3.1': 'PCE{oidc_trust_wildcard_sub_2024}',
+  '3.2.1': 'PCE{terraform_five_misconfigs_2024}',
+  '3.4.1': 'PCE{npm_typosquat_postinstall_2024}',
+  '4.3.1': 'PCE{k8s_networkpolicy_gap_2024}',
+  '4.4.1': 'PCE{k8s_pods_run_as_root_2024}',
+  '5.2.1': 'PCE{lateral_movement_role_chain_2024}',
+  '5.3.2': 'PCE{s3_forensics_exfil_actor_2024}',
+  '5.4.2': 'PCE{guardduty_true_positive_2024}',
+  '6.1.2': 'PCE{security_group_least_exposure_2024}',
+  '6.2.1': 'PCE{least_privilege_scoped_policy_2024}',
 };
 
 if (!DATABASE_URL) {

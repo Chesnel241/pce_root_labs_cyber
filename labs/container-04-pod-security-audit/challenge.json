@@ -1,0 +1,12 @@
+{
+  "id": "4.4.1",
+  "title": "Pods en root / privileged (Pod Security)",
+  "flag": "PCE{k8s_pods_run_as_root_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/sh",
+  "hints": [
+    "Listez les pods et leurs colonnes de sécurité : kubectl get pods -A. Repérez ceux où PRIVILEGED=True, RUNASUSER=0/root ou HOSTPATH=yes.",
+    "Inspectez un pod suspect : kubectl describe pod node-agent-xk21. Notez privileged=true, capabilities add SYS_ADMIN et le volume hostPath '/'.",
+    "Listez tous les contrevenants et récupérez le flag : kubectl audit-podsecurity. Le flag est au format PCE{...}."
+  ]
+}

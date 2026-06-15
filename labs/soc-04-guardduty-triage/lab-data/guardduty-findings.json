@@ -1,0 +1,88 @@
+{
+  "_comment": "Lot de findings Amazon GuardDuty a TRIER. Il melange de VRAIS positifs a confirmer et des FAUX positifs explicables (scanner de vuln autorise, sauvegarde S3 legitime, sonde de monitoring interne, test pentest planifie). Un seul finding est un VRAI positif AVERE et a fort impact : UnauthorizedAccess:IAMUser/MaliciousIPCaller (id 5ec0...beef) — une cle IAM appelle l'API depuis une IP figurant sur une liste de menaces connue, hors plage horaire, sans MFA. Son champ 'pceFinding' encode le flag. Triez sur : severity, type, confidence, et surtout le contexte (l'activite est-elle attendue/autorisee ?).",
+  "Findings": [
+    {
+      "Id": "1aa0d3e7c1f0a0b1c2d3e4f5a6b7c8d9",
+      "Type": "Recon:EC2/Portscan",
+      "Severity": 2.0,
+      "Region": "eu-west-3",
+      "Resource": { "ResourceType": "Instance", "InstanceId": "i-0scanner01vulnmgmt" },
+      "Service": {
+        "Action": { "ActionType": "NETWORK_CONNECTION", "RemoteIpDetails": { "IpAddressV4": "10.0.2.50", "Organization": { "Org": "PCE-Corp-Internal" } } },
+        "Count": 412,
+        "Archived": false
+      },
+      "Title": "Portscan depuis i-0scanner01vulnmgmt vers plusieurs hotes internes",
+      "Description": "Instance taguee 'role=vuln-scanner' (Nessus) realisant son scan hebdomadaire planifie sur le VPC interne. Activite autorisee et documentee (ticket CHG-2291).",
+      "Verdict": "false-positive",
+      "TriageNote": "Scanner de vulnerabilites AUTORISE, IP interne, fenetre de scan planifiee. Benin."
+    },
+    {
+      "Id": "2bb1e4f8d2a1b1c2d3e4f5a6b7c8d9e0",
+      "Type": "Exfiltration:S3/ObjectRead.Unusual",
+      "Severity": 3.0,
+      "Region": "eu-west-3",
+      "Resource": { "ResourceType": "S3Bucket", "S3BucketName": "pce-db-backups" },
+      "Service": {
+        "Action": { "ActionType": "AWS_API_CALL", "AwsApiCallAction": { "Api": "GetObject", "CallerType": "AssumedRole", "RemoteIpDetails": { "IpAddressV4": "10.0.4.21", "Organization": { "Org": "PCE-Corp-Internal" } } } },
+        "Count": 1,
+        "Archived": false
+      },
+      "Title": "Lecture S3 inhabituelle sur pce-db-backups",
+      "Description": "Le role ci-backup-role lit un volume eleve depuis pce-db-backups. Correspond au job de restauration de test nocturne (mod. eu-west-3, IP interne, role attendu).",
+      "Verdict": "false-positive",
+      "TriageNote": "Role de sauvegarde legitime, IP interne, volumetrie attendue (restore test). Benin."
+    },
+    {
+      "Id": "5ec0a1b2c3d4e5f6a7b8c9d0e1f2beef",
+      "Type": "UnauthorizedAccess:IAMUser/MaliciousIPCaller",
+      "Severity": 8.0,
+      "Region": "us-east-1",
+      "Resource": { "ResourceType": "AccessKey", "AccessKeyDetails": { "UserName": "billing-uploader", "AccessKeyId": "AKIAY34FZKBOKMUTVV7A", "UserType": "IAMUser" } },
+      "Service": {
+        "Action": { "ActionType": "AWS_API_CALL", "AwsApiCallAction": { "Api": "ListBuckets", "ServiceName": "s3.amazonaws.com", "CallerType": "RemoteIp", "RemoteIpDetails": { "IpAddressV4": "203.0.113.66", "Organization": { "Org": "TOR-Exit-Relay" }, "Country": { "CountryName": "Unknown" } } } },
+        "AdditionalInfo": { "ThreatListName": "ProofPoint-EmergingThreats", "ThreatIntelIndicatorValue": "203.0.113.66" },
+        "Count": 17,
+        "Archived": false
+      },
+      "Title": "Cle IAM billing-uploader utilisee depuis une IP malveillante connue",
+      "Description": "La cle d'acces de billing-uploader appelle l'API S3 depuis 203.0.113.66, presente sur la liste de menaces ProofPoint-EmergingThreats (relais TOR), region us-east-1 (jamais utilisee par ce compte), hors plage horaire, sans MFA. Aucune activite attendue de ce compte de facturation depuis l'exterieur.",
+      "Verdict": "true-positive",
+      "TriageNote": "VRAI POSITIF: cle volee, IP sur threat-list, region/horaire/absence MFA anormaux. A escalader.",
+      "pceFinding": "True positive confirme: UnauthorizedAccess:IAMUser/MaliciousIPCaller — la cle de billing-uploader (AKIAY34FZKBOKMUTVV7A) est utilisee depuis l'IP malveillante 203.0.113.66 (threat-list ProofPoint). FLAG=PCE{guardduty_true_positive_2024}"
+    },
+    {
+      "Id": "3cc2f5a9e3b2c2d3e4f5a6b7c8d9e0f1",
+      "Type": "UnauthorizedAccess:EC2/SSHBruteForce",
+      "Severity": 5.0,
+      "Region": "eu-west-3",
+      "Resource": { "ResourceType": "Instance", "InstanceId": "i-0bastionpentestlab" },
+      "Service": {
+        "Action": { "ActionType": "NETWORK_CONNECTION", "RemoteIpDetails": { "IpAddressV4": "198.51.100.23", "Organization": { "Org": "PCE-RedTeam-Approved" } } },
+        "Count": 88,
+        "Archived": false
+      },
+      "Title": "SSH brute force vers i-0bastionpentestlab",
+      "Description": "Tentatives SSH soutenues depuis l'IP du prestataire pentest (RedTeam) sur le bastion isole du lab. Test d'intrusion PLANIFIE et autorise (mandat RT-2024-07, fenetre de test ouverte).",
+      "Verdict": "false-positive",
+      "TriageNote": "Engagement RedTeam autorise, IP prestataire connue, hote de lab isole. Benin (a archiver)."
+    },
+    {
+      "Id": "4dd3a6b0f4c3d3e4f5a6b7c8d9e0f1a2",
+      "Type": "Recon:IAMUser/MaliciousIPCaller.Custom",
+      "Severity": 4.0,
+      "Region": "eu-west-3",
+      "Resource": { "ResourceType": "AccessKey", "AccessKeyDetails": { "UserName": "monitoring-probe", "AccessKeyId": "AKIAMONPROBE000INTERN", "UserType": "IAMUser" } },
+      "Service": {
+        "Action": { "ActionType": "AWS_API_CALL", "AwsApiCallAction": { "Api": "DescribeInstances", "CallerType": "RemoteIp", "RemoteIpDetails": { "IpAddressV4": "10.0.9.12", "Organization": { "Org": "PCE-Corp-Internal" } } } },
+        "AdditionalInfo": { "ThreatListName": "custom-internal-watchlist", "ThreatIntelIndicatorValue": "10.0.9.12" },
+        "Count": 6,
+        "Archived": false
+      },
+      "Title": "Appels API depuis une IP de la watchlist custom",
+      "Description": "La sonde monitoring-probe appelle DescribeInstances depuis 10.0.9.12. L'IP figure par erreur sur une watchlist custom mal entretenue ; c'est en realite une IP interne du systeme de supervision. Watchlist a corriger.",
+      "Verdict": "false-positive",
+      "TriageNote": "Faux positif: IP INTERNE ajoutee par erreur a une threat-list custom. Corriger la liste."
+    }
+  ]
+}

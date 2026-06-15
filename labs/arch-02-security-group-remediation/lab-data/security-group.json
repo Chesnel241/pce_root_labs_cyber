@@ -1,0 +1,24 @@
+{
+  "_comment": "Configuration 'as-code' d'un Security Group AWS (etat exporte). C'est la cible de l'audit. PROBLEME : une regle ingress ouvre 0.0.0.0/0 (tout Internet) sur TOUS les ports (protocol -1, fromPort 0, toPort 65535) -> exposition maximale. REMEDIATION : remplacer cette regle par le moindre privilege reseau : protocol 'tcp', fromPort 443, toPort 443, cidr d'un reseau de confiance (ex. 10.0.0.0/16), surtout PAS 0.0.0.0/0. Editez ensuite et relancez sg-audit.py pour reveler le flag.",
+  "groupId": "sg-0a1b2c3d4e5f6a7b8",
+  "groupName": "pce-corp-web-tier",
+  "vpcId": "vpc-0pce1234",
+  "description": "Security group du tier web PCE Corp",
+  "ingress": [
+    {
+      "protocol": "-1",
+      "fromPort": 0,
+      "toPort": 65535,
+      "cidr": "0.0.0.0/0",
+      "_hint": "REGLE DANGEREUSE : tout Internet (0.0.0.0/0) sur tous les ports. A remplacer par une regle de moindre exposition (ex. 443/tcp depuis un CIDR de confiance)."
+    }
+  ],
+  "egress": [
+    {
+      "protocol": "-1",
+      "fromPort": 0,
+      "toPort": 65535,
+      "cidr": "0.0.0.0/0"
+    }
+  ]
+}

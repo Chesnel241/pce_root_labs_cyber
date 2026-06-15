@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+"""Mock `kubectl` HORS-LIGNE pour le lab NetworkPolicy.
+
+Lit l'état réseau simulé depuis cluster.json (aucun cluster réel) et répond à un
+sous-ensemble de commandes : get/describe des namespaces, pods et
+networkpolicies, plus une commande maison `audit-netpol` qui détecte les
+namespaces sans politique default-deny (gap autorisant le trafic cross-namespace
+/ pivot latéral) et révèle le flag.
+"""
+import json
+import os
+import sys
+
+SEARCH = (
+    "./cluster.json",
+    "./lab-data/cluster.json",
+    "/srv/k8s/cluster.json",
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), "cluster.json"),
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), "lab-data", "cluster.json"),
+)
+
+
+def load():
+    for path in SEARCH:
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as handle:
+                return json.load(handle)
+    sys.stderr.write("kubectl: impossible de joindre le cluster (cluster.json introuvable)\n")
+    sys.exit(1)
+
+
+def is_default_deny_ingress(policy):
+    """Vrai si la politique applique un default-deny sur l'ingress :
+    podSelector vide (= tous les pods du namespace) + aucune règle ingress."""
+    spec = policy.get("spec", {})
+    selects_all = spec.get("podSelector", {}) == {}
+    types = spec.get("policyTypes", [])
+    deny_ingress = "Ingress" in types and not spec.get("ingress")
+    return selects_all and deny_ingress
+
+
+def policies_for(data, ns):
+    return [p for p in data.get("networkPolicies", []) if p.get("namespace") == ns]
+
+
+def app_namespaces(data):
+    """Namespaces applicatifs (on exclut les namespaces système du périmètre d'audit)."""
+    system = {"kube-system", "kube-public", "kube-node-lease"}
+    return [n for n in data.get("namespaces", []) if n.get("name") not in system]
+
+
+def main():
+    data = load()
+    args = sys.argv[1:]
+    if not args:
+        print("usage: kubectl [get|describe|audit-netpol] ...")
+        return
+
+    verb, rest = args[0], args[1:]
+
+    if verb == "audit-netpol":
+        print("== Audit NetworkPolicy : namespaces sans default-deny (gap cross-namespace) ==\n")
+        gaps = []
+        for ns in app_namespaces(data):
+            name = ns["name"]
+            pols = policies_for(data, name)
+            has_deny = any(is_default_deny_ingress(p) for p in pols)
+            if not has_deny:
+                gaps.append(name)
+        if not gaps:
+            print("Tous les namespaces applicatifs appliquent une politique default-deny. RAS.")
+            return
+        for name in gaps:
+            pols = policies_for(data, name)
+            sensitive = [
+                p for p in data.get("pods", [])
+                if p.get("namespace") == name and (
+                    p.get("labels", {}).get("store") == "cardholder-data"
+                    or "vault" in p.get("name", "")
+                )
+            ]
+            print(f"[CRITIQUE] Namespace '{name}' : AUCUNE politique default-deny en ingress.")
+            if not pols:
+                print("           networkPolicies = 0  =>  modèle 'allow-all' par défaut de Kubernetes.")
+            else:
+                print(f"           {len(pols)} politique(s) présente(s) mais aucune ne couvre TOUS les pods (podSelector vide).")
+            for s in sensitive:
+                print(f"           pod sensible exposé -> {s['namespace']}/{s['name']} "
+                      f"(labels={s.get('labels', {})})")
+            print("           => n'importe quel pod d'un autre namespace peut joindre ces pods (pivot latéral).\n")
+        print("Remédiation : appliquer un NetworkPolicy default-deny puis des allow ciblées (voir README).")
+        print(f"\nFLAG: {data['flag']}")
+        return
+
+    if verb == "get":
+        if not rest:
+            print("usage: kubectl get <resource>")
+            return
+        res = rest[0].lower()
+        # -n <ns> / --namespace=<ns> filtre éventuel
+        ns_filter = None
+        for i, a in enumerate(rest):
+            if a in ("-n", "--namespace") and i + 1 < len(rest):
+                ns_filter = rest[i + 1]
+            elif a.startswith("--namespace="):
+                ns_filter = a.split("=", 1)[1]
+        all_ns = "-A" in rest or "--all-namespaces" in rest
+        as_json = "-o" in rest and "json" in rest
+
+        if res in ("networkpolicies", "networkpolicy", "netpol"):
+            items = data.get("networkPolicies", [])
+            if ns_filter:
+                items = [p for p in items if p.get("namespace") == ns_filter]
+            if as_json:
+                print(json.dumps(items, indent=2))
+                return
+            print(f"{'NAMESPACE':12}{'NAME':36}POD-SELECTOR")
+            for p in items:
+                sel = p.get("spec", {}).get("podSelector", {})
+                sel_txt = "<all>" if sel == {} else json.dumps(sel.get("matchLabels", sel))
+                print(f"{p['namespace']:12}{p['name']:36}{sel_txt}")
+            if not items:
+                print("(aucune NetworkPolicy" + (f" dans le namespace '{ns_filter}'" if ns_filter else "") + ")")
+            return
+
+        if res in ("namespaces", "namespace", "ns"):
+            print(f"{'NAME':16}LABELS")
+            for n in data.get("namespaces", []):
+                print(f"{n['name']:16}{json.dumps(n.get('labels', {}))}")
+            return
+
+        if res in ("pods", "pod", "po"):
+            items = data.get("pods", [])
+            if ns_filter and not all_ns:
+                items = [p for p in items if p.get("namespace") == ns_filter]
+            if as_json:
+                print(json.dumps(items, indent=2))
+                return
+            print(f"{'NAMESPACE':12}{'NAME':24}{'POD-IP':16}LABELS")
+            for p in items:
+                print(f"{p['namespace']:12}{p['name']:24}{p.get('podIP', '-'):16}{json.dumps(p.get('labels', {}))}")
+            return
+
+        print(f"kubectl: ressource inconnue '{res}'")
+        return
+
+    if verb == "describe":
+        if len(rest) >= 2 and rest[0].lower().startswith(("networkpolic", "netpol")):
+            name = rest[1]
+            for p in data.get("networkPolicies", []):
+                if p["name"] == name:
+                    print(json.dumps(p, indent=2))
+                    return
+            print(f"kubectl: networkpolicy '{name}' introuvable")
+            return
+        if len(rest) >= 2 and rest[0].lower().startswith(("namespace", "ns")):
+            name = rest[1]
+            for n in data.get("namespaces", []):
+                if n["name"] == name:
+                    pols = policies_for(data, name)
+                    print(json.dumps(n, indent=2))
+                    print(f"\nNetworkPolicies dans '{name}': "
+                          f"{[p['name'] for p in pols] or 'AUCUNE (allow-all)'}")
+                    return
+            print(f"kubectl: namespace '{name}' introuvable")
+            return
+        print("usage: kubectl describe [networkpolicy|namespace] <name>")
+        return
+
+    print(f"kubectl: commande inconnue '{verb}'")
+
+
+if __name__ == "__main__":
+    main()

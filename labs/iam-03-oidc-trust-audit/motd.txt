@@ -1,0 +1,26 @@
+==============================================================================
+ PCE Root Labs Cyber — Lab 2.3.1 : Trust OIDC GitHub Actions trop large
+==============================================================================
+ Scénario : le compte "PCE Corp" (123456789012) utilise le provider OIDC
+ GitHub Actions (token.actions.githubusercontent.com) pour laisser ses
+ pipelines assumer des rôles sans clé statique. L'un des rôles a une condition
+ sur le claim "sub" trop large (wildcard "repo:*"), si bien que N'IMPORTE
+ QUEL dépôt GitHub — y compris un dépôt attaquant — peut assumer ce rôle.
+
+ Objectif : énumérer les rôles, inspecter leurs trust policies, identifier le
+ rôle fautif, puis récupérer le flag au format PCE{...}.
+
+ Pistes :
+   1) Lister les rôles et le provider OIDC :
+        aws iam list-roles
+        aws iam list-open-id-connect-providers
+   2) Lire la trust policy d'un rôle :
+        aws iam get-role --role-name <name>
+   3) Auditer la trust policy d'un rôle (signale un sub trop large) :
+        aws iam audit-trust --role-name <name>
+
+ Astuce : un "sub" correct cible un dépôt PRÉCIS, ex :
+   repo:pce-corp/pce-app:ref:refs/heads/main
+ Un "sub" en "repo:*" (ou sans condition) est dangereux. L'audit du bon
+ rôle révèle le drapeau.
+==============================================================================

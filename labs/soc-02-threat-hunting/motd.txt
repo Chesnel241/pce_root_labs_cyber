@@ -1,0 +1,28 @@
+==============================================================================
+ PCE Root Labs Cyber — Lab 5.2.1 : Threat Hunting / Mouvement latéral
+==============================================================================
+ Scénario : un export CloudTrail (~/cloudtrail-events.json) couvre l'activité du
+ compte PCE Corp. La plupart des événements sont légitimes, mais un acteur ayant
+ compromis l'utilisateur « dev-sandbox » réalise un MOUVEMENT LATÉRAL via une
+ CHAÎNE d'AssumeRole. Chaque saut (hop) réutilise les credentials temporaires
+ (ASIA...) obtenus au saut précédent (role chaining).
+
+ Objectif : reconstruire la chaîne d'AssumeRole et identifier le ROLE PIVOT final
+ (le plus privilégié), puis récupérer le flag au format PCE{...}.
+
+ Pistes :
+   1) Repérer l'acteur (IP/user-agent inhabituels, ex. "kali") :
+        jq -r '.Records[] | "\(.sourceIPAddress) \(.userAgent)"' cloudtrail-events.json | sort | uniq -c
+   2) Lister tous les AssumeRole pour voir les rôles cible :
+        jq -r '.Records[] | select(.eventName=="AssumeRole")
+               | "\(.userIdentity.userName // .userIdentity.arn) -> \(.requestParameters.roleArn)"' cloudtrail-events.json
+   3) Relier les hops : l'accessKeyId (ASIA...) RENDU par un AssumeRole
+      (responseElements.credentials.accessKeyId) est l'accessKeyId qui RÉALISE
+      le hop suivant (userIdentity.accessKeyId). Suivez la chaîne :
+        dev-sandbox -> ci-deploy -> app-backend -> db-admin
+   4) Confirmer le finding (révèle le flag) :
+        verify-finding db-admin
+
+ Astuce : l'AssumeRole final (vers db-admin) porte un champ "pceFinding" qui
+ contient le drapeau.
+==============================================================================

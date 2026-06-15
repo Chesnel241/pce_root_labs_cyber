@@ -1,0 +1,12 @@
+{
+  "id": "6.2.1",
+  "title": "IAM : moindre privilège",
+  "flag": "PCE{least_privilege_scoped_policy_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/sh",
+  "hints": [
+    "Lancez l'audit : `python3 policy-audit.py`. Le Statement est en FAIL : il accorde Action:'*' sur Resource:'*'. Le fichier à corriger est `iam-policy.json`.",
+    "Éditez `iam-policy.json` : remplacez le Statement par du moindre privilège, par ex. `\"Action\": [\"s3:GetObject\", \"s3:PutObject\"]` et `\"Resource\": \"arn:aws:s3:::pce-corp-reports/*\"`. Aucun wildcard global : pas d'Action '*', pas de 'service:*', pas de Resource '*'.",
+    "Relancez `python3 policy-audit.py`. Quand tous les Statements Allow sont scopés, l'audit affiche le flag PCE{...}. (Corrigez la policy, pas le script.)"
+  ]
+}

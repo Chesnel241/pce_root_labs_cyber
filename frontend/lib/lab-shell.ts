@@ -8,6 +8,8 @@
  * terminal se connecte au vrai container et ce module n'est plus utilisé.
  */
 
+import { scenarioRegistry } from "./lab-scenarios";
+
 export interface ShellResult {
   lines?: string[];
   clear?: boolean;
@@ -966,6 +968,10 @@ export function getScenario(
   challengeId: string,
   labSlug?: string,
 ): ShellScenario {
+  // Labs câblés via un module de scénario dédié (frontend/lib/lab-scenarios/).
+  if (labSlug && scenarioRegistry[labSlug]) {
+    return scenarioRegistry[labSlug]();
+  }
   if (labSlug === "devsecops-02-jenkins-secrets" || challengeId === "3.1.1") {
     return jenkinsSecretsScenario();
   }

@@ -1,0 +1,24 @@
+==============================================================================
+ PCE Root Labs Cyber — Lab 2.2.1 : PassRole + RunInstances (escalade)
+==============================================================================
+ Scénario : le compte "PCE Corp" (123456789012) possède plusieurs utilisateurs
+ IAM avec des policies inline. L'un d'eux cumule iam:PassRole (non restreint)
+ et ec2:RunInstances — un chemin d'escalade de privilèges : lancer une EC2
+ portant un profil d'instance lié à un rôle admin, puis voler ses credentials.
+
+ Objectif : énumérer les utilisateurs, inspecter leurs policies inline,
+ identifier l'utilisateur fautif, puis récupérer le flag au format PCE{...}.
+
+ Pistes :
+   1) Lister les utilisateurs :
+        aws iam list-users
+   2) Lister et lire les policies inline d'un utilisateur :
+        aws iam list-user-policies --user-name <name>
+        aws iam get-user-policy    --user-name <name> --policy-name <p>
+   3) Auditer un utilisateur (signale le couple PassRole+RunInstances) :
+        aws iam audit-user --user-name <name>
+
+ Astuce : cherchez "iam:PassRole" sur Resource:"*" (sans condition
+ iam:PassedToService) COMBINÉ à "ec2:RunInstances". L'audit du bon
+ utilisateur révèle le drapeau.
+==============================================================================

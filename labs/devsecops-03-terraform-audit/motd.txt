@@ -1,0 +1,25 @@
+PCE Root Labs — Lab 3.2.1 · Audit Terraform
+-------------------------------------------
+Objectif : AUDITER l'infrastructure Terraform du projet "pce-data-platform"
+et DÉTECTER ses 5 catégories de misconfigurations de sécurité AWS :
+  1. Bucket S3 exposé publiquement (ACL public-read)
+  2. Security group ouvert au monde (ingress 0.0.0.0/0)
+  3. Stockage non chiffré au repos (volume EBS + bucket S3)
+  4. Secret / mot de passe codé EN DUR dans le code
+  5. Base RDS accessible publiquement (publicly_accessible = true)
+
+Les fichiers se trouvent dans /srv/terraform :
+  - main.tf   (infrastructure complète)
+
+Audit manuel :
+  grep -n "public-read"            main.tf
+  grep -n "0.0.0.0/0"              main.tf
+  grep -nE "encrypted *= *false"   main.tf
+  grep -niE "password|secret"      main.tf
+  grep -n "publicly_accessible"    main.tf
+
+Scanner automatique :
+  python3 /usr/local/bin/tf-audit.py .
+
+Détecter les 5 catégories (5/5) révèle le flag (format PCE{...}).
+Voir README.md pour la remédiation de chaque finding.

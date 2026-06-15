@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+"""Mock `kubectl` HORS-LIGNE pour le lab Pod Security.
+
+Lit l'état des pods simulé depuis pods.json (aucun cluster réel) et répond à un
+sous-ensemble de commandes : get/describe des pods, plus une commande maison
+`audit-podsecurity` qui inspecte le securityContext de chaque pod/conteneur,
+liste les violations des Pod Security Standards (exécution en root, privileged,
+capability SYS_ADMIN ajoutée, montage hostPath, hostPID/hostNetwork...) et
+révèle le flag.
+"""
+import json
+import os
+import sys
+
+SEARCH = (
+    "./pods.json",
+    "./lab-data/pods.json",
+    "/srv/k8s/pods.json",
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), "pods.json"),
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), "lab-data", "pods.json"),
+)
+
+DANGEROUS_CAPS = {"SYS_ADMIN", "NET_ADMIN", "SYS_PTRACE", "SYS_MODULE", "ALL"}
+
+
+def load():
+    for path in SEARCH:
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as handle:
+                return json.load(handle)
+    sys.stderr.write("kubectl: impossible de joindre le cluster (pods.json introuvable)\n")
+    sys.exit(1)
+
+
+def pod_violations(pod):
+    """Retourne la liste des violations de sécurité d'un pod (vide = conforme)."""
+    spec = pod.get("spec", {})
+    pod_sc = spec.get("securityContext", {}) or {}
+    findings = []
+
+    if spec.get("hostPID"):
+        findings.append("hostPID=true (partage l'espace de processus du noeud)")
+    if spec.get("hostNetwork"):
+        findings.append("hostNetwork=true (partage la pile reseau du noeud)")
+    if spec.get("hostIPC"):
+        findings.append("hostIPC=true")
+
+    for vol in spec.get("volumes", []) or []:
+        if "hostPath" in vol:
+            path = vol["hostPath"].get("path", "?")
+            findings.append(f"montage hostPath '{path}' (acces au FS du noeud)")
+
+    for c in spec.get("containers", []):
+        cname = c.get("name", "?")
+        sc = c.get("securityContext", {}) or {}
+
+        if sc.get("privileged"):
+            findings.append(f"conteneur '{cname}': privileged=true")
+
+        # Exécution en root : runAsUser 0 explicite, OU ni le pod ni le
+        # conteneur ne garantissent runAsNonRoot=true.
+        runs_as_root = False
+        if sc.get("runAsUser") == 0:
+            runs_as_root = True
+        else:
+            non_root = sc.get("runAsNonRoot")
+            if non_root is None:
+                non_root = pod_sc.get("runAsNonRoot")
+            user = sc.get("runAsUser", pod_sc.get("runAsUser"))
+            if non_root is not True and (user in (None, 0)):
+                runs_as_root = True
+        if runs_as_root:
+            findings.append(f"conteneur '{cname}': s'execute en root (runAsNonRoot non garanti)")
+
+        if sc.get("allowPrivilegeEscalation") is True:
+            findings.append(f"conteneur '{cname}': allowPrivilegeEscalation=true")
+
+        caps = sc.get("capabilities", {}) or {}
+        added = [c.upper() for c in caps.get("add", []) or []]
+        bad = [c for c in added if c in DANGEROUS_CAPS]
+        if bad:
+            findings.append(f"conteneur '{cname}': capabilities ajoutees {bad}")
+        if "ALL" not in [c.upper() for c in caps.get("drop", []) or []] and not sc.get("privileged"):
+            # Recommandation Pod Security 'restricted' : drop ALL.
+            pass
+
+    return findings
+
+
+def main():
+    data = load()
+    args = sys.argv[1:]
+    if not args:
+        print("usage: kubectl [get|describe|audit-podsecurity] ...")
+        return
+
+    verb, rest = args[0], args[1:]
+
+    if verb == "audit-podsecurity":
+        print("== Audit Pod Security : pods violant les Pod Security Standards ==\n")
+        offenders = []
+        for pod in data.get("pods", []):
+            v = pod_violations(pod)
+            if v:
+                offenders.append((pod, v))
+        if not offenders:
+            print("Tous les pods sont conformes (runAsNonRoot, drop ALL, pas de privileged/hostPath). RAS.")
+            return
+        for pod, v in offenders:
+            print(f"[CRITIQUE] {pod['namespace']}/{pod['name']}")
+            for line in v:
+                print(f"           - {line}")
+            print()
+        print(f"Total : {len(offenders)} pod(s) non conforme(s) sur {len(data.get('pods', []))}.")
+        print("Remediation : runAsNonRoot, drop ALL des capabilities, pas de privileged/hostPath, "
+              "Pod Security Admission (voir README).")
+        print(f"\nFLAG: {data['flag']}")
+        return
+
+    if verb == "get":
+        if not rest:
+            print("usage: kubectl get <resource>")
+            return
+        res = rest[0].lower()
+        ns_filter = None
+        for i, a in enumerate(rest):
+            if a in ("-n", "--namespace") and i + 1 < len(rest):
+                ns_filter = rest[i + 1]
+            elif a.startswith("--namespace="):
+                ns_filter = a.split("=", 1)[1]
+        all_ns = "-A" in rest or "--all-namespaces" in rest
+        as_json = "-o" in rest and "json" in rest
+
+        if res in ("pods", "pod", "po"):
+            items = data.get("pods", [])
+            if ns_filter and not all_ns:
+                items = [p for p in items if p.get("namespace") == ns_filter]
+            if as_json:
+                print(json.dumps(items, indent=2))
+                return
+            print(f"{'NAMESPACE':12}{'NAME':22}{'PRIVILEGED':12}{'RUNASUSER':12}HOSTPATH")
+            for p in items:
+                spec = p.get("spec", {})
+                conts = spec.get("containers", [])
+                priv = any((c.get("securityContext", {}) or {}).get("privileged") for c in conts)
+                users = []
+                for c in conts:
+                    sc = c.get("securityContext", {}) or {}
+                    u = sc.get("runAsUser", (spec.get("securityContext", {}) or {}).get("runAsUser"))
+                    users.append("0/root" if u == 0 else (str(u) if u is not None else "?"))
+                hostpath = "yes" if any("hostPath" in v for v in spec.get("volumes", []) or []) else "no"
+                print(f"{p['namespace']:12}{p['name']:22}{str(priv):12}{','.join(users):12}{hostpath}")
+            return
+
+        print(f"kubectl: ressource inconnue '{res}'")
+        return
+
+    if verb == "describe":
+        if len(rest) >= 2 and rest[0].lower().startswith(("pod", "po")):
+            name = rest[1]
+            for p in data.get("pods", []):
+                if p["name"] == name:
+                    print(json.dumps(p, indent=2))
+                    return
+            print(f"kubectl: pod '{name}' introuvable")
+            return
+        print("usage: kubectl describe pod <name>")
+        return
+
+    print(f"kubectl: commande inconnue '{verb}'")
+
+
+if __name__ == "__main__":
+    main()

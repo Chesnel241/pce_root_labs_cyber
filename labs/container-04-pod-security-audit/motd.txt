@@ -1,0 +1,14 @@
+PCE Root Labs — Lab 4.4.1 · Pods en root / privileged (Pod Security)
+-------------------------------------------------------------------
+Objectif : auditer les securityContext des pods du cluster et identifier ceux
+qui violent les Pod Security Standards : exécution en root (runAsUser 0 /
+runAsNonRoot non défini), mode privileged, capability SYS_ADMIN ajoutée,
+montage hostPath, hostPID. Ces pods permettent une évasion de conteneur ou une
+compromission du noeud.
+
+L'état des pods est interrogeable via le shim `kubectl` (hors-ligne) :
+  kubectl get pods -A
+  kubectl describe pod <name>
+  kubectl audit-podsecurity   # liste les pods fautifs et révèle le flag
+
+Le flag est au format PCE{...}.

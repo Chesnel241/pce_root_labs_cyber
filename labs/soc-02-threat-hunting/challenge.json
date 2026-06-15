@@ -1,0 +1,12 @@
+{
+  "id": "5.2.1",
+  "title": "Threat Hunting — Mouvement latéral par chaîne de rôles",
+  "flag": "PCE{lateral_movement_role_chain_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/sh",
+  "hints": [
+    "Isolez l'acteur : `jq -r '.Records[] | \"\\(.sourceIPAddress) \\(.userAgent)\"' cloudtrail-events.json | sort | uniq -c`. Une IP (198.51.100.77) et un user-agent 'kali' détonnent ; tout part de l'utilisateur 'dev-sandbox'.",
+    "Listez tous les AssumeRole pour reconstruire la chaîne : `jq -r '.Records[] | select(.eventName==\"AssumeRole\") | \"\\(.userIdentity.userName // .userIdentity.arn) -> \\(.requestParameters.roleArn)\"' cloudtrail-events.json`. Reliez chaque hop : responseElements.credentials.accessKeyId d'un AssumeRole = userIdentity.accessKeyId du suivant (dev-sandbox -> ci-deploy -> app-backend -> db-admin).",
+    "Le pivot final atteint le rôle privilégié `db-admin` ; son événement porte un champ \"pceFinding\". Confirmez : `verify-finding db-admin` (ou `grep pceFinding cloudtrail-events.json`). Le flag est PCE{...}."
+  ]
+}

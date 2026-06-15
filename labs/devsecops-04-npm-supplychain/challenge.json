@@ -1,0 +1,12 @@
+{
+  "id": "3.4.1",
+  "title": "Supply chain npm",
+  "flag": "PCE{npm_typosquat_postinstall_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/sh",
+  "hints": [
+    "Le projet est dans /srv/app. Lisez package.json (cat package.json) et comparez les noms de dépendances : repérez le paquet quasi-identique à un paquet légitime (cross-env vs crossenv) — c'est un typosquat.",
+    "Inspectez le manifeste du paquet suspect : cat node_modules/crossenv/package.json. Cherchez un script de cycle de vie automatique : grep -rn 'postinstall' node_modules/*/package.json. Puis lisez le script qu'il lance (node_modules/crossenv/package-setup.js).",
+    "Le flag PCE{...} est laissé en marqueur dans la charge utile : grep -rn 'PCE{' node_modules/. Ou lancez le scanner : python3 /usr/local/bin/npm-audit.py ."
+  ]
+}

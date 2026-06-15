@@ -1,0 +1,12 @@
+{
+  "id": "3.2.1",
+  "title": "Audit Terraform",
+  "flag": "PCE{terraform_five_misconfigs_2024}",
+  "ttlMinutes": 60,
+  "entrypoint": "/bin/sh",
+  "hints": [
+    "Les fichiers Terraform sont dans /srv/terraform. Listez-les (ls) puis lisez main.tf (cat main.tf) en cherchant les ressources aws_s3_bucket, aws_security_group, aws_instance et aws_db_instance.",
+    "Cherchez chaque misconfig à la main : grep -n 'public-read' main.tf (S3 public), grep -n '0.0.0.0/0' main.tf (SG ouvert), grep -n 'encrypted *= *false' main.tf (volume non chiffré), grep -niE 'password|secret' main.tf (secret en dur), grep -n 'publicly_accessible *= *true' main.tf (RDS publique).",
+    "Lancez le scanner fourni : python3 /usr/local/bin/tf-audit.py . — quand les 5 catégories sont détectées (5/5), le flag PCE{...} s'affiche."
+  ]
+}

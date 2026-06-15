@@ -1,0 +1,103 @@
+{
+  "_comment": "État de pods Kubernetes simulé, lu par le shim kubectl. Plusieurs pods violent les bonnes pratiques de sécurité (Pod Security Standards 'restricted') : exécution en root (runAsNonRoot non défini / runAsUser 0), mode privileged, ajout de la capability SYS_ADMIN, montage hostPath (accès au système de fichiers du noeud). Un seul pod ('web-frontend') est durci correctement (runAsNonRoot, drop ALL, allowPrivilegeEscalation=false). `kubectl audit-podsecurity` liste les pods fautifs et révèle le flag.",
+  "flag": "PCE{k8s_pods_run_as_root_2024}",
+  "pods": [
+    {
+      "namespace": "prod",
+      "name": "web-frontend-7d9c",
+      "labels": { "app": "web-frontend" },
+      "spec": {
+        "securityContext": { "runAsNonRoot": true, "runAsUser": 10001, "seccompProfile": { "type": "RuntimeDefault" } },
+        "containers": [
+          {
+            "name": "web",
+            "image": "registry.pce.local/web-frontend:1.8.2",
+            "securityContext": {
+              "runAsNonRoot": true,
+              "allowPrivilegeEscalation": false,
+              "readOnlyRootFilesystem": true,
+              "capabilities": { "drop": ["ALL"] }
+            }
+          }
+        ],
+        "volumes": []
+      }
+    },
+    {
+      "namespace": "prod",
+      "name": "legacy-api-6b5f",
+      "labels": { "app": "legacy-api" },
+      "spec": {
+        "securityContext": {},
+        "containers": [
+          {
+            "name": "api",
+            "image": "registry.pce.local/legacy-api:0.4.0",
+            "securityContext": { "runAsUser": 0 }
+          }
+        ],
+        "volumes": []
+      }
+    },
+    {
+      "namespace": "monitoring",
+      "name": "node-agent-xk21",
+      "labels": { "app": "node-agent" },
+      "spec": {
+        "securityContext": {},
+        "containers": [
+          {
+            "name": "agent",
+            "image": "registry.pce.local/node-agent:2.1.0",
+            "securityContext": {
+              "privileged": true,
+              "capabilities": { "add": ["SYS_ADMIN", "NET_ADMIN"] }
+            }
+          }
+        ],
+        "volumes": [
+          { "name": "host-root", "hostPath": { "path": "/", "type": "Directory" } }
+        ]
+      }
+    },
+    {
+      "namespace": "dev",
+      "name": "debug-shell-aa90",
+      "labels": { "app": "debug-shell" },
+      "spec": {
+        "hostPID": true,
+        "securityContext": {},
+        "containers": [
+          {
+            "name": "shell",
+            "image": "registry.pce.local/busybox:1.36",
+            "securityContext": {
+              "runAsUser": 0,
+              "allowPrivilegeEscalation": true,
+              "capabilities": { "add": ["SYS_ADMIN"] }
+            }
+          }
+        ],
+        "volumes": [
+          { "name": "docker-sock", "hostPath": { "path": "/var/run/docker.sock", "type": "Socket" } }
+        ]
+      }
+    },
+    {
+      "namespace": "prod",
+      "name": "cache-redis-0",
+      "labels": { "app": "cache-redis" },
+      "spec": {
+        "securityContext": {},
+        "containers": [
+          {
+            "name": "redis",
+            "image": "registry.pce.local/redis:7.2",
+            "securityContext": {}
+          }
+        ],
+        "volumes": []
+      }
+    }
+  ]
+}

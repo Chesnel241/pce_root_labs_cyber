@@ -1,0 +1,15 @@
+PCE Root Labs — Lab 4.3.1 · Gap de NetworkPolicy (trafic cross-namespace)
+-------------------------------------------------------------------------
+Objectif : auditer la segmentation réseau du cluster et repérer le namespace
+sensible qui n'applique AUCUNE politique default-deny. Sans default-deny,
+Kubernetes autorise tout le trafic (allow-all) : un pod compromis dans un autre
+namespace peut joindre les pods sensibles (pivot latéral).
+
+L'état réseau est interrogeable via le shim `kubectl` (hors-ligne) :
+  kubectl get namespaces
+  kubectl get pods -A
+  kubectl get networkpolicies -A
+  kubectl describe networkpolicy <name>
+  kubectl audit-netpol      # détecte le gap et révèle le flag
+
+Le flag est au format PCE{...}.

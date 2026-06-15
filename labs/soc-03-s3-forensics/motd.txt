@@ -1,0 +1,29 @@
+==============================================================================
+ PCE Root Labs Cyber — Lab 5.3.2 : Forensics S3 / Exfiltration
+==============================================================================
+ Scénario : deux sources de logs couvrent le bucket sensible « pce-customer-pii » :
+   - ~/s3-access.log          (journal d'accès S3, format texte AWS)
+   - ~/cloudtrail-events.json (data events S3 CloudTrail)
+ La plupart des accès sont légitimes (alice, rôle CI de sauvegarde). Mais un
+ compte de service censé rester interne a été détourné pour EXFILTRER un objet
+ sensible vers l'extérieur.
+
+ Objectif : déterminer QUEL acteur a exfiltré QUEL objet, puis récupérer le flag
+ au format PCE{...}.
+
+ Pistes :
+   1) Lister les téléchargements (REST.GET.OBJECT) et les tailles dans le log S3.
+      Le timestamp [date heure] occupe 2 champs awk : principal=$6, clé=$9,
+      bytes_sent=$15. Triez par volume :
+        awk '$8 ~ /GET.OBJECT/ {print $15, $6, $9}' s3-access.log | sort -rn
+      Un objet ~48 Mo (exports/customers-full.csv) ressort, téléchargé par le
+      compte svc-reporting depuis 203.0.113.66 (kali).
+   2) Corréler avec CloudTrail (région/IP anormales du même acteur) :
+        jq -r '.Records[] | select(.eventName=="GetObject")
+               | "\(.userIdentity.userName) \(.awsRegion) \(.sourceIPAddress) \(.requestParameters.key)"' cloudtrail-events.json
+   3) Confirmer l'acteur (révèle le flag) :
+        verify-finding svc-reporting
+
+ Astuce : l'événement GetObject d'exfiltration porte un champ "pceFinding" qui
+ contient le drapeau.
+==============================================================================

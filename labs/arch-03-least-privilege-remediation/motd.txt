@@ -1,0 +1,31 @@
+==============================================================================
+ PCE Root Labs Cyber — Lab 6.2.1 : IAM, moindre privilège
+==============================================================================
+ Scénario : vous auditez la policy IAM attachée au rôle applicatif "PCE Corp"
+ pce-report-uploader. Sa configuration est exportée "as-code" dans
+ ~/least-privilege :
+   - iam-policy.json   : la policy IAM à corriger ;
+   - policy-audit.py   : l'outil d'audit (moindre privilège).
+
+ PROBLEME : le Statement accorde Action:"*" sur Resource:"*" — équivalent
+ AdministratorAccess. Sur-privilège total.
+
+ Objectif : ré-écrire la policy en MOINDRE PRIVILEGE (actions explicites et
+ ressources scopées à un ARN précis, sans wildcard global), puis relancer
+ l'audit. Lorsque tous les Statements Allow sont conformes, l'audit révèle le
+ flag au format PCE{...}.
+
+ Pistes :
+   1) Lancer l'audit :
+        python3 policy-audit.py
+   2) Repérer le Statement en FAIL (Action:"*" / Resource:"*").
+   3) Corriger la policy — éditez iam-policy.json, par ex. le Statement :
+        "Action": ["s3:GetObject", "s3:PutObject"],
+        "Resource": "arn:aws:s3:::pce-corp-reports/*"
+      (surtout PAS d'Action "*", PAS de "service:*", PAS de Resource "*")
+   4) Relancer l'audit -> Statements conformes -> le flag s'affiche :
+        python3 policy-audit.py
+
+ Astuce : la conformité se fait en CORRIGEANT iam-policy.json, pas en
+ modifiant le script d'audit.
+==============================================================================

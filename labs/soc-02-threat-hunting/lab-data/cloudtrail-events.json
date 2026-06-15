@@ -1,0 +1,130 @@
+{
+  "_comment": "Export CloudTrail (LookupEvents) simulé pour le lab de threat-hunting. La majorité des événements sont bénins (activité légitime d'alice, du rôle CI et de pipelines). Un acteur ayant compromis l'utilisateur 'dev-sandbox' réalise un MOUVEMENT LATÉRAL par une CHAÎNE d'AssumeRole : dev-sandbox -> role/ci-deploy -> role/app-backend -> role/db-admin. Chaque hop réutilise les credentials temporaires (ASIA...) du hop précédent (chaînage de rôles). Le PIVOT final (AssumeRole vers db-admin) porte un champ 'pceFinding' qui encode le flag. On trace la chaîne en reliant responseElements.credentials.accessKeyId d'un AssumeRole au userIdentity.accessKeyId de l'AssumeRole suivant.",
+  "Records": [
+    {
+      "eventTime": "2024-06-02T07:58:21Z",
+      "eventName": "ConsoleLogin",
+      "eventSource": "signin.amazonaws.com",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "92.154.10.3",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+      "userIdentity": { "type": "IAMUser", "userName": "alice", "accessKeyId": "AKIAALICE0000LEGIT01" },
+      "responseElements": { "ConsoleLogin": "Success" }
+    },
+    {
+      "eventTime": "2024-06-02T08:12:09Z",
+      "eventName": "DescribeInstances",
+      "eventSource": "ec2.amazonaws.com",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "92.154.10.3",
+      "userAgent": "aws-cli/2.15.0 Python/3.11",
+      "userIdentity": { "type": "IAMUser", "userName": "alice", "accessKeyId": "AKIAALICE0000LEGIT01" }
+    },
+    {
+      "eventTime": "2024-06-02T09:03:44Z",
+      "eventName": "AssumeRole",
+      "eventSource": "sts.amazonaws.com",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "10.0.4.21",
+      "userAgent": "aws-sdk-go/1.49.0",
+      "userIdentity": { "type": "AssumedRole", "arn": "arn:aws:sts::123456789012:assumed-role/github-oidc/run-7781", "accessKeyId": "ASIAGHOIDC0000LEGIT" },
+      "requestParameters": { "roleArn": "arn:aws:iam::123456789012:role/ci-deploy", "roleSessionName": "nightly-build" },
+      "responseElements": { "credentials": { "accessKeyId": "ASIACIDEPLOY00LEGIT1" } },
+      "errorCode": null
+    },
+    {
+      "eventTime": "2024-06-02T09:05:10Z",
+      "eventName": "PutObject",
+      "eventSource": "s3.amazonaws.com",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "10.0.4.21",
+      "userAgent": "aws-sdk-go/1.49.0",
+      "userIdentity": { "type": "AssumedRole", "arn": "arn:aws:sts::123456789012:assumed-role/ci-deploy/nightly-build", "accessKeyId": "ASIACIDEPLOY00LEGIT1" }
+    },
+    {
+      "eventTime": "2024-06-03T01:14:55Z",
+      "eventName": "GetCallerIdentity",
+      "eventSource": "sts.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.77",
+      "userAgent": "Boto3/1.26.0 Python/3.9 Linux/5.4 kali",
+      "userIdentity": { "type": "IAMUser", "userName": "dev-sandbox", "accessKeyId": "AKIADEVSANDBOX00PWN1" },
+      "responseElements": null
+    },
+    {
+      "eventTime": "2024-06-03T01:18:32Z",
+      "eventName": "ListAttachedUserPolicies",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.77",
+      "userAgent": "Boto3/1.26.0 Python/3.9 Linux/5.4 kali",
+      "userIdentity": { "type": "IAMUser", "userName": "dev-sandbox", "accessKeyId": "AKIADEVSANDBOX00PWN1" }
+    },
+    {
+      "eventTime": "2024-06-03T01:22:07Z",
+      "eventName": "AssumeRole",
+      "eventSource": "sts.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.77",
+      "userAgent": "Boto3/1.26.0 Python/3.9 Linux/5.4 kali",
+      "userIdentity": { "type": "IAMUser", "userName": "dev-sandbox", "accessKeyId": "AKIADEVSANDBOX00PWN1" },
+      "requestParameters": { "roleArn": "arn:aws:iam::123456789012:role/ci-deploy", "roleSessionName": "s3-sync" },
+      "responseElements": { "credentials": { "accessKeyId": "ASIAHOP1CIDEPLOY0001" } },
+      "errorCode": null
+    },
+    {
+      "eventTime": "2024-06-03T01:27:41Z",
+      "eventName": "AssumeRole",
+      "eventSource": "sts.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.77",
+      "userAgent": "Boto3/1.26.0 Python/3.9 Linux/5.4 kali",
+      "userIdentity": { "type": "AssumedRole", "arn": "arn:aws:sts::123456789012:assumed-role/ci-deploy/s3-sync", "accessKeyId": "ASIAHOP1CIDEPLOY0001" },
+      "requestParameters": { "roleArn": "arn:aws:iam::123456789012:role/app-backend", "roleSessionName": "s3-sync" },
+      "responseElements": { "credentials": { "accessKeyId": "ASIAHOP2APPBACK00002" } },
+      "errorCode": null
+    },
+    {
+      "eventTime": "2024-06-03T01:30:18Z",
+      "eventName": "ListBuckets",
+      "eventSource": "s3.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.77",
+      "userAgent": "Boto3/1.26.0 Python/3.9 Linux/5.4 kali",
+      "userIdentity": { "type": "AssumedRole", "arn": "arn:aws:sts::123456789012:assumed-role/app-backend/s3-sync", "accessKeyId": "ASIAHOP2APPBACK00002" }
+    },
+    {
+      "eventTime": "2024-06-03T01:34:02Z",
+      "eventName": "AssumeRole",
+      "eventSource": "sts.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.77",
+      "userAgent": "Boto3/1.26.0 Python/3.9 Linux/5.4 kali",
+      "userIdentity": { "type": "AssumedRole", "arn": "arn:aws:sts::123456789012:assumed-role/app-backend/s3-sync", "accessKeyId": "ASIAHOP2APPBACK00002" },
+      "requestParameters": { "roleArn": "arn:aws:iam::123456789012:role/db-admin", "roleSessionName": "s3-sync" },
+      "responseElements": { "credentials": { "accessKeyId": "ASIAHOP3DBADMIN00003" } },
+      "errorCode": null,
+      "pceFinding": "Mouvement lateral confirme: chaine d'AssumeRole dev-sandbox -> ci-deploy -> app-backend -> db-admin depuis 198.51.100.77. Le pivot final atteint le role privilegie db-admin. FLAG=PCE{lateral_movement_role_chain_2024}"
+    },
+    {
+      "eventTime": "2024-06-03T01:38:49Z",
+      "eventName": "GenerateDbAuthToken",
+      "eventSource": "rds.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.77",
+      "userAgent": "Boto3/1.26.0 Python/3.9 Linux/5.4 kali",
+      "userIdentity": { "type": "AssumedRole", "arn": "arn:aws:sts::123456789012:assumed-role/db-admin/s3-sync", "accessKeyId": "ASIAHOP3DBADMIN00003" },
+      "requestParameters": { "dbInstanceIdentifier": "pce-prod-customers" }
+    },
+    {
+      "eventTime": "2024-06-03T07:46:12Z",
+      "eventName": "ConsoleLogin",
+      "eventSource": "signin.amazonaws.com",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "92.154.10.3",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+      "userIdentity": { "type": "IAMUser", "userName": "alice", "accessKeyId": "AKIAALICE0000LEGIT01" },
+      "responseElements": { "ConsoleLogin": "Success" }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+PCE Root Labs — Lab 3.4.1 · Supply chain npm (typosquat)
+--------------------------------------------------------
+Objectif : AUDITER les dépendances du projet Node "pce-checkout-service" et
+DÉTECTER une dépendance TYPOSQUATTÉE qui embarque un script postinstall
+malveillant (exfiltration de variables d'environnement).
+
+ATTENTION : la charge utile est DÉSARMÉE / inerte. Elle est là pour être LUE
+et analysée, pas exécutée. Ne lancez PAS "npm install".
+
+Le projet se trouve dans /srv/app :
+  - package.json       (dépendances déclarées)
+  - package-lock.json  (lockfile)
+  - .npm-allowlist.txt (paquets approuvés par la sécurité)
+  - node_modules/      (paquets installés)
+
+Audit manuel :
+  cat package.json
+  grep -rn "postinstall" node_modules/*/package.json
+  cat node_modules/crossenv/package.json
+  cat node_modules/crossenv/package-setup.js
+  grep -rn "PCE{" node_modules/
+
+Scanner automatique :
+  python3 /usr/local/bin/npm-audit.py .
+
+Le flag (format PCE{...}) est le marqueur laissé dans la charge utile.
+Voir README.md pour la remédiation (lockfile, allowlist, --ignore-scripts).

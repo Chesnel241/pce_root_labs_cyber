@@ -1,0 +1,17 @@
+{
+  "_comment": "Policy IAM 'as-code' attachee au role applicatif PCE Corp 'pce-report-uploader' (etat exporte). C'est la cible de l'audit. PROBLEME : le Statement accorde Action:'*' sur Resource:'*' -> equivalent AdministratorAccess (sur-privilege total). REMEDIATION : re-ecrire le Statement en MOINDRE PRIVILEGE -> lister explicitement les actions necessaires (ex. 's3:GetObject', 's3:PutObject') et restreindre Resource a l'ARN precis du bucket de rapports (ex. 'arn:aws:s3:::pce-corp-reports/*'). Aucun wildcard global (pas d'Action '*', pas de Resource '*', pas de 'service:*'). Editez puis relancez policy-audit.py pour reveler le flag.",
+  "policyName": "pce-report-uploader-policy",
+  "attachedTo": "role/pce-report-uploader",
+  "PolicyDocument": {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "AllowEverything",
+        "Effect": "Allow",
+        "Action": "*",
+        "Resource": "*",
+        "_hint": "STATEMENT DANGEREUX : Action '*' + Resource '*' = AdministratorAccess. A remplacer par des actions et ressources scopees (moindre privilege)."
+      }
+    ]
+  }
+}

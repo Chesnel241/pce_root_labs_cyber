@@ -1,0 +1,26 @@
+==============================================================================
+ PCE Root Labs Cyber — Lab 5.4.2 : Triage GuardDuty
+==============================================================================
+ Scénario : un lot de findings Amazon GuardDuty (~/guardduty-findings.json) vient
+ d'arriver dans la file du SOC. Il MÉLANGE des faux positifs (bruit) et un VRAI
+ positif à fort impact. Le bruit provient d'activités légitimes/autorisées :
+ scanner de vulnérabilités planifié, engagement RedTeam, job de sauvegarde,
+ watchlist interne mal réglée.
+
+ Objectif : trier les findings et isoler l'unique VRAI POSITIF avéré, puis
+ récupérer le flag au format PCE{...}.
+
+ Méthode de triage :
+   1) Prioriser par sévérité :
+        jq -r '.Findings[] | "\(.Severity) \(.Type) \(.Id)"' guardduty-findings.json | sort -rn
+   2) Ne pas s'arrêter à la sévérité : lire le CONTEXTE (l'activité est-elle
+      attendue / autorisée ? l'IP est-elle interne ou sur une threat-list ?) :
+        jq -r '.Findings[] | "[\(.Verdict)] \(.Type) — \(.Description)"' guardduty-findings.json
+   3) Confirmer le vrai positif par son Id (révèle le flag) :
+        verify-finding 5ec0a1b2c3d4e5f6a7b8c9d0e1f2beef
+
+ Astuce : le vrai positif (cle IAM appelée depuis une IP malveillante connue,
+ hors région/horaire habituels, sans MFA) porte un champ "pceFinding" qui
+ contient le drapeau. Les autres ont une "TriageNote" expliquant pourquoi ils
+ sont bénins.
+==============================================================================

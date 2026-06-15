@@ -1,0 +1,77 @@
+{
+  "_comment": "Export CloudTrail (data events S3) correle au journal d'acces S3 (s3-access.log). Il aide a etablir QUI a exfiltre QUOI. L'utilisateur 'svc-reporting' est un compte de service censé rester interne (eu-west-3, sans interaction humaine) mais ici il telecharge l'objet sensible exports/customers-full.csv (48 Mo de PII) depuis l'IP externe 203.0.113.66 (user-agent 'kali', region us-east-1). C'est l'acte d'exfiltration. L'evenement GetObject correspondant porte un champ 'pceFinding' qui encode le flag.",
+  "Records": [
+    {
+      "eventTime": "2024-06-10T08:01:12Z",
+      "eventName": "GetObject",
+      "eventSource": "s3.amazonaws.com",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "92.154.10.3",
+      "userAgent": "aws-cli/2.15.0 Python/3.11",
+      "userIdentity": { "type": "IAMUser", "userName": "alice", "accessKeyId": "AKIAALICE0000LEGIT01" },
+      "requestParameters": { "bucketName": "pce-customer-pii", "key": "exports/report-2024-05.pdf" }
+    },
+    {
+      "eventTime": "2024-06-10T09:14:55Z",
+      "eventName": "PutObject",
+      "eventSource": "s3.amazonaws.com",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "10.0.4.21",
+      "userAgent": "aws-sdk-go/1.49.0",
+      "userIdentity": { "type": "AssumedRole", "arn": "arn:aws:sts::123456789012:assumed-role/ci-build-role/ci", "accessKeyId": "ASIACIBUILD0000LEGIT" },
+      "requestParameters": { "bucketName": "pce-customer-pii", "key": "backups/db-2024-06-10.sql.gz" }
+    },
+    {
+      "eventTime": "2024-06-11T03:02:41Z",
+      "eventName": "ListObjects",
+      "eventSource": "s3.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "203.0.113.66",
+      "userAgent": "Boto3/1.26.0 Python/3.9 Linux/5.4 kali",
+      "userIdentity": { "type": "IAMUser", "userName": "svc-reporting", "accessKeyId": "AKIASVCREPORT00LEAK1" },
+      "requestParameters": { "bucketName": "pce-customer-pii" }
+    },
+    {
+      "eventTime": "2024-06-11T03:05:18Z",
+      "eventName": "HeadObject",
+      "eventSource": "s3.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "203.0.113.66",
+      "userAgent": "Boto3/1.26.0 Python/3.9 Linux/5.4 kali",
+      "userIdentity": { "type": "IAMUser", "userName": "svc-reporting", "accessKeyId": "AKIASVCREPORT00LEAK1" },
+      "requestParameters": { "bucketName": "pce-customer-pii", "key": "exports/customers-full.csv" }
+    },
+    {
+      "eventTime": "2024-06-11T03:07:59Z",
+      "eventName": "GetObject",
+      "eventSource": "s3.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "203.0.113.66",
+      "userAgent": "Boto3/1.26.0 Python/3.9 Linux/5.4 kali",
+      "userIdentity": { "type": "IAMUser", "userName": "svc-reporting", "accessKeyId": "AKIASVCREPORT00LEAK1" },
+      "requestParameters": { "bucketName": "pce-customer-pii", "key": "exports/customers-full.csv" },
+      "additionalEventData": { "bytesTransferredOut": 48210334 },
+      "pceFinding": "Exfiltration confirmee: l'acteur svc-reporting (clé AKIASVCREPORT00LEAK1) a telecharge exports/customers-full.csv (48 Mo de PII) depuis 203.0.113.66 (kali, us-east-1). FLAG=PCE{s3_forensics_exfil_actor_2024}"
+    },
+    {
+      "eventTime": "2024-06-11T08:33:27Z",
+      "eventName": "GetObject",
+      "eventSource": "s3.amazonaws.com",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "92.154.10.3",
+      "userAgent": "aws-cli/2.15.0 Python/3.11",
+      "userIdentity": { "type": "IAMUser", "userName": "alice", "accessKeyId": "AKIAALICE0000LEGIT01" },
+      "requestParameters": { "bucketName": "pce-customer-pii", "key": "exports/report-2024-05.pdf" }
+    },
+    {
+      "eventTime": "2024-06-11T14:20:06Z",
+      "eventName": "PutObject",
+      "eventSource": "s3.amazonaws.com",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "10.0.4.21",
+      "userAgent": "aws-sdk-go/1.49.0",
+      "userIdentity": { "type": "AssumedRole", "arn": "arn:aws:sts::123456789012:assumed-role/ci-build-role/ci", "accessKeyId": "ASIACIBUILD0000LEGIT" },
+      "requestParameters": { "bucketName": "pce-customer-pii", "key": "backups/db-2024-06-11.sql.gz" }
+    }
+  ]
+}
