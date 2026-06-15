@@ -166,24 +166,24 @@ services:
   # Frontend — déployé sur Vercel (recommandé). Service OPTIONNEL pour un
   # déploiement self-hosted. Décommentez si vous souhaitez l'embarquer ici.
   # ---------------------------------------------------------------------------
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #   container_name: pce-frontend
-  #   restart: unless-stopped
-  #   environment:
-  #     NEXT_PUBLIC_API_URL: https://${API_HOST:-api.example.com}
-  #   expose:
-  #     - "3000"
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.http.routers.frontend.rule=Host(`${APP_HOST:-app.example.com}`)"
-  #     - "traefik.http.routers.frontend.entrypoints=websecure"
-  #     - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
-  #     - "traefik.http.routers.frontend.middlewares=security-headers@file"
-  #     - "traefik.http.services.frontend.loadbalancer.server.port=3000"
-  #   networks:
-  #     - pce-net
+  frontend:
+    build:
+      context: ./frontend
+    container_name: pce-frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: https://${API_HOST:-api.example.com}
+    expose:
+      - "3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`${APP_HOST:-app.example.com}`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.frontend.middlewares=security-headers@file"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+    networks:
+      - pce-net
 
 volumes:
   pce-pgdata:
