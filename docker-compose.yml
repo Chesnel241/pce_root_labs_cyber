@@ -64,6 +64,7 @@ services:
       context: ./backend
     image: pce-backend:latest
     container_name: pce-backend
+    user: root
     restart: unless-stopped
     depends_on:
       postgres:
