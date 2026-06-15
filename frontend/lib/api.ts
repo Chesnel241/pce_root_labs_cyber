@@ -62,6 +62,7 @@ export interface ApiUser {
   email: string;
   username: string;
   xp: number;
+  role?: "user" | "admin";
   createdAt: string;
 }
 
