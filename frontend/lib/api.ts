@@ -22,13 +22,18 @@ export function apiEnabled(): boolean {
 
 /**
  * URL WebSocket du terminal, dérivée de NEXT_PUBLIC_API_URL (http->ws).
+ * Le chemin est préfixé par `/api` pour partager EXACTEMENT la même route que
+ * les appels REST (`${API_URL}/api/...`). Ainsi, un reverse proxy (Caddy/Nginx)
+ * qui route déjà `/api/*` vers le backend couvre aussi le terminal WebSocket —
+ * sans règle dédiée. Côté backend, l'upgrade matche `endsWith('/ws/terminal')`,
+ * donc `/api/ws/terminal` est bien pris en charge.
  * Retourne null si l'API n'est pas configurée.
  */
 export function terminalWsUrl(sessionId: string, token: string): string | null {
   if (!apiEnabled()) return null;
   const base = API_URL.replace(/^http/i, "ws").replace(/\/$/, "");
   const params = new URLSearchParams({ sessionId, token });
-  return `${base}/ws/terminal?${params.toString()}`;
+  return `${base}/api/ws/terminal?${params.toString()}`;
 }
 
 const TOKEN_KEY = "pce.token";
