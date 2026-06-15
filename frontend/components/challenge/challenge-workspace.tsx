@@ -90,21 +90,20 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
         setStatus("running");
         return;
       } catch (err) {
-        // Repli démo : on démarre quand même le simulateur, en signalant l'erreur.
         setSessionId(null);
         setLabError(
           err instanceof ApiError
-            ? `Lab indisponible (${err.message}). Terminal en mode démo.`
-            : "Lab indisponible. Terminal en mode démo.",
+            ? `Erreur de l'API : ${err.message}`
+            : "Impossible de démarrer le lab.",
         );
-        setStatus("running");
+        setStatus("idle");
         return;
       }
     }
 
-    // Mode démo : démarrage simulé immédiat.
     setSessionId(null);
-    setTimeout(() => setStatus("running"), 700);
+    setLabError("L'orchestration des labs est actuellement indisponible.");
+    setStatus("idle");
   }
 
   function stopLab() {
@@ -171,13 +170,8 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
       return;
     }
 
-    // Mode démo : vérification locale contre le flag attendu.
-    const ok =
-      value.toLowerCase() === expectedFlag(props.challengeId).toLowerCase();
-    setResult(ok ? "correct" : "wrong");
-    setResultMessage(
-      ok ? `Flag correct ! +${props.points} XP ajoutés à votre score.` : null,
-    );
+    setResult("wrong");
+    setResultMessage("Le système de validation est indisponible.");
   }
 
   const mmss = `${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(
@@ -295,8 +289,8 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
             </div>
           </div>
 
-          {labError && status === "running" && (
-            <div className="border-b border-border bg-amber-50 px-5 py-2 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+          {labError && (
+            <div className="border-b border-border bg-red-50 px-5 py-2 text-xs font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400">
               {labError}
             </div>
           )}
