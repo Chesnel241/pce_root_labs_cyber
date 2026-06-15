@@ -92,6 +92,12 @@ export interface ApiModule {
   challengeCount: number;
 }
 
+/** Condition de déverrouillage d'un parcours (parcours précédent + seuil %). */
+export interface TrackUnlockRequirement {
+  prevTrackId: string;
+  threshold: number;
+}
+
 export interface ApiTrack {
   id: string;
   order: number;
@@ -105,6 +111,10 @@ export interface ApiTrack {
   progress: number;
   solvedCount: number;
   challengeCount: number;
+  /** Vrai quand le parcours est verrouillé pour l'utilisateur authentifié. */
+  locked?: boolean;
+  /** Condition de déverrouillage (présente quand authentifié). */
+  unlockRequirement?: TrackUnlockRequirement | null;
 }
 
 export interface ApiChallengeDetail {
@@ -124,11 +134,32 @@ export interface ApiChallengeDetail {
   solved: boolean;
 }
 
+/** Badge nouvellement débloqué retourné lors d'une soumission réussie. */
+export interface NewBadge {
+  id: string;
+  name: string;
+}
+
 export interface SubmitResult {
   correct: boolean;
   awardedPoints: number;
   totalXp: number;
   alreadySolved: boolean;
+  /** Score final (points + bonus) — champ additif. */
+  score?: number;
+  /** Durée de résolution en secondes — champ additif. */
+  durationSeconds?: number;
+  /** Bonus de rapidité — champ additif. */
+  timeBonus?: number;
+  /** Badges débloqués par cette soumission — champ additif. */
+  newBadges?: NewBadge[];
+}
+
+/** Réponse à la révélation d'un indice (sans texte d'indice). */
+export interface HintResult {
+  index: number;
+  totalRevealed: number;
+  penalty: number;
 }
 
 export interface LeaderboardEntry {
@@ -145,6 +176,12 @@ export interface TrackProgressEntry {
   xp: number;
 }
 
+/** Résumé des badges renvoyé dans la progression agrégée. */
+export interface BadgeSummary {
+  earned: number;
+  total: number;
+}
+
 export interface ProgressResponse {
   totalXp: number;
   rank: number | null;
@@ -152,6 +189,41 @@ export interface ProgressResponse {
   totalChallenges: number;
   byTrack: TrackProgressEntry[];
   streak: number;
+  /** Identifiants des parcours déverrouillés — champ additif. */
+  unlockedTracks?: string[];
+  /** Résumé des badges — champ additif. */
+  badges?: BadgeSummary;
+}
+
+/** Badge détaillé (GET /api/me/badges). */
+export interface ApiBadge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  earned: boolean;
+  earnedAt?: string | null;
+}
+
+/** Statistiques globales de la plateforme (GET /api/admin/stats). */
+export interface AdminStats {
+  users: number;
+  submissions: number;
+  solvedTotal: number;
+  labsRunning: number;
+  challenges: number;
+  tracks: number;
+}
+
+/** Utilisateur listé dans l'administration (GET /api/admin/users). */
+export interface AdminUser {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+  xp: number;
+  solvedCount: number;
+  createdAt: string;
 }
 
 export interface LabSession {
@@ -218,9 +290,24 @@ export const api = {
       `/challenges/${encodeURIComponent(challengeId)}/submit`,
       { method: "POST", body: JSON.stringify({ flag }) },
     ),
+  /** Révèle un indice côté serveur (suivi des révélations / pénalités). */
+  submitHint: (challengeId: string, index: number) =>
+    request<HintResult>(
+      `/challenges/${encodeURIComponent(challengeId)}/hint`,
+      { method: "POST", body: JSON.stringify({ index }) },
+    ),
   leaderboard: () =>
     request<{ leaderboard: LeaderboardEntry[] }>("/leaderboard"),
   progress: () => request<ProgressResponse>("/me/progress"),
+  /** Badges de l'utilisateur (débloqués + à débloquer). */
+  myBadges: () => request<{ badges: ApiBadge[] }>("/me/badges"),
+  /** Statistiques globales (administration). */
+  adminStats: () => request<AdminStats>("/admin/stats"),
+  /** Liste des utilisateurs (administration), filtrable par requête. */
+  adminUsers: (query = "") =>
+    request<{ users: AdminUser[] }>(
+      `/admin/users${query ? `?query=${encodeURIComponent(query)}` : ""}`,
+    ),
   startLab: (challengeId: string) =>
     request<LabSession>(`/labs/${encodeURIComponent(challengeId)}/start`, {
       method: "POST",

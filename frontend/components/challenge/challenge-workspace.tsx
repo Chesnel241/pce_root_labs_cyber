@@ -118,6 +118,15 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
     setLabError(null);
   }
 
+  function revealHint(index: number) {
+    setRevealed((r) => Math.max(r, index + 1));
+    // Suivi serveur (révélations / pénalité) en best-effort : on ignore l'échec
+    // pour ne pas dégrader l'UX de révélation locale.
+    if (liveActions) {
+      api.submitHint(props.challengeId, index).catch(() => {});
+    }
+  }
+
   function resetLab() {
     // Reset : on relance proprement la session/terminal.
     if (sessionId && liveActions) {
@@ -227,7 +236,7 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
                     <p className="text-muted-foreground">{hint}</p>
                   ) : (
                     <button
-                      onClick={() => setRevealed((r) => Math.max(r, i + 1))}
+                      onClick={() => revealHint(i)}
                       disabled={i > revealed}
                       className="flex w-full items-center justify-between text-left font-medium text-foreground disabled:opacity-40"
                     >

@@ -65,11 +65,12 @@ import { difficultyMeta } from "@/lib/style-maps";
 import { cn, formatNumber } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import {
+  useBadges,
   useLeaderboard,
   useProgress,
   useTracks,
 } from "@/lib/use-platform-data";
-import type { ApiTrack, ProgressResponse } from "@/lib/api";
+import type { ApiBadge, ApiTrack, ProgressResponse } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import { Progress } from "@/components/ui/progress";
@@ -341,18 +342,26 @@ export function TracksView() {
   const liveProgress = liveTrackProgress(progress.data);
   const annotated = tracksState.data;
 
-  const map = new Map<string, { solved: number; percent: number }>();
+  const map = new Map<
+    string,
+    { solved: number; percent: number; locked: boolean }
+  >();
   if (annotated) {
     for (const t of annotated) {
-      map.set(t.id, { solved: t.solvedCount, percent: t.progress });
+      map.set(t.id, {
+        solved: t.solvedCount,
+        percent: t.progress,
+        locked: Boolean(t.locked),
+      });
     }
   } else if (liveProgress) {
     for (const p of liveProgress) {
-      map.set(p.trackId, { solved: p.solved, percent: p.percent });
+      map.set(p.trackId, { solved: p.solved, percent: p.percent, locked: false });
     }
   } else {
+    // Mode démo : rien n'est verrouillé.
     for (const p of trackProgress()) {
-      map.set(p.trackId, { solved: p.solved, percent: p.percent });
+      map.set(p.trackId, { solved: p.solved, percent: p.percent, locked: false });
     }
   }
 
@@ -379,6 +388,7 @@ export function TracksView() {
               track={track}
               solved={p?.solved ?? 0}
               percent={p?.percent ?? 0}
+              locked={p?.locked ?? false}
             />
           );
         })}
@@ -416,6 +426,12 @@ export function TrackDetailView({ trackId }: { trackId: string }) {
   const demoProgress = trackProgress().find((p) => p.trackId === track.id);
   const solved = liveTrack?.solvedCount ?? demoProgress?.solved ?? 0;
   const percent = liveTrack?.progress ?? demoProgress?.percent ?? 0;
+  // Verrouillage : uniquement en mode live (en démo, rien n'est verrouillé).
+  const locked = Boolean(liveTrack?.locked);
+  const prevTrack = liveTrack?.unlockRequirement
+    ? getTrack(liveTrack.unlockRequirement.prevTrackId)
+    : null;
+  const threshold = liveTrack?.unlockRequirement?.threshold ?? 70;
 
   // Set des challenges résolus pour ce track (live -> override de l'accordéon).
   const solvedIds = liveTrack
@@ -439,9 +455,12 @@ export function TrackDetailView({ trackId }: { trackId: string }) {
       <div className="rounded-xl border border-border bg-surface p-6 shadow-card">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
           <span
-            className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${accent.tile}`}
+            className={cn(
+              "flex h-14 w-14 shrink-0 items-center justify-center rounded-xl",
+              locked ? "bg-muted text-muted-foreground/70" : accent.tile,
+            )}
           >
-            <Icon className="h-7 w-7" />
+            {locked ? <Lock className="h-7 w-7" /> : <Icon className="h-7 w-7" />}
           </span>
           <div className="min-w-0 flex-1">
             <h1 className="text-2xl font-semibold tracking-tight">
@@ -488,11 +507,40 @@ export function TrackDetailView({ trackId }: { trackId: string }) {
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Modules &amp; challenges
         </h2>
-        <ModuleAccordion
-          modules={track.modules as Module[]}
-          accentBar={accent.bar}
-          solvedIds={solvedIds}
-        />
+        {locked ? (
+          <Card>
+            <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-muted text-muted-foreground">
+                <Lock className="h-6 w-6" />
+              </span>
+              <p className="mt-4 text-sm font-semibold">Parcours verrouillé</p>
+              <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+                Terminez {threshold}% du parcours précédent
+                {prevTrack ? (
+                  <>
+                    {" "}
+                    (<span className="font-medium">{prevTrack.name}</span>)
+                  </>
+                ) : null}{" "}
+                pour débloquer ce contenu.
+              </p>
+              {prevTrack && (
+                <Link href={`/tracks/${prevTrack.id}`} className="mt-4">
+                  <Button variant="secondary" size="sm">
+                    Aller au parcours précédent
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </Card>
+        ) : (
+          <ModuleAccordion
+            modules={track.modules as Module[]}
+            accentBar={accent.bar}
+            solvedIds={solvedIds}
+          />
+        )}
       </div>
     </div>
   );
@@ -671,9 +719,28 @@ const badgeIconComponents: Record<string, LucideIcon> = {
   Trophy,
 };
 
+/** Forme de badge normalisée (démo ou live) pour l'affichage. */
+interface DisplayBadge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  earned: boolean;
+  earnedAt?: string | null;
+}
+
+function formatBadgeDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export function ProfileView() {
   const { user, isAuthenticated } = useAuth();
   const progress = useProgress();
+  const badgesState = useBadges();
 
   const liveProgress = liveTrackProgress(progress.data);
   const xp =
@@ -687,7 +754,26 @@ export function ProfileView() {
   const email = user?.email ?? currentUser.email;
   const role = currentUser.role;
 
-  const earnedBadges = badges.filter((b) => b.earned).length;
+  // Badges : live si disponibles, sinon repli sur la démo.
+  const displayBadges: DisplayBadge[] =
+    badgesState.data && badgesState.data.length > 0
+      ? badgesState.data.map((b: ApiBadge) => ({
+          id: b.id,
+          name: b.name,
+          description: b.description,
+          icon: b.icon,
+          earned: b.earned,
+          earnedAt: b.earnedAt ?? null,
+        }))
+      : badges.map((b) => ({
+          id: b.id,
+          name: b.name,
+          description: b.description,
+          icon: b.icon,
+          earned: b.earned,
+        }));
+
+  const earnedBadges = displayBadges.filter((b) => b.earned).length;
   const rows = liveProgress ?? trackProgress();
 
   return (
@@ -719,11 +805,11 @@ export function ProfileView() {
                 Badges
               </CardTitle>
               <span className="text-sm text-muted-foreground">
-                {earnedBadges}/{badges.length} débloqués
+                {earnedBadges}/{displayBadges.length} débloqués
               </span>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-3 pt-4 sm:grid-cols-3">
-              {badges.map((badge) => (
+              {displayBadges.map((badge) => (
                 <ProfileBadge key={badge.id} badge={badge} />
               ))}
             </CardContent>
@@ -769,11 +855,7 @@ export function ProfileView() {
   );
 }
 
-function ProfileBadge({
-  badge,
-}: {
-  badge: (typeof badges)[number];
-}) {
+function ProfileBadge({ badge }: { badge: DisplayBadge }) {
   const Icon = badge.earned
     ? badgeIconComponents[badge.icon] ?? Trophy
     : Lock;
@@ -807,6 +889,11 @@ function ProfileBadge({
       <p className="mt-0.5 text-xs text-muted-foreground">
         {badge.description}
       </p>
+      {badge.earned && badge.earnedAt && (
+        <p className="mt-1.5 text-[11px] font-medium text-primary">
+          Obtenu le {formatBadgeDate(badge.earnedAt)}
+        </p>
+      )}
     </div>
   );
 }

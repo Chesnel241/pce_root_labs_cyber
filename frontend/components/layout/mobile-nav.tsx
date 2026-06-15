@@ -12,6 +12,7 @@ import {
   LifeBuoy,
   ShieldHalf,
   Settings2,
+  FileText,
   Menu,
   X,
 } from "lucide-react";
@@ -26,6 +27,7 @@ const nav = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/tracks", label: "Parcours", icon: Layers },
   { href: "/vulnerabilities", label: "Vulnérabilités", icon: ShieldAlert },
+  { href: "/reports", label: "Rapport", icon: FileText },
   { href: "/leaderboard", label: "Classement", icon: Trophy },
   { href: "/admin", label: "Administration", icon: ShieldHalf },
   { href: "/profile", label: "Profil", icon: User },

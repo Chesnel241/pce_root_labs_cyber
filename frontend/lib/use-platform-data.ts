@@ -21,6 +21,9 @@ import {
   type LeaderboardEntry,
   type ProgressResponse,
   type ApiChallengeDetail,
+  type ApiBadge,
+  type AdminStats,
+  type AdminUser,
 } from "@/lib/api";
 
 export interface LiveState<T> {
@@ -110,5 +113,34 @@ export function useChallenge(
     async () => (await api.challenge(challengeId)).challenge,
     apiEnabled,
     [apiEnabled, challengeId],
+  );
+}
+
+/** Badges de l'utilisateur (débloqués + à débloquer). Requiert l'auth. */
+export function useBadges(): LiveState<ApiBadge[]> {
+  const { apiEnabled, isAuthenticated, loading: authLoading } = useAuth();
+  const enabled = apiEnabled && isAuthenticated && !authLoading;
+  return useLiveResource(
+    async () => (await api.myBadges()).badges,
+    enabled,
+    [enabled],
+  );
+}
+
+/** Statistiques globales de la plateforme (administration). Requiert l'auth. */
+export function useAdminStats(): LiveState<AdminStats> {
+  const { apiEnabled, isAuthenticated, loading: authLoading } = useAuth();
+  const enabled = apiEnabled && isAuthenticated && !authLoading;
+  return useLiveResource(() => api.adminStats(), enabled, [enabled]);
+}
+
+/** Liste des utilisateurs (administration), filtrable. Requiert l'auth. */
+export function useAdminUsers(query: string): LiveState<AdminUser[]> {
+  const { apiEnabled, isAuthenticated, loading: authLoading } = useAuth();
+  const enabled = apiEnabled && isAuthenticated && !authLoading;
+  return useLiveResource(
+    async () => (await api.adminUsers(query)).users,
+    enabled,
+    [enabled, query],
   );
 }

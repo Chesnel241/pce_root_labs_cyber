@@ -10,6 +10,7 @@ import {
   Search,
   SearchX,
   Circle,
+  FlaskConical,
 } from "lucide-react";
 import { tracks, totals, allChallenges } from "@/lib/curriculum";
 import { currentUser, leaderboard } from "@/lib/demo";
@@ -19,7 +20,11 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatNumber } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { useAdminStats, useAdminUsers } from "@/lib/use-platform-data";
+import type { AdminUser as ApiAdminUser } from "@/lib/api";
 
 /* ------------------------------------------------------------------ */
 /* Données de démonstration (admin)                                    */
@@ -27,7 +32,7 @@ import { formatNumber } from "@/lib/utils";
 
 type Status = "active" | "idle" | "suspended";
 
-interface AdminUser {
+interface DemoAdminUser {
   username: string;
   email: string;
   xp: number;
@@ -76,7 +81,7 @@ const statuses: Status[] = [
   "active",
 ];
 
-const adminUsers: AdminUser[] = leaderboard.map((row, i) => ({
+const demoUsers: DemoAdminUser[] = leaderboard.map((row, i) => ({
   username: row.username,
   email: row.isCurrentUser
     ? currentUser.email
@@ -86,6 +91,19 @@ const adminUsers: AdminUser[] = leaderboard.map((row, i) => ({
   joined: joinDates[i % joinDates.length],
   status: statuses[i % statuses.length],
 }));
+
+/** Ligne de tableau normalisée (démo ou live). */
+interface AdminUserRow {
+  key: string;
+  username: string;
+  email: string;
+  xp: number;
+  /** Rang (démo) ou nombre de challenges résolus (live). */
+  metricLabel: string;
+  metricValue: string;
+  joined: string;
+  status?: Status;
+}
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("fr-FR", {
@@ -99,55 +117,136 @@ const labsCount = allChallenges().filter(({ challenge }) => challenge.lab)
   .length;
 
 export default function AdminPage() {
+  const { apiEnabled } = useAuth();
   const [query, setQuery] = React.useState("");
 
-  const filteredUsers = React.useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return adminUsers;
-    return adminUsers.filter(
-      (u) =>
-        u.username.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q),
-    );
+  // En mode live, on délègue le filtrage au backend (avec un petit debounce).
+  const [debouncedQuery, setDebouncedQuery] = React.useState("");
+  React.useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query), 250);
+    return () => clearTimeout(t);
   }, [query]);
+
+  const statsState = useAdminStats();
+  const usersState = useAdminUsers(debouncedQuery);
+
+  const stats = statsState.data;
+  const statsLoading = statsState.loading;
+
+  /* --- Stat cards (live si dispo, sinon démo) --- */
+  const usersValue = stats ? formatNumber(stats.users) : formatNumber(demoUsers.length);
+  const labsValue = stats ? formatNumber(stats.labsRunning) : formatNumber(labsCount);
+  const challengesValue = stats
+    ? formatNumber(stats.challenges)
+    : formatNumber(totals.challenges);
+  const solvedValue = stats
+    ? formatNumber(stats.solvedTotal)
+    : formatNumber(142);
+
+  /* --- Lignes utilisateurs (live -> normalisées, sinon démo filtrée) --- */
+  const liveRows: AdminUserRow[] | null = React.useMemo(() => {
+    if (!usersState.data) return null;
+    return usersState.data.map((u: ApiAdminUser) => ({
+      key: u.id,
+      username: u.username,
+      email: u.email,
+      xp: u.xp,
+      metricLabel: "Résolus",
+      metricValue: formatNumber(u.solvedCount),
+      joined: u.createdAt,
+    }));
+  }, [usersState.data]);
+
+  const demoRows: AdminUserRow[] = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const filtered = q
+      ? demoUsers.filter(
+          (u) =>
+            u.username.toLowerCase().includes(q) ||
+            u.email.toLowerCase().includes(q),
+        )
+      : demoUsers;
+    return filtered.map((u) => ({
+      key: u.username,
+      username: u.username,
+      email: u.email,
+      xp: u.xp,
+      metricLabel: "Rang",
+      metricValue: `#${u.rank}`,
+      joined: u.joined,
+      status: u.status,
+    }));
+  }, [query]);
+
+  const rows = liveRows ?? demoRows;
+  const totalUsers = stats?.users ?? demoUsers.length;
+  const usersLoading = usersState.loading && !usersState.data;
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Administration"
         description="Vue d'ensemble en lecture seule de la plateforme : utilisateurs, labs et contenu pédagogique."
-      />
+      >
+        {!apiEnabled && (
+          <Badge className="bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-400/20">
+            <FlaskConical className="h-3 w-3" />
+            Mode démo
+          </Badge>
+        )}
+      </PageHeader>
 
       {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label="Utilisateurs"
-          value={formatNumber(adminUsers.length)}
-          icon={Users}
-          hint="comptes enregistrés"
-        />
-        <StatCard
-          label="Labs disponibles"
-          value={formatNumber(labsCount)}
-          icon={Server}
-          iconClassName="bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400"
-          hint="environnements provisionnables"
-        />
-        <StatCard
-          label="Challenges"
-          value={formatNumber(totals.challenges)}
-          icon={Flag}
-          iconClassName="bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400"
-          hint={`${totals.modules} modules · ${totals.tracks} parcours`}
-        />
-        <StatCard
-          label="Soumissions du jour"
-          value={formatNumber(142)}
-          icon={CheckCircle2}
-          iconClassName="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
-          trend={{ value: "+18%", positive: true }}
-          hint="vs hier"
-        />
+        {statsLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="p-5">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-7 w-16" />
+                </div>
+                <Skeleton className="h-10 w-10 rounded-lg" />
+              </div>
+              <Skeleton className="mt-3 h-3 w-28" />
+            </Card>
+          ))
+        ) : (
+          <>
+            <StatCard
+              label="Utilisateurs"
+              value={usersValue}
+              icon={Users}
+              hint="comptes enregistrés"
+            />
+            <StatCard
+              label={stats ? "Labs actifs" : "Labs disponibles"}
+              value={labsValue}
+              icon={Server}
+              iconClassName="bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400"
+              hint={
+                stats ? "environnements en cours" : "environnements provisionnables"
+              }
+            />
+            <StatCard
+              label="Challenges"
+              value={challengesValue}
+              icon={Flag}
+              iconClassName="bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400"
+              hint={`${stats?.tracks ?? totals.tracks} parcours · ${
+                totals.modules
+              } modules`}
+            />
+            <StatCard
+              label={stats ? "Challenges résolus" : "Soumissions du jour"}
+              value={solvedValue}
+              icon={CheckCircle2}
+              iconClassName="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
+              trend={stats ? undefined : { value: "+18%", positive: true }}
+              hint={stats ? "cumulé" : "vs hier"}
+            />
+          </>
+        )}
       </div>
 
       {/* Users table */}
@@ -158,7 +257,7 @@ export default function AdminPage() {
               Utilisateurs
             </h2>
             <p className="text-sm text-muted-foreground">
-              {filteredUsers.length} sur {adminUsers.length} comptes
+              {rows.length} sur {formatNumber(totalUsers)} comptes
             </p>
           </div>
           <div className="relative w-full sm:max-w-xs">
@@ -174,7 +273,17 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {filteredUsers.length === 0 ? (
+        {usersLoading ? (
+          <div className="space-y-3 p-5">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <Skeleton className="h-4 flex-1" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            ))}
+          </div>
+        ) : rows.length === 0 ? (
           <EmptyState
             icon={SearchX}
             title="Aucun utilisateur trouvé"
@@ -188,17 +297,21 @@ export default function AdminPage() {
                   <th className="px-5 py-3 font-medium">Utilisateur</th>
                   <th className="px-5 py-3 font-medium">Email</th>
                   <th className="px-5 py-3 text-right font-medium">XP</th>
-                  <th className="px-5 py-3 text-right font-medium">Rang</th>
+                  <th className="px-5 py-3 text-right font-medium">
+                    {rows[0]?.metricLabel ?? "Rang"}
+                  </th>
                   <th className="px-5 py-3 font-medium">Inscrit le</th>
-                  <th className="px-5 py-3 font-medium">Statut</th>
+                  {rows.some((r) => r.status) && (
+                    <th className="px-5 py-3 font-medium">Statut</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((u) => {
-                  const meta = statusMeta[u.status];
+                {rows.map((u) => {
+                  const meta = u.status ? statusMeta[u.status] : null;
                   return (
                     <tr
-                      key={u.username}
+                      key={u.key}
                       className="border-b border-border transition-colors last:border-0 hover:bg-surface-muted"
                     >
                       <td className="px-5 py-3">
@@ -216,14 +329,20 @@ export default function AdminPage() {
                         {formatNumber(u.xp)}
                       </td>
                       <td className="px-5 py-3 text-right font-mono text-muted-foreground">
-                        #{u.rank}
+                        {u.metricValue}
                       </td>
                       <td className="px-5 py-3 text-muted-foreground">
                         {formatDate(u.joined)}
                       </td>
-                      <td className="px-5 py-3">
-                        <Badge className={meta.badge}>{meta.label}</Badge>
-                      </td>
+                      {rows.some((r) => r.status) && (
+                        <td className="px-5 py-3">
+                          {meta ? (
+                            <Badge className={meta.badge}>{meta.label}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground/60">—</span>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
