@@ -87,7 +87,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/data:ro
     ports:
-      - "127.0.0.1:4000:4000"
+      - "4000:4000"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:4000/api/health"]
       interval: 30s
@@ -115,7 +115,7 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: https://${API_HOST:-api.example.com}
     ports:
-      - "127.0.0.1:3000:3000"
+      - "3000:3000"
     networks:
       - pce-net
 
