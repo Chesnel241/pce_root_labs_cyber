@@ -6,7 +6,7 @@
 #   - backend  : API REST + WebSocket terminal + orchestrateur de labs (dockerode).
 #   - traefik  : reverse proxy 80/443, TLS Let's Encrypt (HTTP-01), middlewares.
 #
-# Le frontend est déployé séparément sur Vercel ; il figure en service OPTIONNEL
+# Le frontend est déployé sur le même VPS via ce docker-compose.
 # commenté en bas (déploiement self-hosted).
 #
 # Pré-requis :

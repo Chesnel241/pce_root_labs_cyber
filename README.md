@@ -21,7 +21,7 @@ est une plateforme crédible en entreprise, comme un produit SaaS professionnel.
 ┌──────────────┐   HTTPS    ┌──────────────┐  Dockerode  ┌──────────────┐
 │  Frontend    │ ─────────► │   Backend    │ ──────────► │  Labs Docker │
 │  Next.js 14  │            │  Node/Express│             │  (isolés)    │
-│  (Vercel)    │ ◄── WS ──► │  + WebSocket │ ◄── pty ──► │  vulns CTF   │
+│   Frontend   │ ◄── WS ──► │  + WebSocket │ ◄── pty ──► │  vulns CTF   │
 └──────────────┘            └──────┬───────┘             └──────────────┘
                                    │
                             ┌──────▼───────┐
@@ -36,7 +36,7 @@ est une plateforme crédible en entreprise, comme un produit SaaS professionnel.
 | Backend       | Node.js, Express, Dockerode, WebSocket (ws), JWT        |
 | Labs          | Docker, Docker Compose, images custom vulnérables       |
 | Données & Auth| PostgreSQL / Supabase, Row Level Security               |
-| Infra         | Vercel, VPS (Hetzner), Traefik + Let's Encrypt          |
+| Infra         | VPS (Hetzner), Traefik + Let's Encrypt          |
 | Gamification  | XP, badges, leaderboard, progression gates, flags CTF   |
 
 ## 📁 Structure du dépôt
@@ -73,26 +73,21 @@ Le frontend fonctionne de manière autonome avec des données de démonstration
 
 ## 🚀 Déploiement
 
-Topologie de production : **frontend sur Vercel**, **backend + PostgreSQL +
-orchestrateur de labs sur un VPS** (Hetzner) derrière **Traefik** (TLS Let's
-Encrypt). Le frontend appelle l'API via `NEXT_PUBLIC_API_URL` (HTTPS) et le
-terminal via WebSocket sécurisé (`wss://<api>/ws/terminal`).
+Topologie de production : **frontend, backend + PostgreSQL + Traefik** sur le même VPS, et les **conteneurs de lab** qui sont générés à la volée. Le frontend appelle l'API via `NEXT_PUBLIC_API_URL` (HTTPS) et le terminal via WebSocket sécurisé (`wss://<api>/ws/terminal`).
 
 ```
-   Vercel (Next.js)  ──HTTPS/WSS──►  Traefik :80/443  ──►  backend :4000  ──►  labs Docker (isolés)
+   Frontend (Next.js)  ──HTTPS/WSS──►  Traefik :80/443  ──►  backend :4000  ──►  labs Docker (isolés)
    app.exemple.tld                   api.exemple.tld         │
                                                        PostgreSQL (réseau interne, jamais exposé)
 ```
 
 - **CI** : GitHub Actions (`.github/workflows/ci.yml`) — lint+build du frontend
   et vérification syntaxique du backend (+ tests si présents) sur push et PR.
-- **Vercel** : configuré via `frontend/vercel.json` (Root Directory `frontend`,
-  framework Next.js). Variable requise : `NEXT_PUBLIC_API_URL`.
+- **Frontend** : déployé avec le backend via Docker Compose.
 - **VPS** : `docker compose up -d --build` (services `backend`, `postgres`,
   `traefik`). Copiez `.env.production.example` → `.env` et renseignez les secrets.
 
-📘 **Runbook complet** (Vercel, provisioning VPS/DNS, TLS, **durcissement
-sécurité des labs vulnérables**, coûts) : **[docs/deployment.md](docs/deployment.md)**.
+📘 **Runbook complet** (provisioning VPS/DNS, TLS, **durcissement sécurité**) disponible dans `docs/deployment.md`.
 
 ## 🗺️ Roadmap
 
