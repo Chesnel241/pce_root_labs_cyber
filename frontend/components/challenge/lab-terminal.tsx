@@ -79,17 +79,10 @@ export function LabTerminal({
       };
 
       if (wsUrl) {
-        const stopWs = connectWebSocket(term, fit, wsUrl, () => {
-          // Repli sur le simulateur : on coupe les ressources WS (sans disposer
-          // le terminal) puis on lance le simulateur sur le même terminal.
-          if (disposed) return;
-          stopWs();
-          const stopSim = runSimulator(term, fit, challengeId, labSlug);
-          cleanup = () => {
-            stopSim();
-            disposeTerm();
-          };
-        });
+        // Mode LIVE : PAS de repli sur le simulateur (ce serait trompeur en
+        // production). En cas d'échec, connectWebSocket affiche une erreur claire
+        // avec le code de fermeture WS ; l'apprenant peut relancer via « Reset ».
+        const stopWs = connectWebSocket(term, fit, wsUrl);
         cleanup = () => {
           stopWs();
           disposeTerm();
@@ -121,29 +114,28 @@ type XTerm = import("@xterm/xterm").Terminal;
 type Fit = import("@xterm/addon-fit").FitAddon;
 
 /**
- * Connecte le terminal au WebSocket du backend. Renvoie une fonction de
- * nettoyage. En cas d'erreur de connexion immédiate, appelle `onFailure` pour
- * basculer sur le simulateur.
+ * Connecte le terminal au WebSocket du backend (mode LIVE). Renvoie une fonction
+ * de nettoyage. En cas d'échec, affiche une erreur claire + le code de fermeture
+ * WS (utile pour diagnostiquer un proxy mal configuré) — sans jamais retomber sur
+ * le simulateur de démonstration.
  */
-function connectWebSocket(
-  term: XTerm,
-  fit: Fit,
-  url: string,
-  onFailure: () => void,
-): () => void {
+function connectWebSocket(term: XTerm, fit: Fit, url: string): () => void {
   term.writeln("\x1b[2mConnexion au conteneur du lab…\x1b[0m");
 
   let ws: WebSocket;
   try {
     ws = new WebSocket(url);
-  } catch {
-    onFailure();
+  } catch (err) {
+    term.writeln(
+      `\r\n\x1b[31mImpossible d'ouvrir le terminal : ${
+        err instanceof Error ? err.message : "URL WebSocket invalide"
+      }\x1b[0m`,
+    );
     return () => {};
   }
   ws.binaryType = "arraybuffer";
 
   let opened = false;
-  let failedOver = false;
   let disposed = false;
 
   const decoder = new TextDecoder();
@@ -172,22 +164,31 @@ function connectWebSocket(
   };
 
   ws.onerror = () => {
-    // Si la connexion n'a jamais abouti, on bascule sur le simulateur.
-    if (!opened && !failedOver && !disposed) {
-      failedOver = true;
-      term.writeln("\r\n\x1b[33mTerminal live indisponible — mode démo.\x1b[0m");
-      onFailure();
-    }
+    // Pas de détail exploitable ici ; le diagnostic complet (code/raison) est
+    // affiché dans onclose, déclenché juste après.
   };
 
-  ws.onclose = () => {
-    if (!opened && !failedOver && !disposed) {
-      failedOver = true;
-      term.writeln("\r\n\x1b[33mTerminal live indisponible — mode démo.\x1b[0m");
-      onFailure();
-    } else if (opened && !disposed) {
+  ws.onclose = (ev) => {
+    if (disposed) return;
+    if (opened) {
       term.writeln("\r\n\x1b[2mSession terminée.\x1b[0m");
+      return;
     }
+    // La connexion n'a jamais abouti -> diagnostic clair (jamais "mode démo").
+    const code = ev.code || 0;
+    const reason = (ev.reason || "").toLowerCase();
+    const hint =
+      code === 1006
+        ? "le reverse proxy ne route probablement pas le WebSocket vers le backend (vérifier le proxy de /api/ws/terminal et l'en-tête Upgrade)"
+        : code === 1008 || code === 4401 || reason.includes("unauth")
+          ? "authentification refusée (token invalide/expiré) — reconnectez-vous"
+          : "le service de terminal est injoignable";
+    term.writeln(
+      `\r\n\x1b[31mConnexion au terminal impossible (code ${code}). ${hint}.\x1b[0m`,
+    );
+    term.writeln(
+      "\x1b[33mLe conteneur du lab est démarré — cliquez sur « Reset » pour réessayer.\x1b[0m",
+    );
   };
 
   // Clavier -> WS (keystrokes bruts).
