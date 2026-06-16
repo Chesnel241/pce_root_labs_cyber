@@ -1,4 +1,5 @@
 /** Indices progressifs par challenge (placeholder tant que l'API n'est pas branchée). */
+import { extraHints } from "./hints/index";
 
 const specific: Record<string, string[]> = {
   "1.1.1": [
@@ -120,7 +121,7 @@ const generic = [
 ];
 
 export function getHints(challengeId: string): string[] {
-  return specific[challengeId] ?? generic;
+  return specific[challengeId] ?? extraHints[challengeId] ?? generic;
 }
 
 /**
