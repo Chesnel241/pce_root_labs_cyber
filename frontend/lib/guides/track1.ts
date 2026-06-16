@@ -8,14 +8,19 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["Amazon S3", "AWS CLI", "Reconnaissance", "Accès Anonyme"],
     steps: [
       {
-        title: "Énumération de buckets S3",
-        detail: "Utilisez la commande AWS CLI pour lister le contenu du bucket cible en mode anonyme (sans fournir d'identifiants).",
-        command: "aws s3 ls s3://<bucket_name> --no-sign-request"
+        title: "Énumération des buckets S3 publics",
+        detail: "Utilisez la commande AWS CLI pour lister tous les buckets accessibles en mode anonyme (sans identifiants). L'environnement utilise un simulateur local sur le port 9000.",
+        command: "aws --no-sign-request --endpoint-url http://localhost:9000 s3 ls"
+      },
+      {
+        title: "Exploration du bucket cible",
+        detail: "La commande précédente a révélé un bucket intéressant nommé 'pce-corp-backups'. Explorons son contenu de manière récursive.",
+        command: "aws --no-sign-request --endpoint-url http://localhost:9000 s3 ls s3://pce-corp-backups --recursive"
       },
       {
         title: "Récupération du flag",
-        detail: "Identifiez le fichier de flag dans le bucket et téléchargez-le pour lire son contenu. Le flag attendu est **PCE{s3_public_bucket_recon_2024}**.",
-        command: "aws s3 cp s3://<bucket_name>/flag.txt . --no-sign-request && cat flag.txt"
+        detail: "Un fichier de configuration a été trouvé. Affichez son contenu directement dans la console pour y lire le flag attendu.",
+        command: "aws --no-sign-request --endpoint-url http://localhost:9000 s3 cp s3://pce-corp-backups/backups/old-config.env -"
       }
     ]
   },
@@ -80,14 +85,14 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["Amazon S3", "Data Exfiltration", "Hidden Prefix", "Brute Force"],
     steps: [
       {
-        title: "Tentative d'énumération (Échec attendu)",
-        detail: "Si vous essayez de lister le bucket, vous recevrez un 'Access Denied'. Vous devez deviner le nom du fichier ou du préfixe.",
-        command: "aws s3 ls s3://<bucket_name> --no-sign-request"
+        title: "Tentative d'énumération (Échec partiel attendu)",
+        detail: "Vous savez que le bucket 'pce-marketing-public' existe. Si vous essayez de le lister récursivement pour tout voir d'un coup, vous verrez seulement la surface.",
+        command: "aws --no-sign-request --endpoint-url http://localhost:9000 s3 ls s3://pce-marketing-public --recursive"
       },
       {
         title: "Exfiltration du fichier caché",
-        detail: "Utilisez un dictionnaire ou une information divulguée pour télécharger le fichier directement. Le flag attendu est **PCE{s3_exfil_hidden_prefix_2024}**.",
-        command: "aws s3 cp s3://<bucket_name>/secret-prefix/flag.txt . --no-sign-request && cat flag.txt"
+        detail: "Un prefix interne a été deviné (ou fuité). Vous pouvez télécharger le fichier spécifique sans avoir besoin de lister le bucket entier. Le flag attendu est **PCE{s3_exfil_hidden_prefix_2024}**.",
+        command: "aws --no-sign-request --endpoint-url http://localhost:9000 s3 cp s3://pce-marketing-public/internal/hr/employees-export.csv -"
       }
     ]
   },
