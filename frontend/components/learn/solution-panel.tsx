@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { api, ApiError, type SolutionStatus } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { getGuide } from "@/lib/guides";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -87,11 +88,42 @@ export function SolutionPanel({
             Connectez-vous pour pouvoir demander le corrigé à un formateur.
           </p>
         ) : status === "approved" ? (
-          <div className="animate-pop-in space-y-2.5">
+          <div className="animate-pop-in space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-emerald-600 dark:text-emerald-400">
               <BookOpenCheck className="h-4 w-4" />
-              Corrigé débloqué par un formateur
+              Corrigé débloqué
             </div>
+            
+            <div className="rounded-lg border border-border bg-surface-muted/50 p-4 text-sm">
+              {(() => {
+                const guide = getGuide(challengeId, "");
+                return (
+                  <div className="space-y-4">
+                    <div>
+                      <strong className="block text-foreground">Objectif attendu</strong>
+                      <p className="mt-1 text-muted-foreground">{guide.objective}</p>
+                    </div>
+                    <div>
+                      <strong className="block text-foreground">Explication de la correction</strong>
+                      <ol className="mt-2 list-decimal space-y-3 pl-4 text-muted-foreground">
+                        {guide.steps.map((step, idx) => (
+                          <li key={idx} className="pl-1">
+                            <span className="font-medium text-foreground">{step.title}</span>
+                            <p className="mt-0.5">{step.detail}</p>
+                            {step.command && (
+                              <code className="mt-1.5 block overflow-x-auto rounded-md bg-[#0F172A] px-3 py-2 font-mono text-xs text-emerald-300">
+                                {step.command}
+                              </code>
+                            )}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
             <div>
               <p className="mb-1 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                 <KeyRound className="h-3.5 w-3.5" /> Flag de la solution
@@ -100,14 +132,6 @@ export function SolutionPanel({
                 {flag ?? "—"}
               </code>
             </div>
-            <p className="text-sm text-muted-foreground">
-              La démarche complète est détaillée dans le{" "}
-              <span className="font-medium text-foreground">
-                Guide pas à pas
-              </span>{" "}
-              ci-dessus. Rejouez chaque étape pour bien comprendre comment on
-              arrive à ce flag — l'objectif est d'apprendre. 💡
-            </p>
           </div>
         ) : status === "pending" ? (
           <div className="space-y-2">
