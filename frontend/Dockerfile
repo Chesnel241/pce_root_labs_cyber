@@ -1,7 +1,11 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# `npm ci` est strict : sur Alpine (musl) certaines dépendances optionnelles
+# natives (résolveur eslint / @emnapi) ne correspondent pas toujours au lock
+# généré sur une autre plateforme (glibc/macOS) -> EUSAGE. On retombe alors sur
+# `npm install` qui résout l'arbre correct pour la plateforme du conteneur.
+RUN npm ci || npm install
 
 FROM node:22-alpine AS builder
 WORKDIR /app
