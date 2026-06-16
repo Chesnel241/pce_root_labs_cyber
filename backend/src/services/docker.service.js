@@ -344,7 +344,17 @@ export async function createExecStream(sessionId, size = {}) {
 
   const container = d.getContainer(s.containerId);
   const exec = await container.exec({
-    Cmd: ['/bin/sh', '-c', 'exec /bin/sh'],
+    // Shell INTERACTIF de connexion : readline/historique (flèches haut/bas),
+    // écho et prompt comme un vrai terminal. On privilégie bash (historique
+    // readline complet) et on retombe sur sh (busybox ash, édition de ligne)
+    // si bash n'est pas présent dans l'image du lab.
+    Cmd: [
+      '/bin/sh',
+      '-c',
+      'if command -v bash >/dev/null 2>&1; then exec bash -il; else exec sh -il; fi',
+    ],
+    // TERM est indispensable à l'édition de ligne et au rendu du curseur.
+    Env: ['TERM=xterm-256color', 'LANG=C.UTF-8', 'LC_ALL=C.UTF-8'],
     AttachStdin: true,
     AttachStdout: true,
     AttachStderr: true,

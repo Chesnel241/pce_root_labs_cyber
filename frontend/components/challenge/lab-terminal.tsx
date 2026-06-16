@@ -67,10 +67,19 @@ export function LabTerminal({
       term.loadAddon(fit);
       term.open(containerRef.current);
       fit.fit();
+      term.focus();
+
+      // Cliquer dans la zone redonne le focus au terminal — sinon les touches
+      // (notamment les flèches haut/bas pour l'historique) sont captées par la
+      // page (scroll) au lieu d'être envoyées au shell.
+      const el = containerRef.current;
+      const focusTerm = () => term.focus();
+      el.addEventListener("mousedown", focusTerm);
 
       // `cleanup` est toujours réassigné de manière à ne disposer le terminal
       // qu'une seule fois (par la couche active : WS ou simulateur).
       const disposeTerm = () => {
+        el.removeEventListener("mousedown", focusTerm);
         try {
           term.dispose();
         } catch {
@@ -151,6 +160,7 @@ function connectWebSocket(term: XTerm, fit: Fit, url: string): () => void {
   ws.onopen = () => {
     opened = true;
     sendResize();
+    term.focus();
   };
 
   ws.onmessage = (ev: MessageEvent) => {
