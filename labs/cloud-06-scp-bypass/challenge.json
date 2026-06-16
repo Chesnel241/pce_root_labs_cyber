@@ -2,5 +2,6 @@
   "name": "Service Control Policies",
   "description": "Understand and bypass an AWS Service Control Policy (SCP) to successfully launch an EC2 instance.",
   "difficulty": "Intermediate",
-  "category": "Cloud Security"
+  "category": "Cloud Security",
+  "flag": "PCE{scp_region_bypass_2024}"
 }

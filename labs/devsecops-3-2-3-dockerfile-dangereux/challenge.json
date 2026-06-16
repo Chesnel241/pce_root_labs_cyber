@@ -4,5 +4,11 @@
   "module": "3.2",
   "id": "3.2.3",
   "description": "Analyze a vulnerable project repository to identify sensitive data leaks and bad practices in its Dockerfile.",
-  "difficulty": "Easy"
+  "difficulty": "Easy",
+  "flag": "PCE{d0ck3rf1l3_s3cr3t_l34k_2024}",
+  "hints": [
+    "Examinez le contenu du projet : cat ~/project/Dockerfile",
+    "Repérez les secrets codés en dur dans les instructions ENV du Dockerfile : grep -i 'ENV' ~/project/Dockerfile",
+    "Le flag est la valeur de la variable d'environnement APP_ADMIN_TOKEN : grep APP_ADMIN_TOKEN ~/project/Dockerfile"
+  ]
 }

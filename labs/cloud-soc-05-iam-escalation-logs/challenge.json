@@ -4,5 +4,11 @@
   "module": "5.1",
   "id": "5.1.3",
   "description": "Analysez les logs CloudTrail fournis pour détecter une escalade de privilèges IAM. Trouvez l'événement suspect pour récupérer le flag.",
-  "difficulty": "medium"
+  "difficulty": "medium",
+  "flag": "PCE{cloudtrail_iam_privesc_detected_2024}",
+  "hints": [
+    "Affichez les logs CloudTrail : cat ~/logs/cloudtrail.json | jq '.Records[].eventName'",
+    "L'escalade de privilèges utilise l'API PutUserPolicy : cat ~/logs/cloudtrail.json | jq '.Records[] | select(.eventName==\"PutUserPolicy\")'",
+    "Le flag se cache dans le champ Sid du document de politique attaché : cat ~/logs/cloudtrail.json | jq -r '.Records[] | select(.eventName==\"PutUserPolicy\") | .requestParameters.policyDocument' | jq -r '.Statement[].Sid'"
+  ]
 }
