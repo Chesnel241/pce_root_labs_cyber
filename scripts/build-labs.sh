@@ -6,7 +6,8 @@
 # and runs `docker build -t pce-lab-<slug>:latest .` inside each directory.
 # =============================================================================
 
-set -e
+# We deliberately omit set -e so that a single failing Dockerfile doesn't halt the entire process.
+
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -30,8 +31,9 @@ for lab_dir in */; do
     # Check if challenge.json and Dockerfile exist
     if [ -f "$lab_dir/challenge.json" ] && [ -f "$lab_dir/Dockerfile" ]; then
       
-      # Extract slug using node
-      SLUG=$(node -e "try { console.log(require('./$lab_dir/challenge.json').slug); } catch (e) { process.exit(1); }")
+      # Extract slug using grep (more robust on systems without node)
+      SLUG=$(grep -o '"slug": *"[^"]*"' "$lab_dir/challenge.json" | cut -d'"' -f4)
+
       
       if [ -n "$SLUG" ]; then
         IMAGE_NAME="pce-lab-$SLUG:latest"
@@ -39,7 +41,11 @@ for lab_dir in */; do
         echo "Building $IMAGE_NAME from $lab_dir/"
         echo "============================================================"
         cd "$lab_dir"
-        docker build -t "$IMAGE_NAME" .
+        if ! docker build -t "$IMAGE_NAME" .; then
+          echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+          echo "ERROR: Failed to build $IMAGE_NAME"
+          echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        fi
         cd ..
       else
         echo "Warning: Could not extract slug from $lab_dir/challenge.json"
