@@ -1,55 +1,53 @@
 #!/usr/bin/env bash
 # =============================================================================
-# build-labs.sh — construit TOUTES les images Docker des labs.
-# -----------------------------------------------------------------------------
-# Chaque dossier labs/<slug>/ contenant un Dockerfile est build en
-#   pce-lab-<slug>:latest
-# ce qui correspond EXACTEMENT au nom résolu par le backend
-# (backend/src/services/docker.service.js -> imageForChallenge :
-#  `${IMAGE_PREFIX}-${lab}:latest`, IMAGE_PREFIX = "pce-lab").
+# build-labs.sh — Build all Docker images for the generated labs
 #
-# Sans ces images, "Démarrer le lab" renvoie 503 « Image du lab introuvable ».
-#
-# Usage :   ./scripts/build-labs.sh            # tous les labs
-#           ./scripts/build-labs.sh pentest-01-s3-recon iam-01-wildcard-policy
+# Loops over all subdirectories in labs/, reads the slug from challenge.json,
+# and runs `docker build -t pce-lab-<slug>:latest .` inside each directory.
 # =============================================================================
-set -euo pipefail
 
-cd "$(dirname "$0")/.."
-shopt -s nullglob
+set -e
 
-# Liste des slugs : argument(s) fournis, sinon tous les dossiers de labs/.
-if [ "$#" -gt 0 ]; then
-  slugs=("$@")
-else
-  slugs=()
-  for dir in labs/*/; do
-    slugs+=("$(basename "$dir")")
-  done
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+LABS_DIR="$REPO_ROOT/labs"
+
+if [ ! -d "$LABS_DIR" ]; then
+  echo "Error: labs directory not found at $LABS_DIR"
+  exit 1
 fi
 
-built=0
-failed=0
-missing=0
+echo "Building all lab images in $LABS_DIR..."
 
-for slug in "${slugs[@]}"; do
-  dir="labs/${slug}"
-  if [ ! -f "${dir}/Dockerfile" ]; then
-    echo "⚠️  ${slug} : pas de Dockerfile — ignoré."
-    missing=$((missing + 1))
-    continue
-  fi
-  tag="pce-lab-${slug}:latest"
-  echo "==> Build ${tag}"
-  if docker build -t "${tag}" "${dir}"; then
-    built=$((built + 1))
-  else
-    echo "❌  Échec : ${tag}"
-    failed=$((failed + 1))
+cd "$LABS_DIR"
+
+for lab_dir in */; do
+  if [ -d "$lab_dir" ]; then
+    # Remove trailing slash
+    lab_dir=${lab_dir%/}
+    
+    # Check if challenge.json and Dockerfile exist
+    if [ -f "$lab_dir/challenge.json" ] && [ -f "$lab_dir/Dockerfile" ]; then
+      
+      # Extract slug using node
+      SLUG=$(node -e "try { console.log(require('./$lab_dir/challenge.json').slug); } catch (e) { process.exit(1); }")
+      
+      if [ -n "$SLUG" ]; then
+        IMAGE_NAME="pce-lab-$SLUG:latest"
+        echo "============================================================"
+        echo "Building $IMAGE_NAME from $lab_dir/"
+        echo "============================================================"
+        cd "$lab_dir"
+        docker build -t "$IMAGE_NAME" .
+        cd ..
+      else
+        echo "Warning: Could not extract slug from $lab_dir/challenge.json"
+      fi
+    else
+      echo "Skipping $lab_dir: missing challenge.json or Dockerfile"
+    fi
   fi
 done
 
-echo ""
-echo "Résumé : ${built} image(s) construite(s), ${failed} échec(s), ${missing} sans Dockerfile."
-echo "Vérifier : docker images 'pce-lab-*'"
-[ "${failed}" -eq 0 ]
+echo "All lab images built successfully!"

@@ -58,3 +58,7 @@ deploy: ## Déploiement de bout en bout sur le VPS (scripts/deploy.sh)
 labs-clean: ## Supprime de force les conteneurs de lab orphelins
 	@docker ps -aq --filter "label=pce.lab" | xargs -r docker rm -f
 	@echo "→ conteneurs de lab nettoyés."
+
+build-labs: ## Construit toutes les images Docker pour les labs
+	./scripts/build-labs.sh
+
