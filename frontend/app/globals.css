@@ -222,3 +222,83 @@
     margin: 1.6cm;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Animations pédagogiques (pop-ups explicatives, célébration flag)    */
+/* ------------------------------------------------------------------ */
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.94) translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes celebrate-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  60% {
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-pop-in {
+  animation: pop-in 0.18s ease-out both;
+}
+.animate-slide-up {
+  animation: slide-up 0.35s ease-out both;
+}
+.animate-backdrop {
+  animation: backdrop-in 0.2s ease-out both;
+}
+.animate-celebrate {
+  animation: celebrate-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pop-in,
+  .animate-slide-up,
+  .animate-backdrop,
+  .animate-celebrate {
+    animation: none;
+  }
+}
+
+/* Terme de glossaire cliquable dans les consignes */
+.glossary-term {
+  border-bottom: 1px dashed rgb(var(--primary) / 0.6);
+  color: rgb(var(--primary));
+  cursor: help;
+  font-weight: 500;
+  transition: background-color 0.15s;
+  border-radius: 2px;
+}
+.glossary-term:hover {
+  background-color: rgb(var(--primary) / 0.08);
+}

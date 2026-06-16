@@ -22,6 +22,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LabTerminal } from "./lab-terminal";
+import { GuidedInstructions } from "@/components/learn/guided-instructions";
+import { GlossaryText } from "@/components/learn/glossary-text";
+import { FlagCelebration } from "@/components/learn/flag-celebration";
 import { cn } from "@/lib/utils";
 
 type LabStatus = "idle" | "starting" | "running";
@@ -59,6 +62,9 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
   const [sessionId, setSessionId] = React.useState<string | null>(null);
   // Clé de remontage du terminal (utilisée par Reset).
   const [termKey, setTermKey] = React.useState(0);
+  // Célébration animée (confettis) à la résolution.
+  const [celebrate, setCelebrate] = React.useState(false);
+  const [celebrateXp, setCelebrateXp] = React.useState(props.points);
 
   const meta = difficultyMeta[props.difficulty];
 
@@ -153,6 +159,10 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
               ? "Flag correct — challenge déjà résolu."
               : `Flag correct ! +${res.awardedPoints} XP (total ${res.totalXp}).`,
           );
+          if (!res.alreadySolved) {
+            setCelebrateXp(res.awardedPoints);
+            setCelebrate(true);
+          }
         } else {
           setResult("wrong");
           setResultMessage(null);
@@ -179,6 +189,7 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
   ).padStart(2, "0")}`;
 
   return (
+    <>
     <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
       {/* Instructions */}
       <div className="space-y-6">
@@ -197,16 +208,11 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
             </div>
             <CardTitle className="mt-2 text-lg">{props.title}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 pt-3">
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {props.description}
-            </p>
-            <div className="rounded-lg bg-surface-muted p-3 text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">
-                Format du flag :
-              </span>{" "}
-              <code className="font-mono">PCE{"{...}"}</code>
-            </div>
+          <CardContent className="pt-3">
+            <GuidedInstructions
+              challengeId={props.challengeId}
+              description={props.description}
+            />
           </CardContent>
         </Card>
 
@@ -227,7 +233,9 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
                   className="rounded-lg border border-border bg-surface-muted/50 p-3 text-sm"
                 >
                   {open ? (
-                    <p className="text-muted-foreground">{hint}</p>
+                    <GlossaryText className="text-muted-foreground">
+                      {hint}
+                    </GlossaryText>
                   ) : (
                     <button
                       onClick={() => revealHint(i)}
@@ -377,6 +385,15 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
         </Card>
       </div>
     </div>
+
+      {celebrate && (
+        <FlagCelebration
+          points={celebrateXp}
+          message={resultMessage ?? undefined}
+          onClose={() => setCelebrate(false)}
+        />
+      )}
+    </>
   );
 }
 
