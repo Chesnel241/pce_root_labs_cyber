@@ -4,6 +4,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { PartyPopper, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 /**
  * Célébration animée à la validation d'un flag : confettis (canvas, sans
@@ -121,9 +122,11 @@ export function FlagCelebration({
           {message ?? "Bravo ! Vous avez exploité la faille et capturé le flag. C'est exactement ça, apprendre la cybersécurité. 🎯"}
         </p>
         <div className="mt-5 flex w-full flex-col gap-2">
-          <Button size="lg" className="w-full" asChild>
-            <a href="/tracks">Retour aux parcours</a>
-          </Button>
+          <Link href="/tracks" className="w-full">
+            <Button size="lg" className="w-full">
+              Retour aux parcours
+            </Button>
+          </Link>
           <Button variant="ghost" className="w-full" onClick={onClose}>
             Fermer et rester sur la page
           </Button>
