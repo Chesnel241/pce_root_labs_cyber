@@ -120,9 +120,14 @@ export function FlagCelebration({
         <p className="mt-3 text-sm text-muted-foreground">
           {message ?? "Bravo ! Vous avez exploité la faille et capturé le flag. C'est exactement ça, apprendre la cybersécurité. 🎯"}
         </p>
-        <Button size="lg" className="mt-5 w-full" onClick={onClose}>
-          Continuer l&apos;entraînement
-        </Button>
+        <div className="mt-5 flex w-full flex-col gap-2">
+          <Button size="lg" className="w-full" asChild>
+            <a href="/tracks">Retour aux parcours</a>
+          </Button>
+          <Button variant="ghost" className="w-full" onClick={onClose}>
+            Fermer et rester sur la page
+          </Button>
+        </div>
       </div>
     </div>,
     document.body,
