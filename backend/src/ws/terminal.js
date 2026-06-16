@@ -144,6 +144,8 @@ async function bridgeDockerExec(ws, sessionId) {
   stream.on('end', () => safeClose(ws, null));
   stream.on('error', (err) => safeClose(ws, `Flux interrompu : ${err.message}`));
 
+  logger.info(`Terminal WS bridged successfully for session ${sessionId}`);
+
   ws.on('message', (data, isBinary) => {
     const handled = handleControlMessage(data, isBinary, (cols, rows) => {
       exec.resize({ w: cols, h: rows }).catch(() => {});
