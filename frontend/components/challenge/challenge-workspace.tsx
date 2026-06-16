@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   CheckCircle2,
   CircleDot,
@@ -371,10 +372,17 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
             </form>
 
             {result === "correct" && (
-              <div className="mt-3 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-                <CheckCircle2 className="h-4 w-4" />
-                {resultMessage ??
-                  `Flag correct ! +${props.points} XP ajoutés à votre score.`}
+              <div className="mt-4 flex flex-col gap-4">
+                <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                  <CheckCircle2 className="h-4 w-4" />
+                  {resultMessage ??
+                    `Flag correct ! +${props.points} XP ajoutés à votre score.`}
+                </div>
+                <Button asChild variant="outline" className="sm:w-fit">
+                  <Link href="/tracks">
+                    Retour aux parcours
+                  </Link>
+                </Button>
               </div>
             )}
             {result === "wrong" && (
