@@ -54,3 +54,6 @@ __pycache__/
 !labs/**/lab-data/**/node_modules
 !labs/**/lab-data/**/node_modules/**
 
+
+# Jeton de debug — ne jamais committer
+token.txt

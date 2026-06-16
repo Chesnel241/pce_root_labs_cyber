@@ -378,11 +378,11 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
                   {resultMessage ??
                     `Flag correct ! +${props.points} XP ajoutés à votre score.`}
                 </div>
-                <Button asChild variant="outline" className="sm:w-fit">
-                  <Link href="/tracks">
+                <Link href="/tracks" className="sm:w-fit">
+                  <Button variant="outline" className="w-full sm:w-auto">
                     Retour aux parcours
-                  </Link>
-                </Button>
+                  </Button>
+                </Link>
               </div>
             )}
             {result === "wrong" && (

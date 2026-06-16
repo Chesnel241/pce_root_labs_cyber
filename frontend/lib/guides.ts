@@ -6,6 +6,7 @@
  * Les challenges sans guide dédié reçoivent un guide générique structuré.
  */
 import { tokenizeWithGlossary } from "./glossary";
+import { extraGuides } from "./guides/index";
 
 export interface GuideStep {
   title: string;
@@ -216,5 +217,5 @@ export function getGuide(
   challengeId: string,
   description: string,
 ): ChallengeGuide {
-  return guides[challengeId] ?? genericGuide(description);
+  return guides[challengeId] ?? extraGuides[challengeId] ?? genericGuide(description);
 }
