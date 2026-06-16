@@ -1,0 +1,8 @@
+{
+  "id": "1.4.2",
+  "track": "cloud-pentesting",
+  "module": "1.4",
+  "title": "Bypass IMDSv2 (header injection)",
+  "description": "Exploit an SSRF vulnerability with header injection to bypass IMDSv2 restrictions and steal cloud credentials.",
+  "flag": "PCE{1mdsv2_byp4ss_h34d3rs_2026}"
+}

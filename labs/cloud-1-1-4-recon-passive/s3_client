@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+import sys
+
+buckets = {
+    "megacloudcorp-public-backup": {
+        "files": ["config.bak", "employees.csv", "secret_flag.txt"],
+        "content": {
+            "config.bak": "DB_PASS=supersecret\nDB_USER=admin",
+            "employees.csv": "alice, CEO\nbob, IT\ncharlie, Engineering",
+            "secret_flag.txt": "PCE{passive_recon_reveals_all_2024}"
+        }
+    }
+}
+
+if len(sys.argv) < 3:
+    print("Usage:")
+    print("  s3_client ls <bucket_name>")
+    print("  s3_client cp <bucket_name>/<file_name> .")
+    sys.exit(1)
+
+cmd = sys.argv[1]
+target = sys.argv[2]
+
+if cmd == "ls":
+    bucket_name = target
+    if bucket_name in buckets:
+        print(f"Listing contents of bucket: {bucket_name}")
+        for f in buckets[bucket_name]["files"]:
+            print(f" - {f}")
+    else:
+        print(f"AccessDenied or NoSuchBucket: {bucket_name}")
+
+elif cmd == "cp":
+    if "/" not in target:
+        print("Invalid path. Use <bucket_name>/<file_name>")
+        sys.exit(1)
+    
+    bucket_name, file_name = target.split("/", 1)
+    if bucket_name in buckets and file_name in buckets[bucket_name]["files"]:
+        print(f"Downloading {file_name}...")
+        with open(file_name, "w") as f:
+            f.write(buckets[bucket_name]["content"][file_name] + "\n")
+        print("Done.")
+    else:
+        print("File not found or AccessDenied.")
+else:
+    print(f"Unknown command: {cmd}")

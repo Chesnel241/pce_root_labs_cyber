@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Mock etcdctl tool to simulate etcd API interactions
+
+if [[ "$*" == *"get"* ]]; then
+    if [[ "$*" == *"--keys-only"* ]]; then
+        echo "/registry/configmaps/default/kube-root-ca.crt"
+        echo "/registry/secrets/default/db-credentials"
+        echo "/registry/secrets/default/admin-token"
+        exit 0
+    fi
+    if [[ "$*" == *"/registry/secrets/default/admin-token"* ]]; then
+        echo "/registry/secrets/default/admin-token"
+        echo "PCE{etcd_secrets_unencrypted_2024}"
+        exit 0
+    fi
+    if [[ "$*" == *"/registry/secrets/default/db-credentials"* ]]; then
+        echo "/registry/secrets/default/db-credentials"
+        echo "user: admin, pass: super_secure_db_pass"
+        exit 0
+    fi
+fi
+
+echo "mock etcdctl: simulate etcd queries"
+echo "Example: etcdctl get / --prefix --keys-only"
+echo "Example: etcdctl get /registry/secrets/default/admin-token"

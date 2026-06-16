@@ -1,0 +1,9 @@
+{
+  "id": "6.2.2",
+  "title": "mTLS entre microservices",
+  "track": "cloud-architecture",
+  "module": "6.2",
+  "slug": "cloud-06-mtls-microservices",
+  "description": "The internal payment microservice is protected by mTLS. Find the client certificates on the system and use them to authenticate and retrieve the flag.",
+  "flag": "PCE{mTLS_auth_successful_2024}"
+}

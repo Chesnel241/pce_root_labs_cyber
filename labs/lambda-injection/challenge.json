@@ -1,0 +1,8 @@
+{
+  "id": "1.3.3",
+  "track": "cloud-pentesting",
+  "module": "1.3",
+  "title": "Lambda vulnérable (injection)",
+  "slug": "lambda-injection",
+  "flag": "PCE{lambda_cmd_injection_2026}"
+}

@@ -1,0 +1,10 @@
+Bienvenue, Analyste.
+
+Nous avons reçu une alerte concernant une fuite potentielle d'informations d'identification dans le dépôt du projet interne.
+Le développeur a assuré avoir corrigé l'erreur, mais nous devons en être sûrs.
+
+1. Explorez le dépôt local situé dans le répertoire 'project'.
+2. Trouvez les clés d'accès AWS (Access Key ID et Secret Access Key) qui ont été exposées dans les commits précédents.
+3. Utilisez l'outil 'verify-keys' avec les clés trouvées pour valider et récupérer le flag.
+
+Bonne chance!

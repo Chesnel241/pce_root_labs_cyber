@@ -1,0 +1,13 @@
+========================================================================
+Bienvenue dans le lab : Énumération AWS non authentifiée
+========================================================================
+Notre équipe a identifié un nom de domaine intéressant : "pceroot-public-assets".
+Votre objectif est de déterminer si ce bucket S3 est accessible 
+publiquement et d'y récupérer le fichier secret.
+
+Outils disponibles : 
+ - aws (AWS CLI - Mocked for this lab)
+
+Exemple : 
+ aws s3 ls s3://nom-du-bucket/ --no-sign-request
+========================================================================

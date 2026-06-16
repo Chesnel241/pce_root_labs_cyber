@@ -23,10 +23,34 @@
           "xp": 200,
           "summary": "Identifier la surface d'attaque cloud exposée sans authentification.",
           "challenges": [
-            { "id": "1.1.1", "title": "Buckets S3 publics exposés", "description": "Trouver des buckets S3 publics exposés (aws s3 ls, enumerate).", "points": 50, "lab": "pentest-01-s3-recon" },
-            { "id": "1.1.2", "title": "Énumération AWS non authentifiée", "description": "Énumérer les services cloud via AWS CLI non authentifié.", "points": 50 },
-            { "id": "1.1.3", "title": "Endpoints API Gateway non protégés", "description": "Identifier des endpoints API Gateway non protégés.", "points": 50 },
-            { "id": "1.1.4", "title": "Reconnaissance passive", "description": "Reconnaissance passive : Certificate Transparency, shodan-cloud.", "points": 50 }
+            {
+              "id": "1.1.1",
+              "title": "Buckets S3 publics exposés",
+              "description": "Trouver des buckets S3 publics exposés (aws s3 ls, enumerate).",
+              "points": 50,
+              "lab": "pentest-01-s3-recon"
+            },
+            {
+              "id": "1.1.2",
+              "title": "Énumération AWS non authentifiée",
+              "description": "Énumérer les services cloud via AWS CLI non authentifié.",
+              "points": 50,
+              "lab": "cloud-enum-aws-unauth"
+            },
+            {
+              "id": "1.1.3",
+              "title": "Endpoints API Gateway non protégés",
+              "description": "Identifier des endpoints API Gateway non protégés.",
+              "points": 50,
+              "lab": "api-gateway-unprotected"
+            },
+            {
+              "id": "1.1.4",
+              "title": "Reconnaissance passive",
+              "description": "Reconnaissance passive : Certificate Transparency, shodan-cloud.",
+              "points": 50,
+              "lab": "cloud-1-1-4-recon-passive"
+            }
           ]
         },
         {
@@ -36,10 +60,34 @@
           "xp": 300,
           "summary": "Exploiter les misconfigurations classiques du cloud public.",
           "challenges": [
-            { "id": "1.2.1", "title": "Exfiltration depuis un bucket S3 public", "description": "Exfiltrer des données d'un bucket S3 public (fichiers sensibles cachés).", "points": 75, "lab": "pentest-02-s3-exfil" },
-            { "id": "1.2.2", "title": "Bypass d'auth API Gateway", "description": "Bypass d'auth sur un API Gateway mal configuré.", "points": 75 },
-            { "id": "1.2.3", "title": "RDS exposée sur internet", "description": "Accès à une base de données RDS exposée sur internet.", "points": 75 },
-            { "id": "1.2.4", "title": "Security Group trop permissif", "description": "Security Group trop permissif (0.0.0.0/0 sur tous les ports).", "points": 75 }
+            {
+              "id": "1.2.1",
+              "title": "Exfiltration depuis un bucket S3 public",
+              "description": "Exfiltrer des données d'un bucket S3 public (fichiers sensibles cachés).",
+              "points": 75,
+              "lab": "pentest-02-s3-exfil"
+            },
+            {
+              "id": "1.2.2",
+              "title": "Bypass d'auth API Gateway",
+              "description": "Bypass d'auth sur un API Gateway mal configuré.",
+              "points": 75,
+              "lab": "cloud-1.2.2-api-gw-bypass"
+            },
+            {
+              "id": "1.2.3",
+              "title": "RDS exposée sur internet",
+              "description": "Accès à une base de données RDS exposée sur internet.",
+              "points": 75,
+              "lab": "rds-exposed-internet"
+            },
+            {
+              "id": "1.2.4",
+              "title": "Security Group trop permissif",
+              "description": "Security Group trop permissif (0.0.0.0/0 sur tous les ports).",
+              "points": 75,
+              "lab": "cloud-pentesting-1-2-4-sg-permissif"
+            }
           ]
         },
         {
@@ -49,10 +97,34 @@
           "xp": 400,
           "summary": "Passer d'un accès limité à un contrôle total via IAM.",
           "challenges": [
-            { "id": "1.3.1", "title": "PrivEsc via PassRole + CreateAccessKey", "description": "IAM privilege escalation via PassRole + CreateAccessKey.", "points": 100, "lab": "pentest-03-iam-privesc" },
-            { "id": "1.3.2", "title": "AssumeRole abuse (pivot)", "description": "AssumeRole abuse pour pivoter vers un autre compte.", "points": 100 },
-            { "id": "1.3.3", "title": "Lambda vulnérable (injection)", "description": "Exploitation d'une Lambda Function vulnérable (injection).", "points": 100 },
-            { "id": "1.3.4", "title": "AttachPolicy → admin access", "description": "AttachPolicy misconfiguration pour obtenir admin access.", "points": 100 }
+            {
+              "id": "1.3.1",
+              "title": "PrivEsc via PassRole + CreateAccessKey",
+              "description": "IAM privilege escalation via PassRole + CreateAccessKey.",
+              "points": 100,
+              "lab": "pentest-03-iam-privesc"
+            },
+            {
+              "id": "1.3.2",
+              "title": "AssumeRole abuse (pivot)",
+              "description": "AssumeRole abuse pour pivoter vers un autre compte.",
+              "points": 100,
+              "lab": "cloud-1-3-2-assumerole-abuse"
+            },
+            {
+              "id": "1.3.3",
+              "title": "Lambda vulnérable (injection)",
+              "description": "Exploitation d'une Lambda Function vulnérable (injection).",
+              "points": 100,
+              "lab": "lambda-injection"
+            },
+            {
+              "id": "1.3.4",
+              "title": "AttachPolicy → admin access",
+              "description": "AttachPolicy misconfiguration pour obtenir admin access.",
+              "points": 100,
+              "lab": "cloud-attachpolicy-admin"
+            }
           ]
         },
         {
@@ -62,9 +134,27 @@
           "xp": 300,
           "summary": "Voler des credentials via le service de métadonnées cloud.",
           "challenges": [
-            { "id": "1.4.1", "title": "SSRF vers IMDSv1 (vol de creds)", "description": "SSRF vers l'IMDSv1 EC2 (169.254.169.254) — vol de credentials.", "points": 100, "lab": "pentest-04-ssrf-imds" },
-            { "id": "1.4.2", "title": "Bypass IMDSv2 (header injection)", "description": "Bypass IMDSv2 via header injection dans une app web.", "points": 100 },
-            { "id": "1.4.3", "title": "SSRF vers services internes", "description": "SSRF pour accéder à des services internes (RDS, Redis).", "points": 100 }
+            {
+              "id": "1.4.1",
+              "title": "SSRF vers IMDSv1 (vol de creds)",
+              "description": "SSRF vers l'IMDSv1 EC2 (169.254.169.254) — vol de credentials.",
+              "points": 100,
+              "lab": "pentest-04-ssrf-imds"
+            },
+            {
+              "id": "1.4.2",
+              "title": "Bypass IMDSv2 (header injection)",
+              "description": "Bypass IMDSv2 via header injection dans une app web.",
+              "points": 100,
+              "lab": "cloud-1-4-2-imdsv2-bypass"
+            },
+            {
+              "id": "1.4.3",
+              "title": "SSRF vers services internes",
+              "description": "SSRF pour accéder à des services internes (RDS, Redis).",
+              "points": 100,
+              "lab": "cloud-1-4-3-ssrf-internal"
+            }
           ]
         }
       ]
@@ -86,10 +176,34 @@
           "xp": 200,
           "summary": "Repérer les faiblesses d'hygiène IAM les plus courantes.",
           "challenges": [
-            { "id": "2.1.1", "title": "Utilisateurs IAM sans MFA", "description": "Détecter des utilisateurs IAM sans MFA activé.", "points": 50 },
-            { "id": "2.1.2", "title": "Access keys dormantes (> 90j)", "description": "Identifier des access keys jamais utilisées (> 90 jours).", "points": 50 },
-            { "id": "2.1.3", "title": "Wildcard dangereux (Action:*)", "description": "Trouver une politique avec wildcard dangereux (Action:*).", "points": 50, "lab": "iam-01-wildcard-policy" },
-            { "id": "2.1.4", "title": "Access keys exposées dans Git", "description": "Détecter des access keys exposées dans un repo Git.", "points": 50 }
+            {
+              "id": "2.1.1",
+              "title": "Utilisateurs IAM sans MFA",
+              "description": "Détecter des utilisateurs IAM sans MFA activé.",
+              "points": 50,
+              "lab": "iam-2-1-1-no-mfa"
+            },
+            {
+              "id": "2.1.2",
+              "title": "Access keys dormantes (> 90j)",
+              "description": "Identifier des access keys jamais utilisées (> 90 jours).",
+              "points": 50,
+              "lab": "iam-2-1-2-dormant-keys"
+            },
+            {
+              "id": "2.1.3",
+              "title": "Wildcard dangereux (Action:*)",
+              "description": "Trouver une politique avec wildcard dangereux (Action:*).",
+              "points": 50,
+              "lab": "iam-01-wildcard-policy"
+            },
+            {
+              "id": "2.1.4",
+              "title": "Access keys exposées dans Git",
+              "description": "Détecter des access keys exposées dans un repo Git.",
+              "points": 50,
+              "lab": "iam-2-1-4-access-keys-git"
+            }
           ]
         },
         {
@@ -99,9 +213,27 @@
           "xp": 400,
           "summary": "Enchaîner des permissions pour atteindre les privilèges admin.",
           "challenges": [
-            { "id": "2.2.1", "title": "PassRole exploitation (EC2 admin)", "description": "PassRole exploitation (créer une EC2 avec rôle admin).", "points": 134 , "lab": "iam-02-passrole-audit" },
-            { "id": "2.2.2", "title": "CreateAccessKey (pivot)", "description": "CreateAccessKey sur un autre utilisateur pour pivot.", "points": 133 },
-            { "id": "2.2.3", "title": "UpdateAssumeRolePolicy → rôle admin", "description": "UpdateAssumeRolePolicy pour s'attribuer un rôle admin.", "points": 133 }
+            {
+              "id": "2.2.1",
+              "title": "PassRole exploitation (EC2 admin)",
+              "description": "PassRole exploitation (créer une EC2 avec rôle admin).",
+              "points": 134,
+              "lab": "iam-02-passrole-audit"
+            },
+            {
+              "id": "2.2.2",
+              "title": "CreateAccessKey (pivot)",
+              "description": "CreateAccessKey sur un autre utilisateur pour pivot.",
+              "points": 133,
+              "lab": "iam-2-2-2-createaccesskey-pivot"
+            },
+            {
+              "id": "2.2.3",
+              "title": "UpdateAssumeRolePolicy → rôle admin",
+              "description": "UpdateAssumeRolePolicy pour s'attribuer un rôle admin.",
+              "points": 133,
+              "lab": "iam-02-update-assume-role-policy"
+            }
           ]
         },
         {
@@ -111,9 +243,27 @@
           "xp": 300,
           "summary": "Abuser des relations de confiance et de la fédération d'identité.",
           "challenges": [
-            { "id": "2.3.1", "title": "OIDC trust misconfiguration", "description": "OIDC trust misconfiguration (GitHub Actions → accès AWS).", "points": 100 , "lab": "iam-03-oidc-trust-audit" },
-            { "id": "2.3.2", "title": "Cross-account role trust abuse", "description": "Cross-account role trust abuse (condition manquante).", "points": 100 },
-            { "id": "2.3.3", "title": "SAML assertion manipulation", "description": "SAML assertion manipulation pour escalade.", "points": 100 }
+            {
+              "id": "2.3.1",
+              "title": "OIDC trust misconfiguration",
+              "description": "OIDC trust misconfiguration (GitHub Actions → accès AWS).",
+              "points": 100,
+              "lab": "iam-03-oidc-trust-audit"
+            },
+            {
+              "id": "2.3.2",
+              "title": "Cross-account role trust abuse",
+              "description": "Cross-account role trust abuse (condition manquante).",
+              "points": 100,
+              "lab": "iam-02-03-02-cross-account-role-trust-abuse"
+            },
+            {
+              "id": "2.3.3",
+              "title": "SAML assertion manipulation",
+              "description": "SAML assertion manipulation pour escalade.",
+              "points": 100,
+              "lab": "iam-saml-assertion-manipulation"
+            }
           ]
         }
       ]
@@ -135,10 +285,34 @@
           "xp": 300,
           "summary": "Découvrir et corriger les failles des pipelines d'intégration.",
           "challenges": [
-            { "id": "3.1.1", "title": "Secrets hardcodés (Jenkinsfile)", "description": "Trouver des secrets hardcodés dans un Jenkinsfile.", "points": 75, "lab": "devsecops-02-jenkins-secrets" },
-            { "id": "3.1.2", "title": "Pipeline injection attack", "description": "Pipeline injection attack via un paramètre non sanitisé.", "points": 75 },
-            { "id": "3.1.3", "title": "Secrets GitHub Actions dans les logs", "description": "Vol de secrets GitHub Actions exposés dans les logs.", "points": 75 },
-            { "id": "3.1.4", "title": "Audit pipeline Jenkins + correctif", "description": "Audit d'un pipeline Jenkins vulnérable et correctif.", "points": 75 }
+            {
+              "id": "3.1.1",
+              "title": "Secrets hardcodés (Jenkinsfile)",
+              "description": "Trouver des secrets hardcodés dans un Jenkinsfile.",
+              "points": 75,
+              "lab": "devsecops-02-jenkins-secrets"
+            },
+            {
+              "id": "3.1.2",
+              "title": "Pipeline injection attack",
+              "description": "Pipeline injection attack via un paramètre non sanitisé.",
+              "points": 75,
+              "lab": "devsecops-03-pipeline-injection"
+            },
+            {
+              "id": "3.1.3",
+              "title": "Secrets GitHub Actions dans les logs",
+              "description": "Vol de secrets GitHub Actions exposés dans les logs.",
+              "points": 75,
+              "lab": "devsecops-03-actions-secrets-logs"
+            },
+            {
+              "id": "3.1.4",
+              "title": "Audit pipeline Jenkins + correctif",
+              "description": "Audit d'un pipeline Jenkins vulnérable et correctif.",
+              "points": 75,
+              "lab": "devsecops-3-1-4-jenkins-audit"
+            }
           ]
         },
         {
@@ -148,9 +322,27 @@
           "xp": 300,
           "summary": "Détecter les misconfigurations dans le code d'infrastructure.",
           "challenges": [
-            { "id": "3.2.1", "title": "5 misconfigs Terraform", "description": "Détecter 5 misconfigs dans un fichier Terraform vulnérable.", "points": 100 , "lab": "devsecops-03-terraform-audit" },
-            { "id": "3.2.2", "title": "Audit CloudFormation", "description": "Audit d'un CloudFormation template (ports ouverts, pas de chiffrement).", "points": 100 },
-            { "id": "3.2.3", "title": "Dockerfile dangereux", "description": "Scanner un Dockerfile avec des pratiques dangereuses (root, secrets).", "points": 100 }
+            {
+              "id": "3.2.1",
+              "title": "5 misconfigs Terraform",
+              "description": "Détecter 5 misconfigs dans un fichier Terraform vulnérable.",
+              "points": 100,
+              "lab": "devsecops-03-terraform-audit"
+            },
+            {
+              "id": "3.2.2",
+              "title": "Audit CloudFormation",
+              "description": "Audit d'un CloudFormation template (ports ouverts, pas de chiffrement).",
+              "points": 100,
+              "lab": "devsecops-3-2-2-audit-cloudformation"
+            },
+            {
+              "id": "3.2.3",
+              "title": "Dockerfile dangereux",
+              "description": "Scanner un Dockerfile avec des pratiques dangereuses (root, secrets).",
+              "points": 100,
+              "lab": "devsecops-3-2-3-dockerfile-dangereux"
+            }
           ]
         },
         {
@@ -160,9 +352,27 @@
           "xp": 200,
           "summary": "Détecter et gérer correctement les secrets applicatifs.",
           "challenges": [
-            { "id": "3.3.1", "title": "Scan Git avec truffleHog", "description": "Scanner un repo Git avec truffleHog (secrets dans l'historique).", "points": 70, "lab": "devsecops-01-git-secrets" },
-            { "id": "3.3.2", "title": "Mot de passe en variable d'env", "description": "Extraire un mot de passe d'une variable d'environnement exposée.", "points": 65 },
-            { "id": "3.3.3", "title": "Migrer vers Secrets Manager", "description": "Configurer AWS Secrets Manager au lieu de hardcoding.", "points": 65 }
+            {
+              "id": "3.3.1",
+              "title": "Scan Git avec truffleHog",
+              "description": "Scanner un repo Git avec truffleHog (secrets dans l'historique).",
+              "points": 70,
+              "lab": "devsecops-01-git-secrets"
+            },
+            {
+              "id": "3.3.2",
+              "title": "Mot de passe en variable d'env",
+              "description": "Extraire un mot de passe d'une variable d'environnement exposée.",
+              "points": 65,
+              "lab": "devsecops-env-password"
+            },
+            {
+              "id": "3.3.3",
+              "title": "Migrer vers Secrets Manager",
+              "description": "Configurer AWS Secrets Manager au lieu de hardcoding.",
+              "points": 65,
+              "lab": "devsecops-3-3-3-secrets-manager"
+            }
           ]
         },
         {
@@ -172,9 +382,27 @@
           "xp": 300,
           "summary": "Analyser les compromissions de la chaîne d'approvisionnement.",
           "challenges": [
-            { "id": "3.4.1", "title": "Package npm malveillant", "description": "Identifier un package npm malveillant dans un projet.", "points": 100 , "lab": "devsecops-04-npm-supplychain" },
-            { "id": "3.4.2", "title": "Typosquatting de dépendance", "description": "Analyser un typosquatting attack sur une dépendance.", "points": 100 },
-            { "id": "3.4.3", "title": "Signatures & SBOM d'image", "description": "Vérifier les signatures et SBOMs d'une image Docker.", "points": 100 }
+            {
+              "id": "3.4.1",
+              "title": "Package npm malveillant",
+              "description": "Identifier un package npm malveillant dans un projet.",
+              "points": 100,
+              "lab": "devsecops-04-npm-supplychain"
+            },
+            {
+              "id": "3.4.2",
+              "title": "Typosquatting de dépendance",
+              "description": "Analyser un typosquatting attack sur une dépendance.",
+              "points": 100,
+              "lab": "devsecops-3-4-2-typosquatting"
+            },
+            {
+              "id": "3.4.3",
+              "title": "Signatures & SBOM d'image",
+              "description": "Vérifier les signatures et SBOMs d'une image Docker.",
+              "points": 100,
+              "lab": "devsecops-3.4.3-sbom-signatures"
+            }
           ]
         }
       ]
@@ -196,10 +424,34 @@
           "xp": 300,
           "summary": "Comprendre et exploiter les évasions de conteneurs.",
           "challenges": [
-            { "id": "4.1.1", "title": "Privileged container escape", "description": "Privileged container escape (monter le filesystem host).", "points": 75 },
-            { "id": "4.1.2", "title": "Docker socket exposure (RCE)", "description": "Docker socket exposure exploitation (docker.sock RCE).", "points": 75 },
-            { "id": "4.1.3", "title": "Breakout via mount namespace", "description": "Container breakout via mount namespace.", "points": 75 },
-            { "id": "4.1.4", "title": "Secrets cachés dans une image", "description": "Analyse d'image Docker pour trouver des secrets cachés.", "points": 75, "lab": "container-01-image-secrets" }
+            {
+              "id": "4.1.1",
+              "title": "Privileged container escape",
+              "description": "Privileged container escape (monter le filesystem host).",
+              "points": 75,
+              "lab": "container-04-01-priv-escape"
+            },
+            {
+              "id": "4.1.2",
+              "title": "Docker socket exposure (RCE)",
+              "description": "Docker socket exposure exploitation (docker.sock RCE).",
+              "points": 75,
+              "lab": "container-04-docker-sock"
+            },
+            {
+              "id": "4.1.3",
+              "title": "Breakout via mount namespace",
+              "description": "Container breakout via mount namespace.",
+              "points": 75,
+              "lab": "container-k8s-4-1-3-mount-namespace"
+            },
+            {
+              "id": "4.1.4",
+              "title": "Secrets cachés dans une image",
+              "description": "Analyse d'image Docker pour trouver des secrets cachés.",
+              "points": 75,
+              "lab": "container-01-image-secrets"
+            }
           ]
         },
         {
@@ -209,10 +461,34 @@
           "xp": 400,
           "summary": "Exploiter et corriger les autorisations Kubernetes.",
           "challenges": [
-            { "id": "4.2.1", "title": "ClusterRoleBinding trop permissif", "description": "RBAC misconfiguration (ClusterRoleBinding trop permissif).", "points": 100, "lab": "container-02-k8s-rbac" },
-            { "id": "4.2.2", "title": "Dashboard K8s sans auth", "description": "Accès au Dashboard Kubernetes exposé sans auth.", "points": 100 },
-            { "id": "4.2.3", "title": "Etcd data exposure", "description": "Etcd data exposure (lire les secrets non chiffrés).", "points": 100 },
-            { "id": "4.2.4", "title": "Service Account token abuse", "description": "Service Account token abuse pour escalade de privilèges.", "points": 100 }
+            {
+              "id": "4.2.1",
+              "title": "ClusterRoleBinding trop permissif",
+              "description": "RBAC misconfiguration (ClusterRoleBinding trop permissif).",
+              "points": 100,
+              "lab": "container-02-k8s-rbac"
+            },
+            {
+              "id": "4.2.2",
+              "title": "Dashboard K8s sans auth",
+              "description": "Accès au Dashboard Kubernetes exposé sans auth.",
+              "points": 100,
+              "lab": "k8s-dashboard-sans-auth"
+            },
+            {
+              "id": "4.2.3",
+              "title": "Etcd data exposure",
+              "description": "Etcd data exposure (lire les secrets non chiffrés).",
+              "points": 100,
+              "lab": "k8s-etcd-exposure"
+            },
+            {
+              "id": "4.2.4",
+              "title": "Service Account token abuse",
+              "description": "Service Account token abuse pour escalade de privilèges.",
+              "points": 100,
+              "lab": "k8s-04-sa-token-abuse"
+            }
           ]
         },
         {
@@ -222,9 +498,27 @@
           "xp": 300,
           "summary": "Pivoter et contourner les contrôles réseau du cluster.",
           "challenges": [
-            { "id": "4.3.1", "title": "NetworkPolicy bypass", "description": "NetworkPolicy bypass (pivot entre namespaces).", "points": 100 , "lab": "container-03-networkpolicy-audit" },
-            { "id": "4.3.2", "title": "Ingress controller misconfig", "description": "Ingress controller misconfiguration (accès interne exposé).", "points": 100 },
-            { "id": "4.3.3", "title": "DNS rebinding dans le cluster", "description": "DNS rebinding attack dans un cluster K8s.", "points": 100 }
+            {
+              "id": "4.3.1",
+              "title": "NetworkPolicy bypass",
+              "description": "NetworkPolicy bypass (pivot entre namespaces).",
+              "points": 100,
+              "lab": "container-03-networkpolicy-audit"
+            },
+            {
+              "id": "4.3.2",
+              "title": "Ingress controller misconfig",
+              "description": "Ingress controller misconfiguration (accès interne exposé).",
+              "points": 100,
+              "lab": "container-k8s-4-3-2-ingress-misconfig"
+            },
+            {
+              "id": "4.3.3",
+              "title": "DNS rebinding dans le cluster",
+              "description": "DNS rebinding attack dans un cluster K8s.",
+              "points": 100,
+              "lab": "k8s-dns-rebinding"
+            }
           ]
         },
         {
@@ -234,9 +528,27 @@
           "xp": 300,
           "summary": "Détecter et corriger les configurations de pods dangereuses.",
           "challenges": [
-            { "id": "4.4.1", "title": "Pods qui tournent en root", "description": "Détecter des pods qui tournent en root.", "points": 100 , "lab": "container-04-pod-security-audit" },
-            { "id": "4.4.2", "title": "Capabilities dangereuses (SYS_ADMIN)", "description": "Corriger un Pod avec capabilities dangereuses (SYS_ADMIN).", "points": 100 },
-            { "id": "4.4.3", "title": "Admission Controller / PSP", "description": "Implémenter un PodSecurityPolicy/Admission Controller.", "points": 100 }
+            {
+              "id": "4.4.1",
+              "title": "Pods qui tournent en root",
+              "description": "Détecter des pods qui tournent en root.",
+              "points": 100,
+              "lab": "container-04-pod-security-audit"
+            },
+            {
+              "id": "4.4.2",
+              "title": "Capabilities dangereuses (SYS_ADMIN)",
+              "description": "Corriger un Pod avec capabilities dangereuses (SYS_ADMIN).",
+              "points": 100,
+              "lab": "container-4-4-2-sys-admin"
+            },
+            {
+              "id": "4.4.3",
+              "title": "Admission Controller / PSP",
+              "description": "Implémenter un PodSecurityPolicy/Admission Controller.",
+              "points": 100,
+              "lab": "k8s-4-4-3-admission-controller-psp"
+            }
           ]
         }
       ]
@@ -258,10 +570,34 @@
           "xp": 200,
           "summary": "Repérer les traces d'intrusion dans les journaux cloud.",
           "challenges": [
-            { "id": "5.1.1", "title": "Intrusion dans CloudTrail", "description": "Analyser des CloudTrail logs et détecter une intrusion.", "points": 50, "lab": "soc-01-cloudtrail-intrusion" },
-            { "id": "5.1.2", "title": "Exfiltration via VPC Flow Logs", "description": "Identifier une exfiltration via VPC Flow Logs.", "points": 50 },
-            { "id": "5.1.3", "title": "Escalade IAM dans les logs", "description": "Détecter une escalade de privilèges IAM dans les logs.", "points": 50 },
-            { "id": "5.1.4", "title": "CloudTrail désactivé", "description": "Repérer un CloudTrail désactivé (tentative d'effacement de traces).", "points": 50 }
+            {
+              "id": "5.1.1",
+              "title": "Intrusion dans CloudTrail",
+              "description": "Analyser des CloudTrail logs et détecter une intrusion.",
+              "points": 50,
+              "lab": "soc-01-cloudtrail-intrusion"
+            },
+            {
+              "id": "5.1.2",
+              "title": "Exfiltration via VPC Flow Logs",
+              "description": "Identifier une exfiltration via VPC Flow Logs.",
+              "points": 50,
+              "lab": "cloud-soc-05-vpc-exfiltration"
+            },
+            {
+              "id": "5.1.3",
+              "title": "Escalade IAM dans les logs",
+              "description": "Détecter une escalade de privilèges IAM dans les logs.",
+              "points": 50,
+              "lab": "cloud-soc-05-iam-escalation-logs"
+            },
+            {
+              "id": "5.1.4",
+              "title": "CloudTrail désactivé",
+              "description": "Repérer un CloudTrail désactivé (tentative d'effacement de traces).",
+              "points": 50,
+              "lab": "cloud-soc-5-1-4-cloudtrail-desactive"
+            }
           ]
         },
         {
@@ -271,10 +607,34 @@
           "xp": 400,
           "summary": "Chasser activement les menaces dans un environnement compromis.",
           "challenges": [
-            { "id": "5.2.1", "title": "Lateral movement", "description": "Chasser un lateral movement dans un environnement cloud compromis.", "points": 100 , "lab": "soc-02-threat-hunting" },
-            { "id": "5.2.2", "title": "Persistance (backdoor Lambda)", "description": "Identifier un mécanisme de persistance (backdoor Lambda).", "points": 100 },
-            { "id": "5.2.3", "title": "Cryptominer sur EC2", "description": "Détecter un cryptominer caché sur une instance EC2.", "points": 100 },
-            { "id": "5.2.4", "title": "Exfiltration DNS (tunneling)", "description": "Identifier une exfiltration DNS (DNS tunneling).", "points": 100 }
+            {
+              "id": "5.2.1",
+              "title": "Lateral movement",
+              "description": "Chasser un lateral movement dans un environnement cloud compromis.",
+              "points": 100,
+              "lab": "soc-02-threat-hunting"
+            },
+            {
+              "id": "5.2.2",
+              "title": "Persistance (backdoor Lambda)",
+              "description": "Identifier un mécanisme de persistance (backdoor Lambda).",
+              "points": 100,
+              "lab": "cloud-soc-05-persistence-backdoor-lambda"
+            },
+            {
+              "id": "5.2.3",
+              "title": "Cryptominer sur EC2",
+              "description": "Détecter un cryptominer caché sur une instance EC2.",
+              "points": 100,
+              "lab": "cloud-soc-05-cryptominer-ec2"
+            },
+            {
+              "id": "5.2.4",
+              "title": "Exfiltration DNS (tunneling)",
+              "description": "Identifier une exfiltration DNS (DNS tunneling).",
+              "points": 100,
+              "lab": "cloud-soc-5-2-4-dns-exfiltration"
+            }
           ]
         },
         {
@@ -284,9 +644,27 @@
           "xp": 400,
           "summary": "Contenir, analyser et remédier à un incident cloud.",
           "challenges": [
-            { "id": "5.3.1", "title": "Containment EC2 compromise", "description": "Containment d'une instance EC2 compromise (isolation réseau).", "points": 134 },
-            { "id": "5.3.2", "title": "Forensics bucket S3", "description": "Forensics d'un bucket S3 : retrouver qui a exfiltré quoi.", "points": 133 , "lab": "soc-03-s3-forensics" },
-            { "id": "5.3.3", "title": "Scénario ransomware cloud", "description": "Scénario ransomware cloud : identifier les fichiers chiffrés.", "points": 133 }
+            {
+              "id": "5.3.1",
+              "title": "Containment EC2 compromise",
+              "description": "Containment d'une instance EC2 compromise (isolation réseau).",
+              "points": 134,
+              "lab": "cloud-soc-5-3-1-containment-ec2"
+            },
+            {
+              "id": "5.3.2",
+              "title": "Forensics bucket S3",
+              "description": "Forensics d'un bucket S3 : retrouver qui a exfiltré quoi.",
+              "points": 133,
+              "lab": "soc-03-s3-forensics"
+            },
+            {
+              "id": "5.3.3",
+              "title": "Scénario ransomware cloud",
+              "description": "Scénario ransomware cloud : identifier les fichiers chiffrés.",
+              "points": 133,
+              "lab": "cloud-soc-5-3-3-ransomware-cloud"
+            }
           ]
         },
         {
@@ -296,9 +674,27 @@
           "xp": 200,
           "summary": "Construire la détection et trier les alertes.",
           "challenges": [
-            { "id": "5.4.1", "title": "Règles de détection IAM", "description": "Créer des règles de détection pour les attaques IAM.", "points": 70 },
-            { "id": "5.4.2", "title": "Triage GuardDuty", "description": "Triage d'alertes GuardDuty : vrais positifs vs faux positifs.", "points": 65 , "lab": "soc-04-guardduty-triage" },
-            { "id": "5.4.3", "title": "Alertes sur API suspects", "description": "Configurer des alertes sur des appels API suspects.", "points": 65 }
+            {
+              "id": "5.4.1",
+              "title": "Règles de détection IAM",
+              "description": "Créer des règles de détection pour les attaques IAM.",
+              "points": 70,
+              "lab": "cloud-soc-5-4-1-iam-detection-rules"
+            },
+            {
+              "id": "5.4.2",
+              "title": "Triage GuardDuty",
+              "description": "Triage d'alertes GuardDuty : vrais positifs vs faux positifs.",
+              "points": 65,
+              "lab": "soc-04-guardduty-triage"
+            },
+            {
+              "id": "5.4.3",
+              "title": "Alertes sur API suspects",
+              "description": "Configurer des alertes sur des appels API suspects.",
+              "points": 65,
+              "lab": "cloud-soc-5-4-3-api-alerts"
+            }
           ]
         }
       ]
@@ -320,10 +716,34 @@
           "xp": 300,
           "summary": "Concevoir une topologie réseau cloud sécurisée.",
           "challenges": [
-            { "id": "6.1.1", "title": "Corriger un VPC mal segmenté", "description": "Corriger un VPC mal segmenté (subnets publics/privés mélangés).", "points": 75 },
-            { "id": "6.1.2", "title": "Fermer les SG trop permissifs", "description": "Fermer des Security Groups trop permissifs (0.0.0.0/0).", "points": 75 , "lab": "arch-02-security-group-remediation" },
-            { "id": "6.1.3", "title": "Bastion host + VPN", "description": "Mettre en place un bastion host + VPN pour accès sécurisé.", "points": 75 },
-            { "id": "6.1.4", "title": "Concevoir un WAF", "description": "Concevoir un WAF pour protéger une app web.", "points": 75 }
+            {
+              "id": "6.1.1",
+              "title": "Corriger un VPC mal segmenté",
+              "description": "Corriger un VPC mal segmenté (subnets publics/privés mélangés).",
+              "points": 75,
+              "lab": "vpc-segmentation-fix"
+            },
+            {
+              "id": "6.1.2",
+              "title": "Fermer les SG trop permissifs",
+              "description": "Fermer des Security Groups trop permissifs (0.0.0.0/0).",
+              "points": 75,
+              "lab": "arch-02-security-group-remediation"
+            },
+            {
+              "id": "6.1.3",
+              "title": "Bastion host + VPN",
+              "description": "Mettre en place un bastion host + VPN pour accès sécurisé.",
+              "points": 75,
+              "lab": "bastion-host-vpn"
+            },
+            {
+              "id": "6.1.4",
+              "title": "Concevoir un WAF",
+              "description": "Concevoir un WAF pour protéger une app web.",
+              "points": 75,
+              "lab": "cloud-6-1-4-waf"
+            }
           ]
         },
         {
@@ -333,9 +753,27 @@
           "xp": 400,
           "summary": "Appliquer les principes Zero Trust à un compte cloud.",
           "challenges": [
-            { "id": "6.2.1", "title": "Least Privilege sur AWS", "description": "Implémenter le Principle of Least Privilege sur un compte AWS.", "points": 134 , "lab": "arch-03-least-privilege-remediation" },
-            { "id": "6.2.2", "title": "mTLS entre microservices", "description": "Configurer mTLS entre microservices (authentification mutuelle).", "points": 133 },
-            { "id": "6.2.3", "title": "Service Control Policies", "description": "Mettre en place des SCP (Service Control Policies) dans AWS Org.", "points": 133 }
+            {
+              "id": "6.2.1",
+              "title": "Least Privilege sur AWS",
+              "description": "Implémenter le Principle of Least Privilege sur un compte AWS.",
+              "points": 134,
+              "lab": "arch-03-least-privilege-remediation"
+            },
+            {
+              "id": "6.2.2",
+              "title": "mTLS entre microservices",
+              "description": "Configurer mTLS entre microservices (authentification mutuelle).",
+              "points": 133,
+              "lab": "cloud-06-mtls-microservices"
+            },
+            {
+              "id": "6.2.3",
+              "title": "Service Control Policies",
+              "description": "Mettre en place des SCP (Service Control Policies) dans AWS Org.",
+              "points": 133,
+              "lab": "cloud-06-scp-bypass"
+            }
           ]
         },
         {
@@ -345,26 +783,173 @@
           "xp": 200,
           "summary": "Évaluer et améliorer la conformité d'un compte cloud.",
           "challenges": [
-            { "id": "6.3.1", "title": "Audit CIS Benchmark", "description": "Audit d'un compte AWS contre le CIS Benchmark (Score).", "points": 70, "lab": "arch-01-cis-audit" },
-            { "id": "6.3.2", "title": "Findings Security Hub", "description": "Corriger les findings critiques de AWS Security Hub.", "points": 65 },
-            { "id": "6.3.3", "title": "AWS Config + CloudTrail", "description": "Activer et configurer AWS Config + CloudTrail correctement.", "points": 65 }
+            {
+              "id": "6.3.1",
+              "title": "Audit CIS Benchmark",
+              "description": "Audit d'un compte AWS contre le CIS Benchmark (Score).",
+              "points": 70,
+              "lab": "arch-01-cis-audit"
+            },
+            {
+              "id": "6.3.2",
+              "title": "Findings Security Hub",
+              "description": "Corriger les findings critiques de AWS Security Hub.",
+              "points": 65,
+              "lab": "cloud-6-3-2-findings-security-hub"
+            },
+            {
+              "id": "6.3.3",
+              "title": "AWS Config + CloudTrail",
+              "description": "Activer et configurer AWS Config + CloudTrail correctement.",
+              "points": 65,
+              "lab": "cloud-06-aws-config-cloudtrail"
+            }
           ]
         }
       ]
     }
   ],
   "vulnerabilities": [
-    { "id": "iam-wildcard", "name": "IAM Wildcard Policy", "category": "iam", "severity": "critical", "tags": ["IAM", "PrivEsc"], "description": "Politique IAM utilisant Action:* ou Resource:* donnant des permissions excessives à un utilisateur ou rôle." },
-    { "id": "s3-public", "name": "Bucket S3 Public", "category": "storage", "severity": "critical", "tags": ["S3", "Data Exposure"], "description": "Bucket S3 configuré avec un ACL public-read ou une bucket policy ouverte, contenant des fichiers sensibles." },
-    { "id": "ssrf-imds", "name": "SSRF → IMDSv1", "category": "network", "severity": "critical", "tags": ["SSRF", "EC2", "Metadata"], "description": "Application vulnérable au SSRF permettant d'atteindre le service de métadonnées EC2 et de voler des credentials IAM." },
-    { "id": "privileged-container", "name": "Privileged Container", "category": "container", "severity": "critical", "tags": ["Docker", "Escape"], "description": "Container Docker en mode --privileged permettant de monter le filesystem hôte et d'échapper au conteneur." },
-    { "id": "passrole", "name": "PassRole Escalation", "category": "iam", "severity": "critical", "tags": ["IAM", "PrivEsc", "EC2"], "description": "iam:PassRole + ec2:RunInstances permet de créer une EC2 avec un rôle admin et de voler ses credentials." },
-    { "id": "git-secrets", "name": "Secrets dans Git", "category": "cicd", "severity": "high", "tags": ["CI/CD", "Secrets", "Git"], "description": "Credentials hardcodés dans l'historique Git, récupérables via git log/reflog même après un commit correctif." },
-    { "id": "docker-socket", "name": "Docker Socket Exposure", "category": "container", "severity": "critical", "tags": ["Docker", "RCE", "Escape"], "description": "Le socket Docker monté dans un container permet de contrôler le daemon et d'échapper vers l'hôte." },
-    { "id": "sg-open", "name": "Security Group 0.0.0.0/0", "category": "network", "severity": "high", "tags": ["Réseau", "AWS", "Exposition"], "description": "Security Group ouvrant tous les ports depuis Internet, exposant directement RDS, Redis ou interfaces d'admin." },
-    { "id": "k8s-rbac", "name": "K8s RBAC Trop Permissif", "category": "container", "severity": "critical", "tags": ["Kubernetes", "RBAC", "PrivEsc"], "description": "ClusterRoleBinding accordant le verbe « * » sur toutes les ressources à un service account." },
-    { "id": "pipeline-injection", "name": "Pipeline Injection", "category": "cicd", "severity": "high", "tags": ["CI/CD", "Injection", "RCE"], "description": "Paramètre de pipeline non sanitisé permettant d'injecter des commandes shell dans le runner CI/CD." },
-    { "id": "s3-no-encryption", "name": "S3 Chiffrement Désactivé", "category": "crypto", "severity": "medium", "tags": ["Chiffrement", "S3", "Compliance"], "description": "Bucket S3 sans chiffrement at-rest : données stockées en clair, exposées en cas de fuite d'access key." },
-    { "id": "stale-access-key", "name": "Access Key Non Rotée", "category": "iam", "severity": "medium", "tags": ["IAM", "Rotation", "Hygiene"], "description": "Access Key IAM jamais rotée depuis sa création, prolongeant indéfiniment l'accès en cas de compromission." }
+    {
+      "id": "iam-wildcard",
+      "name": "IAM Wildcard Policy",
+      "category": "iam",
+      "severity": "critical",
+      "tags": [
+        "IAM",
+        "PrivEsc"
+      ],
+      "description": "Politique IAM utilisant Action:* ou Resource:* donnant des permissions excessives à un utilisateur ou rôle."
+    },
+    {
+      "id": "s3-public",
+      "name": "Bucket S3 Public",
+      "category": "storage",
+      "severity": "critical",
+      "tags": [
+        "S3",
+        "Data Exposure"
+      ],
+      "description": "Bucket S3 configuré avec un ACL public-read ou une bucket policy ouverte, contenant des fichiers sensibles."
+    },
+    {
+      "id": "ssrf-imds",
+      "name": "SSRF → IMDSv1",
+      "category": "network",
+      "severity": "critical",
+      "tags": [
+        "SSRF",
+        "EC2",
+        "Metadata"
+      ],
+      "description": "Application vulnérable au SSRF permettant d'atteindre le service de métadonnées EC2 et de voler des credentials IAM."
+    },
+    {
+      "id": "privileged-container",
+      "name": "Privileged Container",
+      "category": "container",
+      "severity": "critical",
+      "tags": [
+        "Docker",
+        "Escape"
+      ],
+      "description": "Container Docker en mode --privileged permettant de monter le filesystem hôte et d'échapper au conteneur."
+    },
+    {
+      "id": "passrole",
+      "name": "PassRole Escalation",
+      "category": "iam",
+      "severity": "critical",
+      "tags": [
+        "IAM",
+        "PrivEsc",
+        "EC2"
+      ],
+      "description": "iam:PassRole + ec2:RunInstances permet de créer une EC2 avec un rôle admin et de voler ses credentials."
+    },
+    {
+      "id": "git-secrets",
+      "name": "Secrets dans Git",
+      "category": "cicd",
+      "severity": "high",
+      "tags": [
+        "CI/CD",
+        "Secrets",
+        "Git"
+      ],
+      "description": "Credentials hardcodés dans l'historique Git, récupérables via git log/reflog même après un commit correctif."
+    },
+    {
+      "id": "docker-socket",
+      "name": "Docker Socket Exposure",
+      "category": "container",
+      "severity": "critical",
+      "tags": [
+        "Docker",
+        "RCE",
+        "Escape"
+      ],
+      "description": "Le socket Docker monté dans un container permet de contrôler le daemon et d'échapper vers l'hôte."
+    },
+    {
+      "id": "sg-open",
+      "name": "Security Group 0.0.0.0/0",
+      "category": "network",
+      "severity": "high",
+      "tags": [
+        "Réseau",
+        "AWS",
+        "Exposition"
+      ],
+      "description": "Security Group ouvrant tous les ports depuis Internet, exposant directement RDS, Redis ou interfaces d'admin."
+    },
+    {
+      "id": "k8s-rbac",
+      "name": "K8s RBAC Trop Permissif",
+      "category": "container",
+      "severity": "critical",
+      "tags": [
+        "Kubernetes",
+        "RBAC",
+        "PrivEsc"
+      ],
+      "description": "ClusterRoleBinding accordant le verbe « * » sur toutes les ressources à un service account."
+    },
+    {
+      "id": "pipeline-injection",
+      "name": "Pipeline Injection",
+      "category": "cicd",
+      "severity": "high",
+      "tags": [
+        "CI/CD",
+        "Injection",
+        "RCE"
+      ],
+      "description": "Paramètre de pipeline non sanitisé permettant d'injecter des commandes shell dans le runner CI/CD."
+    },
+    {
+      "id": "s3-no-encryption",
+      "name": "S3 Chiffrement Désactivé",
+      "category": "crypto",
+      "severity": "medium",
+      "tags": [
+        "Chiffrement",
+        "S3",
+        "Compliance"
+      ],
+      "description": "Bucket S3 sans chiffrement at-rest : données stockées en clair, exposées en cas de fuite d'access key."
+    },
+    {
+      "id": "stale-access-key",
+      "name": "Access Key Non Rotée",
+      "category": "iam",
+      "severity": "medium",
+      "tags": [
+        "IAM",
+        "Rotation",
+        "Hygiene"
+      ],
+      "description": "Access Key IAM jamais rotée depuis sa création, prolongeant indéfiniment l'accès en cas de compromission."
+    }
   ]
 }

@@ -1,0 +1,15 @@
+====================================================================
+  PCE Root Labs - Cloud Pentesting: Unprotected API Gateway Endpoints
+====================================================================
+
+Scenario:
+The development team has deployed a new internal API Gateway on port 8080.
+They claim all sensitive endpoints are protected by API keys.
+
+Your goal:
+Review the provided Swagger/OpenAPI specification (swagger.json) and
+find a way to access a sensitive endpoint without an API key.
+
+Retrieve the flag to complete the lab.
+
+====================================================================

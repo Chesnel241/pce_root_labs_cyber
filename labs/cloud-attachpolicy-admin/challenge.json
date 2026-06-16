@@ -1,0 +1,7 @@
+{
+  "name": "AttachPolicy → admin access",
+  "description": "Exploit iam:AttachUserPolicy to attach the AdministratorAccess policy to your user and read the secret flag.",
+  "track": "cloud-pentesting",
+  "module": "1.3",
+  "id": "1.3.4"
+}

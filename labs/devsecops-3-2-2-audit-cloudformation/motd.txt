@@ -1,0 +1,15 @@
+========================================================================
+Welcome to the CloudFormation Audit Lab!
+
+Scenario:
+A developer has created a CloudFormation template (template.yaml) for a 
+new infrastructure deployment. However, it seems to have some security 
+misconfigurations.
+
+Your Tasks:
+1. Run `checkov -f template.yaml` to audit the template for security issues.
+2. Fix the issues identified by checkov. In particular:
+   - Make sure the Security Group does not allow SSH (port 22) from 0.0.0.0/0.
+   - Enable Server-Side Encryption (AES256) for the S3 bucket.
+3. Once you've secured the template, run `./verify.py` to get your flag!
+========================================================================

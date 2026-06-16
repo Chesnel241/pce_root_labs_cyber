@@ -1,0 +1,13 @@
+=========================================================
+      PCE Root Labs - SOC Analyst - Incident #524
+=========================================================
+Scenario:
+Our monitoring tools detected a sudden spike in DNS traffic
+originating from a compromised internal host. We suspect 
+data exfiltration is taking place over DNS tunneling.
+
+Your goal is to analyze the captured DNS logs (`dns.log`), 
+extract the exfiltrated data, and find the hidden flag.
+
+Happy Hunting!
+=========================================================

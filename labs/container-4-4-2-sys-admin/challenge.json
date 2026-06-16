@@ -1,0 +1,9 @@
+{
+  "name": "Capabilities dangereuses (SYS_ADMIN)",
+  "track": "container-k8s",
+  "module": "4.4",
+  "id": "4.4.2",
+  "slug": "container-4-4-2-sys-admin",
+  "flag": "PCE{sys_admin_c4p_m0unt_2024}",
+  "description": "Exploit CAP_SYS_ADMIN to mount the host filesystem and escape the container."
+}

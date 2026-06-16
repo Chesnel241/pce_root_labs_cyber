@@ -1,0 +1,7 @@
+{
+  "id": "2.3.2",
+  "title": "Cross-account role trust abuse",
+  "track": "iam-identity",
+  "module": "2.3",
+  "flag": "PCE{cross_account_trust_abuse_2024}"
+}

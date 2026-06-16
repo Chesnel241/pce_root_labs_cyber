@@ -1,0 +1,16 @@
+===================================================================
+  Lab 1.2.3: RDS exposée sur internet
+===================================================================
+
+Context:
+You have discovered a legacy application configuration file in your
+current directory. We suspect that a production database has been left
+publicly accessible on the internet.
+
+Objective:
+1. Enumerate AWS RDS instances using the `aws` CLI.
+2. Verify if the database is publicly accessible.
+3. Connect to the exposed MySQL instance and retrieve the flag.
+
+Note: The environment is simulated. Use `aws rds describe-db-instances`
+and `mysql` commands to interact with the mock services.

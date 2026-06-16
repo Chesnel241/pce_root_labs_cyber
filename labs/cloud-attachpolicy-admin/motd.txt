@@ -1,0 +1,15 @@
+Welcome to the Cloud Pentesting Lab (1.3.4) - AttachPolicy -> admin access.
+
+You have access to a restricted AWS environment as the user 'analyst'.
+Your current permissions include the ability to attach policies to yourself!
+
+Your goal is to escalate your privileges and retrieve the flag from AWS Secrets Manager.
+The secret id is 'flag'.
+
+Use the 'aws' command to interact with the environment.
+Example commands:
+  aws sts get-caller-identity
+  aws iam attach-user-policy --user-name <username> --policy-arn <arn>
+  aws secretsmanager get-secret-value --secret-id <id>
+
+Good luck!

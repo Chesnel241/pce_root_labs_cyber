@@ -1,0 +1,7 @@
+{
+  "id": "6.1.4",
+  "title": "Concevoir un WAF",
+  "track": "cloud-architecture",
+  "module": "6.1",
+  "flag": "PCE{waf_rules_designed_2024}"
+}

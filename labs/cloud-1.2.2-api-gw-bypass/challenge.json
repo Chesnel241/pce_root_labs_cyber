@@ -1,0 +1,8 @@
+{
+  "id": "1.2.2",
+  "track": "cloud-pentesting",
+  "module": "1.2",
+  "title": "Bypass d'auth API Gateway",
+  "slug": "cloud-1.2.2-api-gw-bypass",
+  "flag": "PCE{api_gateway_path_normalization_bypass_2024}"
+}

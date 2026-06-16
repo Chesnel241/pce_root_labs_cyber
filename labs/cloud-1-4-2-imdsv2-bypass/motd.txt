@@ -1,0 +1,23 @@
+===============================================================
+               IMDSv2 Header Injection Lab
+===============================================================
+
+Scenario:
+You have discovered a vulnerable internal web application that 
+acts as an SSRF proxy. It is running locally on port 8080.
+
+The cloud environment has been upgraded to IMDSv2, meaning you 
+must supply specific HTTP headers to access the metadata service.
+For this lab, the IMDS service is mock-hosted at:
+http://127.0.0.1:9090/
+
+Your Goal:
+1. Exploit the SSRF endpoint at http://127.0.0.1:8080/fetch.
+2. Leverage header injection to bypass IMDSv2 restrictions.
+3. Retrieve the IAM credentials at:
+   /latest/meta-data/iam/security-credentials/admin
+
+The flag is embedded in the returned AccessKeyId.
+
+Good luck!
+===============================================================

@@ -1,0 +1,8 @@
+{
+  "name": "Audit pipeline Jenkins + correctif",
+  "description": "Audit a Jenkins pipeline for security vulnerabilities and apply corrections.",
+  "difficulty": "Medium",
+  "category": "DevSecOps",
+  "author": "PCE Root",
+  "flag": "PCE{j3nk1ns_p1p3l1n3_s3cur3d}"
+}

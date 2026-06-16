@@ -1,0 +1,21 @@
+======================================================
+  PCE Root Labs - Cloud Pentesting
+  Module 1.3: Serverless Vulnerabilities
+  Challenge 1.3.3: Lambda vulnérable (injection)
+======================================================
+
+Scenario:
+We have identified an AWS Lambda function named "NetworkTest"
+that takes a JSON payload and pings a target host. 
+
+Your goal:
+Find a vulnerability in the Lambda function and retrieve the 
+flag stored at /home/lambda_user/flag.txt.
+
+Use the provided mock 'aws' CLI to interact with the Lambda.
+Example:
+  aws lambda invoke --function-name NetworkTest --payload '{"target": "127.0.0.1"}' out.json
+  cat out.json
+
+Good luck!
+======================================================

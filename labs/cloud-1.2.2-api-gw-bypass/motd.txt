@@ -1,0 +1,19 @@
+====================================================================
+  PCE Root Labs - Cloud Pentesting - API Gateway Auth Bypass
+====================================================================
+
+You are targeting an internal mock API running locally on port 8080.
+The API Gateway enforces authentication for the /admin endpoint,
+but allows public access to the /public endpoint.
+
+Your goal: Find a way to bypass the API Gateway's authentication
+and access the /admin endpoint to retrieve the flag.
+
+Hint: How do the API Gateway and the backend differently process
+the request URI paths?
+
+Commands available: curl
+Target: http://localhost:8080
+
+Good luck!
+====================================================================

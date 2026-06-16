@@ -1,0 +1,27 @@
+======================================================================
+  ____  _                 _   ____   ___   ____ 
+ / ___|| | ___  _   _  __| | / ___| / _ \ / ___|
+| |    | |/ _ \| | | |/ _` | \___ \| | | | |    
+| |___ | | (_) | |_| | (_| |  ___) | |_| | |___ 
+ \____||_|\___/ \__,_|\__,_| |____/ \___/ \____|
+                                                
+VPC Flow Logs Analysis - Data Exfiltration
+======================================================================
+
+We received an alert from our SIEM regarding potential data exfiltration 
+from our internal web server (10.0.1.55). The attacker managed to bypass 
+our outbound web proxy and seems to have exfiltrated a large amount of 
+data over DNS.
+
+We have extracted a sample of the VPC Flow Logs covering the incident 
+timeframe. It's located in your home directory: `vpc-flow-logs.txt`.
+
+TASK:
+Analyze the flow logs and identify the destination IP address that was 
+used for this DNS exfiltration. 
+
+The flag format is: PCE{<IP_ADDRESS>_dns_exfil}
+Example: PCE{1.2.3.4_dns_exfil}
+
+Good luck!
+======================================================================

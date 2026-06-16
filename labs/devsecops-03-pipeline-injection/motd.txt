@@ -1,0 +1,20 @@
+
+========================================================================
+            DevSecOps Lab: Pipeline Injection Attack
+========================================================================
+
+Welcome, Analyst!
+
+You are reviewing a custom CI/CD runner. 
+There is a vulnerability in how the pipeline runner processes untrusted 
+input (like a branch name) during the build configuration execution.
+
+Your goal is to exploit this pipeline injection vulnerability to read 
+the flag located at /opt/ci/flag.txt. This file is owned by the 
+'ci-runner' user.
+
+To trigger the pipeline, run the runner via sudo and provide a branch name:
+  sudo -u ci-runner /opt/ci/run-pipeline.py <branch-name>
+
+Good luck!
+========================================================================

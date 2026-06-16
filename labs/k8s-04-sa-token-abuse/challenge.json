@@ -1,0 +1,6 @@
+{
+  "name": "Service Account Token Abuse",
+  "description": "Exploit a mounted service account token to access the Kubernetes API and retrieve the flag.",
+  "category": "container-k8s",
+  "author": "PCE Root Labs"
+}

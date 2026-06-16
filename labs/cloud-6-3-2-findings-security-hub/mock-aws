@@ -1,0 +1,93 @@
+#!/bin/bash
+
+if [ "$1" == "securityhub" ] && [ "$2" == "get-findings" ]; then
+  cat << 'EOF'
+{
+  "Findings": [
+    {
+      "SchemaVersion": "2018-10-08",
+      "Id": "arn:aws:securityhub:us-east-1:123456789012:subscription/pci-dss/v/3.2.1/PCI.IAM.1/finding/123",
+      "ProductArn": "arn:aws:securityhub:us-east-1::product/aws/securityhub",
+      "GeneratorId": "pci-dss/v/3.2.1/PCI.IAM.1",
+      "AwsAccountId": "123456789012",
+      "Types": ["Software and Configuration Checks/Industry and Regulatory Standards/PCI-DSS"],
+      "CreatedAt": "2026-06-16T12:00:00.000Z",
+      "UpdatedAt": "2026-06-16T12:00:00.000Z",
+      "Severity": {
+        "Label": "LOW",
+        "Normalized": 10
+      },
+      "Title": "IAM root user access key should not exist",
+      "Description": "The root user access key is currently active."
+    },
+    {
+      "SchemaVersion": "2018-10-08",
+      "Id": "arn:aws:securityhub:us-east-1:123456789012:subscription/pci-dss/v/3.2.1/PCI.CloudTrail.2/finding/789",
+      "ProductArn": "arn:aws:securityhub:us-east-1::product/aws/securityhub",
+      "GeneratorId": "pci-dss/v/3.2.1/PCI.CloudTrail.2",
+      "AwsAccountId": "123456789012",
+      "Types": ["Software and Configuration Checks/Industry and Regulatory Standards/PCI-DSS"],
+      "CreatedAt": "2026-06-16T12:10:00.000Z",
+      "UpdatedAt": "2026-06-16T12:10:00.000Z",
+      "Severity": {
+        "Label": "MEDIUM",
+        "Normalized": 40
+      },
+      "Title": "CloudTrail should have encryption at rest enabled",
+      "Description": "CloudTrail logs are not encrypted."
+    },
+    {
+      "SchemaVersion": "2018-10-08",
+      "Id": "arn:aws:securityhub:us-east-1:123456789012:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.1/finding/101",
+      "ProductArn": "arn:aws:securityhub:us-east-1::product/aws/securityhub",
+      "GeneratorId": "aws-foundational-security-best-practices/v/1.0.0/EC2.1",
+      "AwsAccountId": "123456789012",
+      "Types": ["Software and Configuration Checks/Industry and Regulatory Standards/AWS-Foundational-Security-Best-Practices"],
+      "CreatedAt": "2026-06-16T12:15:00.000Z",
+      "UpdatedAt": "2026-06-16T12:15:00.000Z",
+      "Severity": {
+        "Label": "HIGH",
+        "Normalized": 70
+      },
+      "Title": "EBS snapshots should not be publicly restorable",
+      "Description": "An EBS snapshot is public."
+    },
+    {
+      "SchemaVersion": "2018-10-08",
+      "Id": "arn:aws:securityhub:us-east-1:123456789012:subscription/aws-foundational-security-best-practices/v/1.0.0/S3.1/finding/456",
+      "ProductArn": "arn:aws:securityhub:us-east-1::product/aws/securityhub",
+      "GeneratorId": "aws-foundational-security-best-practices/v/1.0.0/S3.1",
+      "AwsAccountId": "123456789012",
+      "Types": ["Software and Configuration Checks/Industry and Regulatory Standards/AWS-Foundational-Security-Best-Practices"],
+      "CreatedAt": "2026-06-16T12:05:00.000Z",
+      "UpdatedAt": "2026-06-16T12:05:00.000Z",
+      "Severity": {
+        "Label": "CRITICAL",
+        "Normalized": 90
+      },
+      "Title": "S3 Bucket has public read/write access",
+      "Description": "This bucket is exposed to the internet. Please secure it immediately. Flag: PCE{cloud_security_hub_2026}"
+    },
+    {
+      "SchemaVersion": "2018-10-08",
+      "Id": "arn:aws:securityhub:us-east-1:123456789012:subscription/cis-aws-foundations-benchmark/v/1.2.0/3.1/finding/112",
+      "ProductArn": "arn:aws:securityhub:us-east-1::product/aws/securityhub",
+      "GeneratorId": "cis-aws-foundations-benchmark/v/1.2.0/3.1",
+      "AwsAccountId": "123456789012",
+      "Types": ["Software and Configuration Checks/Industry and Regulatory Standards/CIS-AWS-Foundations-Benchmark"],
+      "CreatedAt": "2026-06-16T12:20:00.000Z",
+      "UpdatedAt": "2026-06-16T12:20:00.000Z",
+      "Severity": {
+        "Label": "MEDIUM",
+        "Normalized": 40
+      },
+      "Title": "Ensure a log metric filter and alarm exist for unauthorized API calls",
+      "Description": "No alarm exists for unauthorized API calls."
+    }
+  ]
+}
+EOF
+else
+  echo "usage: aws <command> <subcommand> [parameters]"
+  echo "Try 'aws securityhub get-findings'"
+fi

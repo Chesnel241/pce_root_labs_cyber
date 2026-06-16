@@ -1,0 +1,5 @@
+Welcome to the AWS Config & CloudTrail Lab.
+
+We've detected suspicious activity in our AWS account. An attacker managed to disable AWS Config and stop CloudTrail logging, but not before CloudTrail captured some of their actions.
+
+Your task is to analyze the provided offline CloudTrail logs in the `lab-data/` directory and find the flag. The flag was passed as a parameter during a suspicious API call. Good luck!

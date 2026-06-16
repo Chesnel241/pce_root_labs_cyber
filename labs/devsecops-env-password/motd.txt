@@ -1,0 +1,5 @@
+Welcome Analyst.
+
+We are investigating a legacy microservice. The developers claimed they secured the application by not hardcoding passwords in the source code. However, it seems the deployment pipeline injects the secrets directly into the environment variables of this container instead. 
+
+See if you can find the admin database password.

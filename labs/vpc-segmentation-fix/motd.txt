@@ -1,0 +1,21 @@
+========================================================================
+Bienvenue dans le laboratoire : Corriger un VPC mal segmenté
+========================================================================
+
+Votre entreprise a déployé une architecture réseau sur le Cloud.
+Cependant, l'équipe de sécurité a signalé que le sous-réseau de
+la base de données (private_db_subnet) est exposé directement à
+Internet via une mauvaise configuration de sa table de routage.
+
+Votre objectif :
+1. Inspectez et modifiez le fichier 'vpc_config.json'.
+2. Corrigez la table de routage 'rtb-private' pour supprimer l'accès
+   direct à Internet via l'Internet Gateway (igw-12345).
+   (Astuce: supprimez la route vers 0.0.0.0/0 ou pointez-la vers un
+   NAT Gateway si nécessaire, mais dans ce lab, supprimer la route 
+   vers igw suffit).
+3. Lancez le script './validate.py' pour vérifier votre correction
+   et obtenir le flag.
+
+Bonne chance !
+========================================================================

@@ -1,0 +1,8 @@
+{
+  "id": "4.1.2",
+  "title": "Docker socket exposure (RCE)",
+  "track": "container-k8s",
+  "module": "4.1",
+  "slug": "container-04-docker-sock",
+  "flag": "PCE{d0ck3r_s0ck3t_rc3_pwnd_2026}"
+}

@@ -1,0 +1,12 @@
+Welcome to the Image Security Lab!
+
+As part of our DevSecOps pipeline, we need to ensure that all container images 
+are properly signed and that we maintain an accurate Software Bill of Materials (SBOM).
+
+We have an image artifact. Your tasks:
+1. Review the generated SBOM (sbom.json) to find the first part of the flag hidden in a vulnerable component's version.
+2. Use the 'cosign' tool to verify the image 'registry.local/myapp:v1.0' using 'cosign.pub'.
+   (Command: cosign verify --key cosign.pub registry.local/myapp:v1.0)
+   
+Concatenate the two parts to get the full flag!
+Format: PCE{part1_part2}

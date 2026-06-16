@@ -1,0 +1,14 @@
+===================================================================
+                       PCE Root Labs Cyber
+===================================================================
+Scenario: 
+You are performing a security review of a newly developed microservice.
+The development team has provided you with the project repository 
+located at ~/project/.
+
+Your objective:
+Review the project's Dockerfile and source files. Identify any
+dangerous practices or hardcoded secrets. Find the leaked flag.
+
+Good luck, Analyst!
+===================================================================

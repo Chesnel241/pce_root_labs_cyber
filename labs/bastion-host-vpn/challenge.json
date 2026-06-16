@@ -1,0 +1,5 @@
+{
+  "name": "Bastion host + VPN",
+  "description": "Learn how to secure internal network access using a VPN and Bastion Host.",
+  "flag": "PCE{bastion_vpn_secured_2026}"
+}

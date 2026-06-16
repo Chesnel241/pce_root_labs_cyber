@@ -1,0 +1,9 @@
+{
+  "id": "1.1.4",
+  "title": "Reconnaissance passive",
+  "track": "cloud-pentesting",
+  "module": "1.1",
+  "slug": "cloud-1-1-4-recon-passive",
+  "flag": "PCE{passive_recon_reveals_all_2024}",
+  "description": "Perform passive reconnaissance to find exposed cloud assets and retrieve the flag."
+}

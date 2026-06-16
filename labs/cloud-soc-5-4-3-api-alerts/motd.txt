@@ -1,0 +1,19 @@
+=======================================================================
+PCE Root Labs - Cloud SOC
+Module 5.4 - Alertes sur API suspects (ID: 5.4.3)
+=======================================================================
+
+Welcome, Analyst.
+
+Our monitoring systems have flagged a potential anomaly in the recent
+API activity logs. The logs have been exported to ~/lab-data/api_logs.json.
+
+Your task:
+1. Analyze the logs to find the single most suspicious API call
+   (hint: someone tried to disable logging/monitoring).
+2. Identify the 'eventID' of this suspicious call.
+3. Run 'python3 ~/lab-data/investigate.py <eventID>' to verify your finding
+   and retrieve the flag.
+
+Good luck!
+=======================================================================

@@ -1,0 +1,6 @@
+{
+  "name": "SSRF vers services internes",
+  "description": "Vous avez identifié une application web vulnérable à une SSRF (Server-Side Request Forgery). Exploitez cette vulnérabilité pour interroger le service de métadonnées interne et récupérer les identifiants cloud.",
+  "difficulty": "Medium",
+  "author": "PCE Root Labs"
+}

@@ -1,0 +1,8 @@
+Welcome to PCE Root Labs!
+
+Scenario:
+We have deployed an Ingress controller for our internal Kubernetes cluster.
+It exposes a public application at `http://localhost:8080/app/`.
+However, we suspect there is a routing misconfiguration that might allow access to the internal administration panel, which is located at the `/admin` path on the backend service.
+
+Your objective is to exploit the Ingress routing misconfiguration to retrieve the flag from the internal `/admin` endpoint.

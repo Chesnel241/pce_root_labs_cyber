@@ -1,0 +1,15 @@
+=======================================================================
+PCE Root Labs - SAML Assertion Manipulation (ID: 2.3.3)
+=======================================================================
+
+Scenario:
+You have intercepted a valid SAML response for a standard 'user'.
+The backend authentication script is `login.py`.
+It expects a base64-encoded SAML assertion as its argument.
+
+Goal:
+Exploit the SAML validation logic to escalate your privileges to 'admin'.
+Your intercepted token is saved in `token.txt`.
+
+Good luck!
+=======================================================================

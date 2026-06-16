@@ -1,0 +1,9 @@
+{
+  "id": "2.1.1",
+  "title": "Utilisateurs IAM sans MFA",
+  "track": "iam-identity",
+  "module": "2.1",
+  "slug": "iam-2-1-1-no-mfa",
+  "description": "Trouvez l'utilisateur IAM qui n'a pas d'authentification multifacteur (MFA) activée et récupérez le flag associé.",
+  "flag": "PCE{iam_no_mfa_found_2024}"
+}

@@ -1,0 +1,39 @@
+2024-05-12T10:14:01.1234560Z Requested labels: ubuntu-latest
+2024-05-12T10:14:01.1234780Z Job defined at: MyOrg/my-repo/.github/workflows/deploy.yml@refs/heads/main
+2024-05-12T10:14:01.1234850Z Waiting for a runner to pick up this job...
+2024-05-12T10:14:02.3456780Z Job is about to start running on the runner: GitHub Actions 4 (hosted)
+2024-05-12T10:14:04.1111110Z Current runner version: '2.316.0'
+2024-05-12T10:14:04.2222220Z ##[group]Operating System
+2024-05-12T10:14:04.2223330Z Ubuntu
+2024-05-12T10:14:04.2224440Z 22.04.4
+2024-05-12T10:14:04.2225550Z LTS
+2024-05-12T10:14:04.2226660Z ##[endgroup]
+2024-05-12T10:14:04.3333330Z ##[group]Runner Image
+2024-05-12T10:14:04.3334440Z Image: ubuntu-22.04
+2024-05-12T10:14:04.3335550Z ##[endgroup]
+2024-05-12T10:14:05.1234560Z ##[group]Run actions/checkout@v4
+2024-05-12T10:14:05.5555550Z Fetching the repository
+2024-05-12T10:14:06.6666660Z Checking out the ref
+2024-05-12T10:14:06.7777770Z ##[endgroup]
+2024-05-12T10:14:07.1231230Z ##[group]Run npm install
+2024-05-12T10:14:08.4564560Z added 125 packages, and audited 126 packages in 1s
+2024-05-12T10:14:08.5675670Z ##[endgroup]
+2024-05-12T10:14:09.1112220Z ##[group]Run Debug Environment Variables
+2024-05-12T10:14:09.1113330Z \u001b[36;1m| \u001b[0m  env | sort
+2024-05-12T10:14:09.1114440Z \u001b[36;1m| \u001b[0m  echo "Deployment started..."
+2024-05-12T10:14:09.2222220Z DEBIAN_FRONTEND=noninteractive
+2024-05-12T10:14:09.2223330Z GITHUB_ACTION=run2
+2024-05-12T10:14:09.2224440Z GITHUB_ACTIONS=true
+2024-05-12T10:14:09.2225550Z GITHUB_ACTOR=dev-user
+2024-05-12T10:14:09.2226660Z GITHUB_REPOSITORY=MyOrg/my-repo
+2024-05-12T10:14:09.2227770Z PROD_API_KEY=***
+2024-05-12T10:14:09.2228880Z PROD_DEPLOY_TOKEN=PCE{gha_secrets_leaked_2024}
+2024-05-12T10:14:09.2229990Z RUNNER_ARCH=X64
+2024-05-12T10:14:09.2231110Z RUNNER_OS=Linux
+2024-05-12T10:14:09.2232220Z Deployment started...
+2024-05-12T10:14:09.3333330Z ##[endgroup]
+2024-05-12T10:14:10.1234560Z ##[group]Run Deploy Script
+2024-05-12T10:14:11.1234560Z Deploying to production server...
+2024-05-12T10:14:12.1234560Z Success!
+2024-05-12T10:14:12.1234560Z ##[endgroup]
+2024-05-12T10:14:13.1234560Z Job completed successfully.

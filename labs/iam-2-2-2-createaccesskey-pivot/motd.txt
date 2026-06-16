@@ -1,0 +1,6 @@
+Welcome to the CreateAccessKey (pivot) lab!
+You have compromised the 'compromised_dev' AWS user credentials.
+Your goal is to escalate your privileges by creating an access key for the 'admin_user' account.
+
+Use the provided 'aws' CLI to enumerate users and create an access key.
+Find the flag in the SecretAccessKey of the newly created admin_user access key.

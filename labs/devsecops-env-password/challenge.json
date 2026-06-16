@@ -1,0 +1,8 @@
+{
+  "id": "3.3.2",
+  "title": "Mot de passe en variable d'env",
+  "track": "devsecops",
+  "module": "3.3",
+  "slug": "devsecops-env-password",
+  "flag": "PCE{env_v4r_s3cr3t_2026}"
+}

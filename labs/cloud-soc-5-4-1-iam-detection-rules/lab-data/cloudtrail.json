@@ -1,0 +1,66 @@
+{
+  "Records": [
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7Y6EZRZTEST1",
+        "arn": "arn:aws:iam::123456789012:user/alice",
+        "accountId": "123456789012",
+        "userName": "alice"
+      },
+      "eventTime": "2024-06-16T10:00:00Z",
+      "eventSource": "ec2.amazonaws.com",
+      "eventName": "DescribeInstances",
+      "awsRegion": "eu-west-1",
+      "sourceIPAddress": "192.168.1.10",
+      "userAgent": "aws-cli/2.0.0"
+    },
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7Y6EZRZTEST2",
+        "arn": "arn:aws:iam::123456789012:user/bob",
+        "accountId": "123456789012",
+        "userName": "bob"
+      },
+      "eventTime": "2024-06-16T10:05:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "eventName": "CreateUser",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "203.0.113.42",
+      "userAgent": "Boto3/1.17",
+      "requestParameters": {
+        "userName": "evil_backdoor_admin"
+      },
+      "responseElements": {
+        "user": {
+          "arn": "arn:aws:iam::123456789012:user/evil_backdoor_admin",
+          "userName": "evil_backdoor_admin"
+        }
+      }
+    },
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7Y6EZRZTEST2",
+        "arn": "arn:aws:iam::123456789012:user/bob",
+        "accountId": "123456789012",
+        "userName": "bob"
+      },
+      "eventTime": "2024-06-16T10:06:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "eventName": "PutUserPolicy",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "203.0.113.42",
+      "userAgent": "Boto3/1.17",
+      "requestParameters": {
+        "userName": "evil_backdoor_admin",
+        "policyName": "AdminAccess",
+        "policyDocument": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}]}"
+      }
+    }
+  ]
+}

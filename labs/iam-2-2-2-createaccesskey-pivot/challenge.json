@@ -1,0 +1,8 @@
+{
+  "id": "2.2.2",
+  "title": "CreateAccessKey (pivot)",
+  "track": "iam-identity",
+  "module": "2.2",
+  "slug": "iam-2-2-2-createaccesskey-pivot",
+  "flag": "PCE{iam_pivot_key_2026}"
+}

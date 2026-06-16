@@ -1,0 +1,8 @@
+{
+  "id": "2.3.3",
+  "track": "iam-identity",
+  "module": "2.3",
+  "title": "SAML assertion manipulation",
+  "slug": "iam-saml-assertion-manipulation",
+  "flag": "PCE{saml_sig_bypass_2026}"
+}

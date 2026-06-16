@@ -1,0 +1,29 @@
+{
+  "vpc": {
+    "cidr": "10.0.0.0/16",
+    "subnets": {
+      "public_subnet": {
+        "cidr": "10.0.1.0/24",
+        "route_table": "rtb-public"
+      },
+      "private_db_subnet": {
+        "cidr": "10.0.2.0/24",
+        "route_table": "rtb-private"
+      }
+    },
+    "route_tables": {
+      "rtb-public": {
+        "routes": [
+          {"destination": "10.0.0.0/16", "target": "local"},
+          {"destination": "0.0.0.0/0", "target": "igw-12345"}
+        ]
+      },
+      "rtb-private": {
+        "routes": [
+          {"destination": "10.0.0.0/16", "target": "local"},
+          {"destination": "0.0.0.0/0", "target": "igw-12345"}
+        ]
+      }
+    }
+  }
+}

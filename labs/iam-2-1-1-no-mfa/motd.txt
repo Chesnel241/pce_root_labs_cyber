@@ -1,0 +1,12 @@
+Bienvenue dans le lab IAM 2.1.1 : Utilisateurs IAM sans MFA.
+
+Votre objectif :
+Vous avez accès à une CLI AWS simulée.
+Utilisez la commande `aws iam list-users` pour lister les utilisateurs.
+Vérifiez ensuite si l'un de ces utilisateurs n'a pas de MFA configuré.
+Une fois trouvé, examinez ses propriétés pour obtenir le flag.
+
+Commandes disponibles:
+- aws iam list-users
+- aws iam list-mfa-devices --user-name <nom>
+- aws iam get-user --user-name <nom>

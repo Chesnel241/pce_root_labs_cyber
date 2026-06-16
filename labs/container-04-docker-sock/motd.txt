@@ -1,0 +1,12 @@
+Welcome to the Container Security Lab!
+Track: container-k8s
+Challenge: Docker socket exposure (RCE)
+
+You have gained an initial shell inside a container.
+We suspect that the container might be running with excessive privileges
+or has access to host resources.
+
+Your goal: Find a way to exploit the environment, escape the container,
+and retrieve the flag.
+
+Hint: Look around for interesting files in /var/run.

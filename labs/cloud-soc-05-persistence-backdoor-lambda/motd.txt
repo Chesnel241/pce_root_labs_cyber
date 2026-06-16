@@ -1,0 +1,22 @@
+======================================================================
+  PCE Root Labs - Cloud SOC
+  Module 5.2 - Persistance (backdoor Lambda)
+======================================================================
+
+Welcome Analyst,
+
+Our cloud monitoring system detected suspicious anomalous execution 
+patterns within our AWS environment. We suspect an attacker has 
+established persistence by backdooring one of our Lambda functions.
+
+The Incident Response team has exported the source code of all active 
+Lambda functions into your home directory under ~/lambdas/.
+
+Your task:
+1. Review the source code of the exported Lambda functions.
+2. Identify the function that has been maliciously modified to 
+   allow arbitrary command execution (backdoor).
+3. Extract the flag embedded within the attacker's persistence mechanism.
+
+Good luck!
+======================================================================

@@ -1,0 +1,5 @@
+{
+  "name": "Audit CloudFormation",
+  "description": "Learn to audit and secure CloudFormation templates using IaC scanning tools.",
+  "flag": "PCE{cfn_auditing_and_securing_2026}"
+}

@@ -1,0 +1,19 @@
+=======================================================================
+                        SOC ALERTE CRITIQUE
+=======================================================================
+
+Une alerte a été déclenchée : notre bucket S3 "corp-data-backup" a été victime d'un ransomware.
+Des fichiers ont été chiffrés et une note de rançon a été déposée.
+
+Les journaux CloudTrail ont été exportés au format JSON dans le répertoire :
+  /home/analyst/logs/
+
+Votre mission :
+Analyser les journaux CloudTrail pour retracer l'attaque.
+Trouver l'adresse IP de l'attaquant ainsi que l'Access Key ID compromise utilisée pour exécuter l'attaque.
+
+Le flag est composé de l'adresse IP de l'attaquant et de l'Access Key ID, séparés par un underscore "_".
+Format attendu : PCE{IP_ACCESSKEYID}
+Exemple : PCE{192.168.1.1_AKIAIOSFODNN7EXAMPLE}
+
+=======================================================================

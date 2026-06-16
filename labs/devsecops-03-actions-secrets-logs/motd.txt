@@ -1,0 +1,20 @@
+========================================================================
+ Bienvenue dans le lab 'Secrets GitHub Actions dans les logs' (3.1.3)
+========================================================================
+
+Scénario :
+L'équipe de développement a récemment mis en place une pipeline CI/CD 
+avec GitHub Actions. Lors d'un incident de déploiement, un développeur 
+a ajouté des instructions de débogage pour afficher l'environnement.
+Vous suspectez que le jeton de déploiement (Deployment Token) de 
+production a fuité en clair dans les logs d'exécution suite à une 
+mauvaise configuration des variables.
+
+Mission :
+Inspectez les fichiers de la pipeline et les logs d'exécution situés 
+dans le dossier ~/lab-data.
+Trouvez le secret compromis qui vous servira de flag.
+Le format du flag est : PCE{...}
+
+Bonne chance !
+========================================================================

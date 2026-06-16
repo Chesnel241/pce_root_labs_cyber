@@ -1,0 +1,9 @@
+{
+  "id": "4.3.2",
+  "track": "container-k8s",
+  "module": "4.3",
+  "title": "Ingress controller misconfig",
+  "slug": "container-k8s-4-3-2-ingress-misconfig",
+  "description": "Exploit a misconfigured Ingress controller to access sensitive backend paths.",
+  "flag": "PCE{ingr3ss_byp4ss_2026}"
+}

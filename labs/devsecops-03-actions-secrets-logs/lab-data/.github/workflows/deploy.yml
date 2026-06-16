@@ -1,0 +1,36 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Debug Environment Variables
+        # Added temporarily to debug why deployment was failing.
+        # Warning: Do not leave this in production pipelines!
+        run: |
+          env | sort
+          echo "Deployment started..."
+        env:
+          PROD_API_KEY: ${{ secrets.PROD_API_KEY }}
+          # Developer mistake: Used "vars" (cleartext variable) instead of "secrets" for the deploy token!
+          # This bypasses GitHub's automatic secret masking in the logs.
+          PROD_DEPLOY_TOKEN: ${{ vars.PROD_DEPLOY_TOKEN }}
+
+      - name: Run Deploy Script
+        run: ./scripts/deploy.sh

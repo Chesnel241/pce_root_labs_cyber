@@ -1,0 +1,13 @@
+Welcome to the Cloud Architecture Lab!
+Scenario: 
+You need to access an internal database server that is not exposed to the public internet.
+The architecture uses a Bastion Host that only accepts SSH connections from users connected to the corporate VPN.
+
+Your goal:
+1. Connect to the mock corporate VPN.
+2. Access the Bastion Host.
+3. Retrieve the flag from the internal server.
+
+Commands available in current directory (~/lab-data):
+- ./vpn-client.py [connect|disconnect|status]
+- ./ssh-bastion.py

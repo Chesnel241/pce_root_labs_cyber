@@ -1,0 +1,8 @@
+{
+  "id": "2.1.4",
+  "track": "iam-identity",
+  "module": "2.1",
+  "title": "Access keys exposées dans Git",
+  "description": "Des clés d'accès AWS ont été accidentellement commitées dans un dépôt Git local, puis supprimées. Retrouvez ces clés dans l'historique Git et utilisez-les pour obtenir le flag.",
+  "flag": "PCE{git_keys_exposed_2024}"
+}

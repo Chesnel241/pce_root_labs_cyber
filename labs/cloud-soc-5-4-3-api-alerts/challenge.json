@@ -1,0 +1,8 @@
+{
+  "id": "5.4.3",
+  "title": "Alertes sur API suspects",
+  "track": "cloud-soc",
+  "module": "5.4",
+  "description": "Analyze the API logs to identify the suspicious activity and find the flag.",
+  "flag": "PCE{Suspicious_API_Calls_Detected_2026}"
+}

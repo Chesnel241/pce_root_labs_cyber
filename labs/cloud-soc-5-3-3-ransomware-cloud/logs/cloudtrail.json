@@ -1,0 +1,159 @@
+{
+  "Records": [
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7YFFAEXAMPLE",
+        "arn": "arn:aws:iam::123456789012:user/backup-service",
+        "accountId": "123456789012",
+        "accessKeyId": "AKIAIOSFODNN7EXAMPLE",
+        "userName": "backup-service"
+      },
+      "eventTime": "2026-06-16T14:10:00Z",
+      "eventSource": "s3.amazonaws.com",
+      "eventName": "PutObject",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "198.51.100.10",
+      "userAgent": "aws-sdk-go/1.44.0 (Linux/5.10.0-1048-aws)",
+      "requestParameters": {
+        "bucketName": "corp-data-backup",
+        "key": "daily_backup.tar.gz"
+      },
+      "responseElements": null,
+      "eventType": "AwsApiCall",
+      "managementEvent": false,
+      "recipientAccountId": "123456789012",
+      "eventCategory": "Data"
+    },
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7YFFAEXAMPLE",
+        "arn": "arn:aws:iam::123456789012:user/backup-service",
+        "accountId": "123456789012",
+        "accessKeyId": "AKIAIOSFODNN7EXAMPLE",
+        "userName": "backup-service"
+      },
+      "eventTime": "2026-06-16T15:23:01Z",
+      "eventSource": "s3.amazonaws.com",
+      "eventName": "ListObjects",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "203.0.113.42",
+      "userAgent": "aws-cli/2.15.0 Python/3.11.6 Linux/5.15.0-1048-aws botocore/2.0.0",
+      "requestParameters": {
+        "bucketName": "corp-data-backup"
+      },
+      "responseElements": null,
+      "eventType": "AwsApiCall",
+      "managementEvent": false,
+      "recipientAccountId": "123456789012",
+      "eventCategory": "Data"
+    },
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7YFFAEXAMPLE",
+        "arn": "arn:aws:iam::123456789012:user/backup-service",
+        "accountId": "123456789012",
+        "accessKeyId": "AKIAIOSFODNN7EXAMPLE",
+        "userName": "backup-service"
+      },
+      "eventTime": "2026-06-16T15:25:12Z",
+      "eventSource": "s3.amazonaws.com",
+      "eventName": "GetObject",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "203.0.113.42",
+      "userAgent": "aws-cli/2.15.0 Python/3.11.6 Linux/5.15.0-1048-aws botocore/2.0.0",
+      "requestParameters": {
+        "bucketName": "corp-data-backup",
+        "key": "daily_backup.tar.gz"
+      },
+      "responseElements": null,
+      "eventType": "AwsApiCall",
+      "managementEvent": false,
+      "recipientAccountId": "123456789012",
+      "eventCategory": "Data"
+    },
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7YFFAEXAMPLE",
+        "arn": "arn:aws:iam::123456789012:user/backup-service",
+        "accountId": "123456789012",
+        "accessKeyId": "AKIAIOSFODNN7EXAMPLE",
+        "userName": "backup-service"
+      },
+      "eventTime": "2026-06-16T15:26:05Z",
+      "eventSource": "s3.amazonaws.com",
+      "eventName": "DeleteObject",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "203.0.113.42",
+      "userAgent": "aws-cli/2.15.0 Python/3.11.6 Linux/5.15.0-1048-aws botocore/2.0.0",
+      "requestParameters": {
+        "bucketName": "corp-data-backup",
+        "key": "daily_backup.tar.gz"
+      },
+      "responseElements": null,
+      "eventType": "AwsApiCall",
+      "managementEvent": false,
+      "recipientAccountId": "123456789012",
+      "eventCategory": "Data"
+    },
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7YFFAEXAMPLE",
+        "arn": "arn:aws:iam::123456789012:user/backup-service",
+        "accountId": "123456789012",
+        "accessKeyId": "AKIAIOSFODNN7EXAMPLE",
+        "userName": "backup-service"
+      },
+      "eventTime": "2026-06-16T15:26:10Z",
+      "eventSource": "s3.amazonaws.com",
+      "eventName": "PutObject",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "203.0.113.42",
+      "userAgent": "aws-cli/2.15.0 Python/3.11.6 Linux/5.15.0-1048-aws botocore/2.0.0",
+      "requestParameters": {
+        "bucketName": "corp-data-backup",
+        "key": "daily_backup.tar.gz.enc"
+      },
+      "responseElements": null,
+      "eventType": "AwsApiCall",
+      "managementEvent": false,
+      "recipientAccountId": "123456789012",
+      "eventCategory": "Data"
+    },
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7YFFAEXAMPLE",
+        "arn": "arn:aws:iam::123456789012:user/backup-service",
+        "accountId": "123456789012",
+        "accessKeyId": "AKIAIOSFODNN7EXAMPLE",
+        "userName": "backup-service"
+      },
+      "eventTime": "2026-06-16T15:27:00Z",
+      "eventSource": "s3.amazonaws.com",
+      "eventName": "PutObject",
+      "awsRegion": "eu-west-3",
+      "sourceIPAddress": "203.0.113.42",
+      "userAgent": "aws-cli/2.15.0 Python/3.11.6 Linux/5.15.0-1048-aws botocore/2.0.0",
+      "requestParameters": {
+        "bucketName": "corp-data-backup",
+        "key": "RANSOM_NOTE.txt"
+      },
+      "responseElements": null,
+      "eventType": "AwsApiCall",
+      "managementEvent": false,
+      "recipientAccountId": "123456789012",
+      "eventCategory": "Data"
+    }
+  ]
+}

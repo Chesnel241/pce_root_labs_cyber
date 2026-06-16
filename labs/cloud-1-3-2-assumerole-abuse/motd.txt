@@ -1,0 +1,12 @@
+===================================================================
+Welcome to the Cloud Pentesting Lab: AssumeRole abuse (pivot)!
+===================================================================
+
+You have obtained credentials for the 'dev-user'. Your goal is to
+find a way to escalate privileges to an administrator and retrieve
+the flag stored in an S3 bucket named 'secret-bucket'.
+
+Try exploring the IAM roles and see if you can assume a higher
+privileged role.
+
+Good luck!

@@ -1,0 +1,15 @@
+Welcome to the Kubernetes Admission Controller / PSP Lab!
+
+You are tasked with assessing the security of a Kubernetes cluster. 
+The cluster administrators have implemented a Pod Security Policy (PSP) 
+to prevent malicious pods from taking over the nodes. 
+
+Your objective:
+Bypass the Admission Controller's restrictions and read the secret flag 
+from the underlying node's filesystem.
+
+Tools available:
+- kubectl (mocked for this lab to simulate pod creation)
+- vi/nano for creating YAML manifests
+
+Hint: Check what the PSP actually blocks, and find what it forgot to block!

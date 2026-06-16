@@ -1,0 +1,7 @@
+Welcome to the Privileged Container Escape lab!
+
+You are inside a container that was mistakenly run with elevated privileges.
+Your goal is to escape the container, access the underlying host filesystem,
+and retrieve the flag located at /root/flag.txt on the host.
+
+Hint: How can you access the host's disk devices from a privileged container?

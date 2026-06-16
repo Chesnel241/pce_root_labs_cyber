@@ -1,0 +1,326 @@
+[
+  {
+    "track": "cloud-pentesting",
+    "module": "1.1",
+    "id": "1.1.2",
+    "title": "Énumération AWS non authentifiée"
+  },
+  {
+    "track": "cloud-pentesting",
+    "module": "1.1",
+    "id": "1.1.3",
+    "title": "Endpoints API Gateway non protégés"
+  },
+  {
+    "track": "cloud-pentesting",
+    "module": "1.1",
+    "id": "1.1.4",
+    "title": "Reconnaissance passive"
+  },
+  {
+    "track": "cloud-pentesting",
+    "module": "1.2",
+    "id": "1.2.2",
+    "title": "Bypass d'auth API Gateway"
+  },
+  {
+    "track": "cloud-pentesting",
+    "module": "1.2",
+    "id": "1.2.3",
+    "title": "RDS exposée sur internet"
+  },
+  {
+    "track": "cloud-pentesting",
+    "module": "1.2",
+    "id": "1.2.4",
+    "title": "Security Group trop permissif"
+  },
+  {
+    "track": "cloud-pentesting",
+    "module": "1.3",
+    "id": "1.3.2",
+    "title": "AssumeRole abuse (pivot)"
+  },
+  {
+    "track": "cloud-pentesting",
+    "module": "1.3",
+    "id": "1.3.3",
+    "title": "Lambda vulnérable (injection)"
+  },
+  {
+    "track": "cloud-pentesting",
+    "module": "1.3",
+    "id": "1.3.4",
+    "title": "AttachPolicy → admin access"
+  },
+  {
+    "track": "cloud-pentesting",
+    "module": "1.4",
+    "id": "1.4.2",
+    "title": "Bypass IMDSv2 (header injection)"
+  },
+  {
+    "track": "cloud-pentesting",
+    "module": "1.4",
+    "id": "1.4.3",
+    "title": "SSRF vers services internes"
+  },
+  {
+    "track": "iam-identity",
+    "module": "2.1",
+    "id": "2.1.1",
+    "title": "Utilisateurs IAM sans MFA"
+  },
+  {
+    "track": "iam-identity",
+    "module": "2.1",
+    "id": "2.1.2",
+    "title": "Access keys dormantes (> 90j)"
+  },
+  {
+    "track": "iam-identity",
+    "module": "2.1",
+    "id": "2.1.4",
+    "title": "Access keys exposées dans Git"
+  },
+  {
+    "track": "iam-identity",
+    "module": "2.2",
+    "id": "2.2.2",
+    "title": "CreateAccessKey (pivot)"
+  },
+  {
+    "track": "iam-identity",
+    "module": "2.2",
+    "id": "2.2.3",
+    "title": "UpdateAssumeRolePolicy → rôle admin"
+  },
+  {
+    "track": "iam-identity",
+    "module": "2.3",
+    "id": "2.3.2",
+    "title": "Cross-account role trust abuse"
+  },
+  {
+    "track": "iam-identity",
+    "module": "2.3",
+    "id": "2.3.3",
+    "title": "SAML assertion manipulation"
+  },
+  {
+    "track": "devsecops",
+    "module": "3.1",
+    "id": "3.1.2",
+    "title": "Pipeline injection attack"
+  },
+  {
+    "track": "devsecops",
+    "module": "3.1",
+    "id": "3.1.3",
+    "title": "Secrets GitHub Actions dans les logs"
+  },
+  {
+    "track": "devsecops",
+    "module": "3.1",
+    "id": "3.1.4",
+    "title": "Audit pipeline Jenkins + correctif"
+  },
+  {
+    "track": "devsecops",
+    "module": "3.2",
+    "id": "3.2.2",
+    "title": "Audit CloudFormation"
+  },
+  {
+    "track": "devsecops",
+    "module": "3.2",
+    "id": "3.2.3",
+    "title": "Dockerfile dangereux"
+  },
+  {
+    "track": "devsecops",
+    "module": "3.3",
+    "id": "3.3.2",
+    "title": "Mot de passe en variable d'env"
+  },
+  {
+    "track": "devsecops",
+    "module": "3.3",
+    "id": "3.3.3",
+    "title": "Migrer vers Secrets Manager"
+  },
+  {
+    "track": "devsecops",
+    "module": "3.4",
+    "id": "3.4.2",
+    "title": "Typosquatting de dépendance"
+  },
+  {
+    "track": "devsecops",
+    "module": "3.4",
+    "id": "3.4.3",
+    "title": "Signatures & SBOM d'image"
+  },
+  {
+    "track": "container-k8s",
+    "module": "4.1",
+    "id": "4.1.1",
+    "title": "Privileged container escape"
+  },
+  {
+    "track": "container-k8s",
+    "module": "4.1",
+    "id": "4.1.2",
+    "title": "Docker socket exposure (RCE)"
+  },
+  {
+    "track": "container-k8s",
+    "module": "4.1",
+    "id": "4.1.3",
+    "title": "Breakout via mount namespace"
+  },
+  {
+    "track": "container-k8s",
+    "module": "4.2",
+    "id": "4.2.2",
+    "title": "Dashboard K8s sans auth"
+  },
+  {
+    "track": "container-k8s",
+    "module": "4.2",
+    "id": "4.2.3",
+    "title": "Etcd data exposure"
+  },
+  {
+    "track": "container-k8s",
+    "module": "4.2",
+    "id": "4.2.4",
+    "title": "Service Account token abuse"
+  },
+  {
+    "track": "container-k8s",
+    "module": "4.3",
+    "id": "4.3.2",
+    "title": "Ingress controller misconfig"
+  },
+  {
+    "track": "container-k8s",
+    "module": "4.3",
+    "id": "4.3.3",
+    "title": "DNS rebinding dans le cluster"
+  },
+  {
+    "track": "container-k8s",
+    "module": "4.4",
+    "id": "4.4.2",
+    "title": "Capabilities dangereuses (SYS_ADMIN)"
+  },
+  {
+    "track": "container-k8s",
+    "module": "4.4",
+    "id": "4.4.3",
+    "title": "Admission Controller / PSP"
+  },
+  {
+    "track": "cloud-soc",
+    "module": "5.1",
+    "id": "5.1.2",
+    "title": "Exfiltration via VPC Flow Logs"
+  },
+  {
+    "track": "cloud-soc",
+    "module": "5.1",
+    "id": "5.1.3",
+    "title": "Escalade IAM dans les logs"
+  },
+  {
+    "track": "cloud-soc",
+    "module": "5.1",
+    "id": "5.1.4",
+    "title": "CloudTrail désactivé"
+  },
+  {
+    "track": "cloud-soc",
+    "module": "5.2",
+    "id": "5.2.2",
+    "title": "Persistance (backdoor Lambda)"
+  },
+  {
+    "track": "cloud-soc",
+    "module": "5.2",
+    "id": "5.2.3",
+    "title": "Cryptominer sur EC2"
+  },
+  {
+    "track": "cloud-soc",
+    "module": "5.2",
+    "id": "5.2.4",
+    "title": "Exfiltration DNS (tunneling)"
+  },
+  {
+    "track": "cloud-soc",
+    "module": "5.3",
+    "id": "5.3.1",
+    "title": "Containment EC2 compromise"
+  },
+  {
+    "track": "cloud-soc",
+    "module": "5.3",
+    "id": "5.3.3",
+    "title": "Scénario ransomware cloud"
+  },
+  {
+    "track": "cloud-soc",
+    "module": "5.4",
+    "id": "5.4.1",
+    "title": "Règles de détection IAM"
+  },
+  {
+    "track": "cloud-soc",
+    "module": "5.4",
+    "id": "5.4.3",
+    "title": "Alertes sur API suspects"
+  },
+  {
+    "track": "cloud-architecture",
+    "module": "6.1",
+    "id": "6.1.1",
+    "title": "Corriger un VPC mal segmenté"
+  },
+  {
+    "track": "cloud-architecture",
+    "module": "6.1",
+    "id": "6.1.3",
+    "title": "Bastion host + VPN"
+  },
+  {
+    "track": "cloud-architecture",
+    "module": "6.1",
+    "id": "6.1.4",
+    "title": "Concevoir un WAF"
+  },
+  {
+    "track": "cloud-architecture",
+    "module": "6.2",
+    "id": "6.2.2",
+    "title": "mTLS entre microservices"
+  },
+  {
+    "track": "cloud-architecture",
+    "module": "6.2",
+    "id": "6.2.3",
+    "title": "Service Control Policies"
+  },
+  {
+    "track": "cloud-architecture",
+    "module": "6.3",
+    "id": "6.3.2",
+    "title": "Findings Security Hub"
+  },
+  {
+    "track": "cloud-architecture",
+    "module": "6.3",
+    "id": "6.3.3",
+    "title": "AWS Config + CloudTrail"
+  }
+]

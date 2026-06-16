@@ -1,0 +1,19 @@
+====================================================================
+                        Containment: EC2 Compromise
+====================================================================
+
+Alert: A web server in your environment has been compromised. The attacker
+is actively exfiltrating data and communicating with a C2 server.
+
+Your task:
+1. Identify the compromised EC2 instance.
+2. Find the pre-configured incident response containment security group.
+3. Modify the instance's security groups to ONLY use the containment SG,
+   effectively cutting off its network access while preserving it for forensics.
+
+You can use the provided mock `aws` CLI tool to investigate and remediate.
+  - aws ec2 describe-instances
+  - aws ec2 describe-security-groups
+  - aws ec2 modify-instance-attribute --instance-id <id> --groups <sg-id>
+
+Good luck!

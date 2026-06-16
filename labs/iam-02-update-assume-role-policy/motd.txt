@@ -1,0 +1,22 @@
+========================================================================
+PCE Root Labs - IAM Identity
+Module 2.2 - Privilege Escalation
+Challenge 2.2.3: UpdateAssumeRolePolicy -> role admin
+========================================================================
+
+You have compromised an AWS user (`dev-user`) with `iam:UpdateAssumeRolePolicy` 
+permissions on a sensitive target role. The target role (`admin-role`) 
+currently does not trust your user.
+
+Your objective: 
+Modify the trust policy of `admin-role` so that your user can assume it.
+Then, assume the role to retrieve the flag.
+
+Tools available:
+- `aws` (a mock script to simulate AWS CLI for this scenario)
+
+Account ID: 123456789012
+User ARN: arn:aws:iam::123456789012:user/dev-user
+Role ARN: arn:aws:iam::123456789012:role/admin-role
+
+========================================================================

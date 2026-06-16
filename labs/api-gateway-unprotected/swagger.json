@@ -1,0 +1,34 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Internal System API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/users": {
+      "get": {
+        "summary": "Get all users",
+        "security": [{"ApiKeyAuth": []}]
+      }
+    },
+    "/api/v1/status": {
+      "get": {
+        "summary": "API Status"
+      }
+    },
+    "/api/v1/admin/debug": {
+      "get": {
+        "summary": "Admin debug info. Note: auth temporarily disabled for troubleshooting."
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    }
+  }
+}

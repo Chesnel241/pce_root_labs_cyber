@@ -1,0 +1,8 @@
+{
+  "id": "3.4.3",
+  "track": "devsecops",
+  "module": "3.4",
+  "title": "Signatures & SBOM d'image",
+  "slug": "devsecops-3.4.3-sbom-signatures",
+  "flag": "PCE{sbom_and_signatures_secured_2026}"
+}

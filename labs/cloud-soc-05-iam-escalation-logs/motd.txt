@@ -1,0 +1,15 @@
+========================================================================
+Bienvenue dans le SOC (Track: Cloud Security - Module 5.1).
+
+Alerte: Un comportement suspect a ete detecte concernant notre
+utilisateur AWS 'dev-johndoe'. Il semblerait qu'une elevation de
+privileges ait eu lieu.
+
+Mission :
+1. Analysez les logs CloudTrail situes dans le dossier ~/logs/.
+2. Identifiez l'appel d'API exact utilise pour l'escalade de privileges.
+3. Le flag se trouve dans la charge utile (payload) de cet evenement
+   (dans le document de la politique IAM attachee).
+
+Outils disponibles : cat, grep, jq
+========================================================================

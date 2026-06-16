@@ -1,0 +1,9 @@
+{
+  "name": "AssumeRole abuse (pivot)",
+  "description": "Learn how to discover assumable roles and pivot to higher privileges using AWS STS.",
+  "track": "cloud-pentesting",
+  "module": "1.3",
+  "id": "1.3.2",
+  "difficulty": "medium",
+  "flag": "PCE{assume_role_pivot_2024}"
+}

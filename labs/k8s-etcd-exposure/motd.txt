@@ -1,0 +1,13 @@
+=======================================================================
+Kubernetes Control Plane Node
+-----------------------------------------------------------------------
+WARNING: Unauthorized access is prohibited.
+
+Scenario:
+You have gained access to a Kubernetes control plane node.
+It is suspected that the etcd datastore is accessible without
+authentication, or its raw files are readable.
+
+Your task: Find the sensitive admin token stored in etcd.
+The flag format is PCE{...}
+=======================================================================

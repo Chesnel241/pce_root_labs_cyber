@@ -1,0 +1,5 @@
+{
+  "name": "Dashboard K8s sans auth",
+  "description": "Exploit an exposed Kubernetes dashboard that lacks authentication to retrieve the flag.",
+  "flag": "PCE{k8s_d4shb04rd_n0_4uth_2026}"
+}

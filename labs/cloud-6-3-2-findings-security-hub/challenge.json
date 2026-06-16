@@ -1,0 +1,8 @@
+{
+  "id": "6.3.2",
+  "title": "Findings Security Hub",
+  "track": "cloud-architecture",
+  "module": "6.3",
+  "slug": "cloud-6-3-2-findings-security-hub",
+  "flag": "PCE{cloud_security_hub_2026}"
+}

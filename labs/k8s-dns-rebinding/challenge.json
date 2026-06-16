@@ -1,0 +1,8 @@
+{
+  "id": "4.3.3",
+  "title": "DNS rebinding dans le cluster",
+  "track": "container-k8s",
+  "module": "4.3",
+  "description": "Exploitez une vulnérabilité SSRF via DNS Rebinding pour accéder à une API interne restreinte dans un environnement simulé.",
+  "flag": "PCE{k8s_dns_rebinding_2024}"
+}

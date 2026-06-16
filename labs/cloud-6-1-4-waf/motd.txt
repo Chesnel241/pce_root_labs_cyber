@@ -1,0 +1,20 @@
+=======================================================================
+                        LAB: Concevoir un WAF
+=======================================================================
+Bienvenue, Architecte Cloud !
+
+Votre mission est de configurer les règles de notre Web Application 
+Firewall (WAF) pour protéger notre application web contre les 
+injections SQL (SQLi) et les attaques Cross-Site Scripting (XSS).
+
+Le fichier 'waf_rules.py' contient des expressions régulières vides.
+Complétez-les afin que 'test_waf.py' puisse valider votre WAF.
+
+Faites attention à ne pas bloquer le trafic légitime !
+
+Commandes utiles:
+- Editez les règles: vi waf_rules.py
+- Testez le WAF: ./test_waf.py
+
+Bonne chance !
+=======================================================================

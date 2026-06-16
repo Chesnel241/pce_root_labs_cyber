@@ -1,0 +1,7 @@
+environment: production
+database:
+  engine: mysql
+  user: admin
+  password: admin123
+  port: 3306
+  # Endpoint provisioned via AWS RDS

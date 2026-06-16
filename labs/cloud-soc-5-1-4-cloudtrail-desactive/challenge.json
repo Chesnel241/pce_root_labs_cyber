@@ -1,0 +1,5 @@
+{
+  "name": "CloudTrail désactivé",
+  "description": "Un attaquant a désactivé CloudTrail. Analysez les logs restants pour trouver l'événement.",
+  "flag": "PCE{n0_m0r3_l0gs_4_u}"
+}

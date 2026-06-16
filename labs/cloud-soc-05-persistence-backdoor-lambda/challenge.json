@@ -1,0 +1,8 @@
+{
+  "id": "5.2.2",
+  "title": "Persistance (backdoor Lambda)",
+  "track": "cloud-soc",
+  "module": "5.2",
+  "flag": "PCE{L4mbd4_B4ckd00r_P3rsist3nc3_2024}",
+  "description": "An attacker has established persistence in our AWS environment by modifying an existing Lambda function. Investigate the exported Lambda functions to find the backdoored function and recover the flag."
+}

@@ -1,0 +1,8 @@
+{
+  "title": "Escalade IAM dans les logs",
+  "track": "cloud-soc",
+  "module": "5.1",
+  "id": "5.1.3",
+  "description": "Analysez les logs CloudTrail fournis pour détecter une escalade de privilèges IAM. Trouvez l'événement suspect pour récupérer le flag.",
+  "difficulty": "medium"
+}

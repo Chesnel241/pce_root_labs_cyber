@@ -1,0 +1,44 @@
+{
+  "Records": [
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7YFFAEXAMPLE",
+        "arn": "arn:aws:iam::123456789012:user/Alice",
+        "accountId": "123456789012",
+        "userName": "Alice"
+      },
+      "eventTime": "2024-06-16T15:00:00Z",
+      "eventSource": "s3.amazonaws.com",
+      "eventName": "ListBuckets",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "192.0.2.1",
+      "userAgent": "aws-cli/2.0.0",
+      "requestParameters": null,
+      "responseElements": null,
+      "eventType": "AwsApiCall"
+    },
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7YFFAEXAMPLB",
+        "arn": "arn:aws:iam::123456789012:user/RogueAdmin",
+        "accountId": "123456789012",
+        "userName": "RogueAdmin"
+      },
+      "eventTime": "2024-06-16T15:15:23Z",
+      "eventSource": "cloudtrail.amazonaws.com",
+      "eventName": "StopLogging",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "203.0.113.5",
+      "userAgent": "aws-cli/2.0.0",
+      "requestParameters": {
+        "name": "arn:aws:cloudtrail:us-east-1:123456789012:trail/PCE{n0_m0r3_l0gs_4_u}"
+      },
+      "responseElements": null,
+      "eventType": "AwsApiCall"
+    }
+  ]
+}

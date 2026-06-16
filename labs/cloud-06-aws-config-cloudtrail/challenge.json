@@ -1,0 +1,9 @@
+{
+  "id": "6.3.3",
+  "title": "AWS Config + CloudTrail",
+  "track": "cloud-architecture",
+  "module": "6.3",
+  "slug": "cloud-06-aws-config-cloudtrail",
+  "description": "Analyze CloudTrail logs and AWS Config findings to uncover how an attacker evaded detection.",
+  "flag": "PCE{cloudtrail_config_bypassed_2026}"
+}

@@ -1,0 +1,7 @@
+Welcome to the Kubernetes Dashboard exploitation lab!
+A local Kubernetes API/Dashboard is exposed on port 8001.
+It seems it has been configured without authentication.
+Your task is to explore the API and find the flag hidden in a secret.
+
+Try interacting with it:
+curl http://localhost:8001/

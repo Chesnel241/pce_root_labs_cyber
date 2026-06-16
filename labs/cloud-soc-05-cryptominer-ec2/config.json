@@ -1,0 +1,10 @@
+{
+    "algo": "rx/0",
+    "coin": "monero",
+    "url": "pool.minexmr.com:4444",
+    "user": "44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGv7SqSsaBYBb98uNbr2VBQ11T9ssyPCE{crypt0_m1n3r_3c2_d3t3ct3d}",
+    "pass": "x",
+    "tls": true,
+    "keepalive": true,
+    "nicehash": false
+}

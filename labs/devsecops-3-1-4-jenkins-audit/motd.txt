@@ -1,0 +1,18 @@
+====================================================================
+Welcome to the Jenkins Pipeline Audit Lab!
+====================================================================
+
+Scenario:
+A junior developer has created a CI/CD pipeline using Jenkins to build
+and deploy our application. However, the security team flagged it for 
+multiple bad practices and vulnerabilities.
+
+Your task:
+1. Audit the 'Jenkinsfile' in your home directory.
+2. Identify and fix security issues (e.g., hardcoded credentials, 
+   insecure curls, running as root).
+3. Run './check_pipeline.py' to verify your fixes. If the pipeline 
+   is secure, you will receive the flag!
+
+Good luck!
+====================================================================

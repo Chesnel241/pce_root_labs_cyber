@@ -1,0 +1,8 @@
+{
+  "name": "Dockerfile dangereux",
+  "track": "devsecops",
+  "module": "3.2",
+  "id": "3.2.3",
+  "description": "Analyze a vulnerable project repository to identify sensitive data leaks and bad practices in its Dockerfile.",
+  "difficulty": "Easy"
+}

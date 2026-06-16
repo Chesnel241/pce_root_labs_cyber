@@ -1,0 +1,7 @@
+Welcome to the AWS Security Hub Findings Analysis lab!
+
+You are tasked with reviewing the recent Security Hub findings.
+A critical security incident has been detected, but it's buried among many low-severity findings.
+Use the mock AWS CLI to list the findings and find the critical vulnerability.
+
+Command: aws securityhub get-findings

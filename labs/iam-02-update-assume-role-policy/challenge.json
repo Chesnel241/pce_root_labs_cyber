@@ -1,0 +1,9 @@
+{
+  "id": "2.2.3",
+  "slug": "iam-02-update-assume-role-policy",
+  "track": "iam-identity",
+  "module": "2.2",
+  "title": "UpdateAssumeRolePolicy → rôle admin",
+  "description": "Exploit the iam:UpdateAssumeRolePolicy permission to take over an admin role.",
+  "flag": "PCE{update_assume_role_policy_admin_2024}"
+}

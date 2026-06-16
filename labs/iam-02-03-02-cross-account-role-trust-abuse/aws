@@ -1,0 +1,94 @@
+#!/bin/bash
+
+COMMAND=$1
+SUBCOMMAND=$2
+
+if [ "$COMMAND" = "sts" ] && [ "$SUBCOMMAND" = "get-caller-identity" ]; then
+    if [ "$AWS_ACCESS_KEY_ID" = "ASIAVULNERABLEACCOUNT123" ]; then
+        echo '{
+    "UserId": "AROA999988887777:assumed-role",
+    "Account": "999988887777",
+    "Arn": "arn:aws:sts::999988887777:assumed-role/VulnerableRole/session"
+}'
+    else
+        echo '{
+    "UserId": "AIDA111122223333",
+    "Account": "111122223333",
+    "Arn": "arn:aws:iam::111122223333:user/analyst"
+}'
+    fi
+    exit 0
+fi
+
+if [ "$COMMAND" = "sts" ] && [ "$SUBCOMMAND" = "assume-role" ]; then
+    ROLE_ARN=""
+    SESSION_NAME="session"
+    
+    # parse args
+    while [[ "$#" -gt 0 ]]; do
+        case $1 in
+            --role-arn) ROLE_ARN="$2"; shift ;;
+            --role-session-name) SESSION_NAME="$2"; shift ;;
+        esac
+        shift
+    done
+
+    if [ "$ROLE_ARN" = "arn:aws:iam::999988887777:role/VulnerableRole" ]; then
+        echo '{
+    "Credentials": {
+        "AccessKeyId": "ASIAVULNERABLEACCOUNT123",
+        "SecretAccessKey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+        "SessionToken": "IQoJb3JpZ2luX2VjEBAaCXVzLWVhc3QtMSJGMEQCIB...",
+        "Expiration": "2028-01-01T00:00:00Z"
+    },
+    "AssumedRoleUser": {
+        "AssumedRoleId": "AROA999988887777:'"$SESSION_NAME"'",
+        "Arn": "arn:aws:sts::999988887777:assumed-role/VulnerableRole/'"$SESSION_NAME"'"
+    }
+}'
+        exit 0
+    else
+        echo "An error occurred (AccessDenied) when calling the AssumeRole operation: User is not authorized to perform: sts:AssumeRole on resource: $ROLE_ARN" >&2
+        exit 1
+    fi
+fi
+
+if [ "$COMMAND" = "s3" ] && [ "$SUBCOMMAND" = "ls" ]; then
+    TARGET=$3
+    if [ "$AWS_ACCESS_KEY_ID" = "ASIAVULNERABLEACCOUNT123" ]; then
+        if [ -z "$TARGET" ]; then
+            echo "2024-01-01 12:00:00 secret-financial-data-999988887777"
+            exit 0
+        elif [ "$TARGET" = "s3://secret-financial-data-999988887777" ] || [ "$TARGET" = "s3://secret-financial-data-999988887777/" ]; then
+            echo "2024-01-01 12:05:00       42 flag.txt"
+            exit 0
+        else
+            echo "An error occurred (AccessDenied) when calling the ListObjectsV2 operation: Access Denied" >&2
+            exit 1
+        fi
+    else
+        echo "An error occurred (AccessDenied) when calling the ListBuckets operation: Access Denied" >&2
+        exit 1
+    fi
+fi
+
+if [ "$COMMAND" = "s3" ] && [ "$SUBCOMMAND" = "cp" ]; then
+    SRC=$3
+    DEST=$4
+    if [ "$AWS_ACCESS_KEY_ID" = "ASIAVULNERABLEACCOUNT123" ]; then
+        if [[ "$SRC" == "s3://secret-financial-data-999988887777/flag.txt" ]]; then
+            echo "download: $SRC to ./flag.txt"
+            echo "PCE{cross_account_trust_abuse_2024}" > flag.txt
+            exit 0
+        else
+            echo "fatal error: An error occurred (404) when calling the HeadObject operation: Key Not Found" >&2
+            exit 1
+        fi
+    else
+        echo "fatal error: An error occurred (403) when calling the HeadObject operation: Forbidden" >&2
+        exit 1
+    fi
+fi
+
+echo "Mock AWS CLI. Command not found or not implemented: $COMMAND $SUBCOMMAND" >&2
+exit 1

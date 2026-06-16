@@ -1,0 +1,9 @@
+{
+  "id": "5.4.1",
+  "title": "Règles de détection IAM",
+  "track": "cloud-soc",
+  "module": "5.4",
+  "slug": "cloud-soc-5-4-1-iam-detection-rules",
+  "description": "Analysez les journaux CloudTrail fournis et identifiez l'activité IAM malveillante. Soumettez le nom de l'utilisateur IAM compromis pour obtenir le flag.",
+  "flag": "PCE{iam_detection_rules_2024}"
+}

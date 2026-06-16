@@ -1,0 +1,8 @@
+[
+  {"eventID": "evt-001", "eventName": "DescribeInstances", "sourceIPAddress": "203.0.113.5", "userAgent": "aws-cli/2.0"},
+  {"eventID": "evt-002", "eventName": "ListBuckets", "sourceIPAddress": "203.0.113.5", "userAgent": "aws-cli/2.0"},
+  {"eventID": "evt-003", "eventName": "GetCallerIdentity", "sourceIPAddress": "198.51.100.22", "userAgent": "Boto3/1.17"},
+  {"eventID": "evt-004", "eventName": "DescribeSecurityGroups", "sourceIPAddress": "203.0.113.5", "userAgent": "aws-cli/2.0"},
+  {"eventID": "evt-005", "eventName": "DeleteTrail", "sourceIPAddress": "198.51.100.22", "userAgent": "Boto3/1.17", "requestParameters": {"name": "MainAuditTrail"}},
+  {"eventID": "evt-006", "eventName": "DescribeVpcs", "sourceIPAddress": "203.0.113.5", "userAgent": "aws-cli/2.0"}
+]

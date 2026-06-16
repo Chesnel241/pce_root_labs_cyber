@@ -1,0 +1,15 @@
+===================================================================
+Bienvenue dans le Lab SOC Cloud : Règles de détection IAM
+===================================================================
+Scénario :
+Des activités suspectes ont été signalées concernant la gestion des 
+identités et accès (IAM) de notre compte cloud.
+
+Votre mission :
+1. Analysez le fichier cloudtrail.json fourni.
+2. Identifiez l'utilisateur IAM malveillant qui a été créé.
+3. Exécutez le script ./submit_finding.sh pour valider votre 
+   découverte et obtenir le flag.
+
+Outils disponibles : jq, grep, cat, etc.
+===================================================================

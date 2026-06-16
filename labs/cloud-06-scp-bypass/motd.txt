@@ -1,0 +1,11 @@
+Welcome to the SCP Lab!
+
+You are an IAM administrator for your organization. However, the root account has applied a Service Control Policy (SCP) that restricts your actions.
+You need to launch an EC2 instance to process some data, but your `aws ec2 run-instances` command keeps getting AccessDenied.
+
+Use the mock `aws` CLI to investigate the organization's policies and find a way to launch your instance.
+
+Available mock commands:
+- aws organizations list-policies --filter SERVICE_CONTROL_POLICY
+- aws organizations describe-policy --policy-id <id>
+- aws ec2 run-instances [--region <region>]

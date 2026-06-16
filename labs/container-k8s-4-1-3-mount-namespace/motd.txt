@@ -1,0 +1,7 @@
+Welcome to the Kubernetes Node simulation environment!
+
+You are currently inside a pod that was deployed with `hostPID: true`.
+Your goal is to break out of this container and access the host's filesystem.
+Retrieve the flag located at `/root/flag.txt` on the host node.
+
+Good luck!

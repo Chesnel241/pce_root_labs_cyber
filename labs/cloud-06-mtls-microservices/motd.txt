@@ -1,0 +1,9 @@
+Welcome to the Cloud Architecture lab environment.
+
+Scenario:
+The payment microservice hosted at https://api.internal/flag is heavily guarded.
+It requires Mutual TLS (mTLS) for any incoming requests.
+Your goal is to locate a valid client certificate and key left on this host, 
+and use them to make a successful request to the API.
+
+Good luck!

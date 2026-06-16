@@ -1,0 +1,21 @@
+========================================================================
+Bienvenue dans le lab de DNS Rebinding K8s !
+
+Un service de test (ssrf_tool.py) est utilisé par les développeurs 
+pour tester des webhooks. Cependant, il bloque l'accès à localhost 
+et aux IPs internes (ex: 127.0.0.1) pour éviter les requêtes SSRF.
+
+Une API interne critique contenant le flag tourne sur le même noeud à 
+l'adresse: http://127.0.0.1:8080/latest/meta-data/
+
+Votre objectif :
+1. Comprendre comment ssrf_tool.py vérifie l'IP.
+2. Écrire un serveur DNS local (avec dnslib) qui retourne une IP 
+   publique (ex: 8.8.8.8) la première fois, puis 127.0.0.1 la seconde fois.
+3. Modifier votre /etc/resolv.conf (avec sudo) pour pointer vers 127.0.0.1.
+4. Exploiter la vulnérabilité de type "Time of Check to Time of Use" (TOCTOU)
+   via DNS Rebinding pour lire le flag.
+
+Astuce : 'dnslib' est installé. Vous avez un squelette 'dns_server_skeleton.py'
+pour démarrer. Le port 53 nécessite sudo.
+========================================================================

@@ -1,0 +1,5 @@
+{
+  "id": "1.1.2",
+  "slug": "cloud-enum-aws-unauth",
+  "flag": "PCE{unauth_s3_buck3t_enum_2026}"
+}

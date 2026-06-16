@@ -1,0 +1,8 @@
+{
+  "id": "3.3.3",
+  "track": "devsecops",
+  "module": "3.3",
+  "title": "Migrer vers Secrets Manager",
+  "slug": "devsecops-3-3-3-secrets-manager",
+  "flag": "PCE{migrated_to_secrets_manager_2024}"
+}

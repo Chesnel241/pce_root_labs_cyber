@@ -1,0 +1,8 @@
+{
+  "id": "1.2.3",
+  "track": "cloud-pentesting",
+  "module": "1.2",
+  "title": "RDS exposée sur internet",
+  "slug": "rds-exposed-internet",
+  "flag": "PCE{rds_pUbl1c_2024}"
+}

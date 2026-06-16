@@ -1,0 +1,9 @@
+{
+  "id": "4.2.3",
+  "title": "Etcd data exposure",
+  "track": "container-k8s",
+  "module": "4.2",
+  "slug": "k8s-etcd-exposure",
+  "description": "Investigate a potential exposure of the Kubernetes etcd data store. Retrieve the admin token to find the flag.",
+  "flag": "PCE{etcd_secrets_unencrypted_2024}"
+}

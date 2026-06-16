@@ -1,0 +1,17 @@
+=====================================================================
+                    PCE Root Labs - Kubernetes
+=====================================================================
+
+You've gained shell access to a compromised pod in a Kubernetes cluster. 
+
+Objective: 
+Enumerate the pod environment to find Kubernetes credentials. 
+Use these credentials to interact with the Kubernetes API and extract the flag.
+
+The Kubernetes API server is accessible at:
+https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT
+
+Hint: Service account tokens are typically mounted at 
+/var/run/secrets/kubernetes.io/serviceaccount/
+
+=====================================================================

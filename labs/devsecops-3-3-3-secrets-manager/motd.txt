@@ -1,0 +1,18 @@
+========================================================================
+PCE Root Labs - DevSecOps 3.3.3: Migrer vers Secrets Manager
+========================================================================
+
+Welcome, Analyst!
+
+Your company has decided to improve security by removing all hardcoded
+secrets from the source code. Your task is to update 'app.py'.
+
+1. Remove the hardcoded DB_PASS ("SuperSecretPassword123!") from app.py.
+2. Use the 'boto3' library to fetch the secret instead.
+3. You must use the secretsmanager client:
+   client = boto3.client('secretsmanager')
+4. And call get_secret_value with the correct SecretId:
+   client.get_secret_value(SecretId='prod/db/password')
+
+When you are finished, run 'verify.sh' to check your work and get your flag.
+Good luck!

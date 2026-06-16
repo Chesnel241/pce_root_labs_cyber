@@ -1,0 +1,70 @@
+{
+  "Records": [
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7Y6EZRZ5XX",
+        "arn": "arn:aws:iam::123456789012:user/admin-backup",
+        "accountId": "123456789012",
+        "userName": "admin-backup"
+      },
+      "eventTime": "2026-06-16T10:00:00Z",
+      "eventSource": "config.amazonaws.com",
+      "eventName": "DeleteConfigRule",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "192.0.2.44",
+      "userAgent": "aws-cli/2.0.0 Python/3.8.2 Linux/5.4.0-1029-aws",
+      "requestParameters": {
+        "configRuleName": "restricted-ssh"
+      },
+      "responseElements": null,
+      "eventID": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+      "eventType": "AwsApiCall"
+    },
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7Y6EZRZ5XX",
+        "arn": "arn:aws:iam::123456789012:user/admin-backup",
+        "accountId": "123456789012",
+        "userName": "admin-backup"
+      },
+      "eventTime": "2026-06-16T10:02:15Z",
+      "eventSource": "s3.amazonaws.com",
+      "eventName": "DeleteBucket",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "192.0.2.44",
+      "userAgent": "aws-cli/2.0.0 Python/3.8.2 Linux/5.4.0-1029-aws",
+      "requestParameters": {
+        "bucketName": "config-bucket-123456789012"
+      },
+      "responseElements": null,
+      "eventID": "b2c3d4e5-6789-01bc-def0-2345678901bc",
+      "eventType": "AwsApiCall"
+    },
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7Y6EZRZ5XX",
+        "arn": "arn:aws:iam::123456789012:user/admin-backup",
+        "accountId": "123456789012",
+        "userName": "admin-backup"
+      },
+      "eventTime": "2026-06-16T10:05:00Z",
+      "eventSource": "cloudtrail.amazonaws.com",
+      "eventName": "StopLogging",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "192.0.2.44",
+      "userAgent": "aws-cli/2.0.0 Python/3.8.2 Linux/5.4.0-1029-aws",
+      "requestParameters": {
+        "name": "arn:aws:cloudtrail:us-east-1:123456789012:trail/security-trail-PCE{cloudtrail_config_bypassed_2026}"
+      },
+      "responseElements": null,
+      "eventID": "f1e2d3c4-5678-90ab-cdef-1234567890ab",
+      "eventType": "AwsApiCall"
+    }
+  ]
+}

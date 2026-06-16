@@ -1,0 +1,9 @@
+===================================================================
+Cloud SOC - Incident Response: Cryptominer on EC2
+===================================================================
+An EC2 instance triggered high CPU usage alarms (GuardDuty finding: CryptoCurrency:EC2/BitcoinTool.B).
+You have been granted access to investigate the system.
+
+Goal: Investigate the compromised instance and find the flag hidden in the cryptominer configuration.
+You have sudo privileges.
+===================================================================

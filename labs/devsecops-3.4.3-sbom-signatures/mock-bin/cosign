@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+import sys
+
+def main():
+    args = sys.argv[1:]
+    if len(args) == 0:
+        print("cosign - A tool for Container Signing, Verification and Storage in an OCI registry.")
+        return
+
+    if args[0] == "verify":
+        if "--key" in args:
+            key_idx = args.index("--key")
+            if key_idx + 1 < len(args):
+                key_file = args[key_idx + 1]
+                if key_file != "cosign.pub":
+                    print(f"Error: public key '{key_file}' not found or invalid.")
+                    return
+                image = args[-1]
+                if image == "registry.local/myapp:v1.0":
+                    print("Verification for registry.local/myapp:v1.0 --")
+                    print("The following checks were performed on each of these signatures:")
+                    print("  - The cosign claims were validated")
+                    print("  - The signatures were verified against the specified public key")
+                    print("\nSignatures Verified!")
+                    print("Part 2 of the flag: _signatures_secured_2026}")
+                else:
+                    print(f"Error: no matching signatures found for {image}")
+            else:
+                print("Error: missing value for --key")
+        else:
+            print("Error: --key must be specified for offline verification")
+    else:
+        print(f"Unknown command: {args[0]}")
+
+if __name__ == "__main__":
+    main()

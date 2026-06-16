@@ -1,0 +1,9 @@
+{
+  "id": "5.2.3",
+  "track": "cloud-soc",
+  "module": "5.2",
+  "title": "Cryptominer sur EC2",
+  "slug": "cloud-soc-05-cryptominer-ec2",
+  "description": "Un de vos serveurs EC2 montre une utilisation CPU de 100%. Investiguez l'instance pour trouver les traces du mineur de cryptomonnaie.",
+  "flag": "PCE{crypt0_m1n3r_3c2_d3t3ct3d}"
+}

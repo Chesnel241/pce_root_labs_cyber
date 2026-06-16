@@ -1,0 +1,19 @@
+========================================================================
+  PCE Root Labs - Cloud Pentesting: SSRF vers services internes
+========================================================================
+
+Une application d'export d'images est exposée sur le port 8000 de ce serveur.
+Elle prend en paramètre une URL pour télécharger des ressources externes.
+
+Cependant, il semble que l'application soit vulnérable à une SSRF (Server-Side Request Forgery).
+
+Votre objectif :
+1. Exploiter la SSRF sur l'application publique (port 8000).
+2. Atteindre le service de métadonnées interne simulé sur http://127.0.0.1:8080/
+3. Naviguer dans l'arborescence des métadonnées pour trouver le rôle IAM "ec2-role".
+4. Récupérer les identifiants AWS et le flag.
+
+Rappel : Vous jouez le rôle de l'attaquant depuis l'extérieur. 
+Limitez-vous à interagir avec le port 8000 via l'application vulnérable !
+
+========================================================================

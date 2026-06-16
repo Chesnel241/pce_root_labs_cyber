@@ -1,0 +1,8 @@
+{
+  "id": "5.2.4",
+  "track": "cloud-soc",
+  "module": "5.2",
+  "title": "Exfiltration DNS (tunneling)",
+  "slug": "cloud-soc-5-2-4-dns-exfiltration",
+  "flag": "PCE{dns_tunn3ling_d3t3ct3d}"
+}

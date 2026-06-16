@@ -1,0 +1,15 @@
+=======================================================================
+PCE Root Labs - SOC Cloud Incident Response
+=======================================================================
+
+Scenario:
+Our primary AWS CloudTrail logging was abruptly disabled. 
+Fortunately, the API call that disabled it was logged just in time.
+
+Task:
+Analyze the 'cloudtrail_logs.json' file in your home directory.
+Identify the event where CloudTrail was stopped.
+The flag is embedded within the 'requestParameters.name' of that event.
+
+Good luck!
+=======================================================================

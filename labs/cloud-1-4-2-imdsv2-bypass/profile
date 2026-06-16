@@ -1,0 +1,4 @@
+#!/bin/sh
+pgrep -f "imds_mock.py" > /dev/null || python3 /opt/imds_mock.py >/dev/null 2>&1 &
+pgrep -f "app.py" > /dev/null || python3 /opt/app.py >/dev/null 2>&1 &
+cat /etc/motd

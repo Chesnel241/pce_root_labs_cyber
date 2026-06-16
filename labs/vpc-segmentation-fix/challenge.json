@@ -1,0 +1,8 @@
+{
+  "id": "6.1.1",
+  "title": "Corriger un VPC mal segmenté",
+  "track": "cloud-architecture",
+  "module": "6.1",
+  "slug": "vpc-segmentation-fix",
+  "flag": "PCE{vpc_segmentation_fixed_2024}"
+}

@@ -1,0 +1,5 @@
+{
+  "name": "Pipeline injection attack",
+  "description": "Exploit a pipeline injection vulnerability in a mock CI/CD runner to read the flag.",
+  "flag": "PCE{pipeline_cmd_inj_2024}"
+}

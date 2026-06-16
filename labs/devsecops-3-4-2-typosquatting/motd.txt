@@ -1,0 +1,16 @@
+========================================================================
+PCE Root Labs - DevSecOps
+Challenge 3.4.2 : Typosquatting de dépendance
+
+Un développeur a récemment ajouté une nouvelle dépendance au projet pour 
+parser des fichiers YAML, mais il a fait une erreur de frappe. Depuis, 
+d'étranges requêtes réseau ont été observées en CI.
+
+Votre mission : 
+1. Inspectez le projet dans votre répertoire courant (/home/analyst/app).
+2. Identifiez la dépendance malveillante (typosquatting) dans les dépendances.
+3. Analysez le code source de cette fausse dépendance installée dans le 
+   virtual environment local (.venv) pour trouver le flag.
+
+Le format du flag est PCE{...}
+========================================================================

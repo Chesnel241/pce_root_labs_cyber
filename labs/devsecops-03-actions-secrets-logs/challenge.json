@@ -1,0 +1,8 @@
+{
+  "id": "3.1.3",
+  "title": "Secrets GitHub Actions dans les logs",
+  "track": "devsecops",
+  "module": "3.1",
+  "description": "Un développeur a configuré un pipeline GitHub Actions, mais vous soupçonnez qu'un secret de production a fuité dans les journaux d'exécution. Analysez les logs fournis pour retrouver ce secret.",
+  "flag": "PCE{gha_secrets_leaked_2024}"
+}

@@ -1,0 +1,12 @@
+Welcome to the SYS_ADMIN Capability Lab!
+
+You are logged into a simulated container. The container was poorly configured
+and started with excessive privileges.
+
+Your objective:
+1. Verify the capabilities available to you (e.g. using `capsh --print`).
+2. Identify available block devices attached from the host (e.g. using `lsblk`).
+3. Leverage your privileges to mount the host's root filesystem and find the flag.
+
+Note: This is a simulated offline environment. Standard Linux tools like `mount`,
+`lsblk`, and `capsh` have been mocked for this exercise.

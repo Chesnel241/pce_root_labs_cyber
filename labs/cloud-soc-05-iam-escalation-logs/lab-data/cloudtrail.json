@@ -1,0 +1,103 @@
+{
+  "Records": [
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7YFFAEXAMPLE",
+        "arn": "arn:aws:iam::123456789012:user/dev-johndoe",
+        "accountId": "123456789012",
+        "userName": "dev-johndoe"
+      },
+      "eventTime": "2024-06-16T14:30:00Z",
+      "eventSource": "ec2.amazonaws.com",
+      "eventName": "DescribeInstances",
+      "awsRegion": "eu-west-1",
+      "sourceIPAddress": "192.0.2.50",
+      "userAgent": "aws-cli/2.0.0 Python/3.8.2",
+      "requestParameters": null,
+      "responseElements": null,
+      "eventID": "a1b2-3c4d-5e6f-7a8b9c0d1e2f",
+      "eventType": "AwsApiCall"
+    },
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7YFFAEXAMPLE",
+        "arn": "arn:aws:iam::123456789012:user/dev-johndoe",
+        "accountId": "123456789012",
+        "userName": "dev-johndoe"
+      },
+      "eventTime": "2024-06-16T14:35:12Z",
+      "eventSource": "iam.amazonaws.com",
+      "eventName": "ListAttachedUserPolicies",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "192.0.2.50",
+      "userAgent": "aws-cli/2.0.0 Python/3.8.2",
+      "requestParameters": {
+        "userName": "dev-johndoe"
+      },
+      "responseElements": {
+        "attachedPolicies": []
+      },
+      "eventID": "b2c3-4d5e-6f7a-8b9c0d1e2f3a",
+      "eventType": "AwsApiCall"
+    },
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7YFFAEXAMPLE",
+        "arn": "arn:aws:iam::123456789012:user/dev-johndoe",
+        "accountId": "123456789012",
+        "userName": "dev-johndoe"
+      },
+      "eventTime": "2024-06-16T14:40:22Z",
+      "eventSource": "iam.amazonaws.com",
+      "eventName": "PutUserPolicy",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "192.0.2.50",
+      "userAgent": "aws-cli/2.0.0 Python/3.8.2",
+      "requestParameters": {
+        "userName": "dev-johndoe",
+        "policyName": "dev-admin-override",
+        "policyDocument": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Sid\": \"PCE{cloudtrail_iam_privesc_detected_2024}\",\n      \"Effect\": \"Allow\",\n      \"Action\": \"*\",\n      \"Resource\": \"*\"\n    }\n  ]\n}"
+      },
+      "responseElements": null,
+      "eventID": "c3b8-4d5e-8f9a-112233445566",
+      "eventType": "AwsApiCall"
+    },
+    {
+      "eventVersion": "1.08",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAJ45Q7YFFAEXAMPLE",
+        "arn": "arn:aws:iam::123456789012:user/dev-johndoe",
+        "accountId": "123456789012",
+        "userName": "dev-johndoe"
+      },
+      "eventTime": "2024-06-16T14:41:05Z",
+      "eventSource": "ec2.amazonaws.com",
+      "eventName": "RunInstances",
+      "awsRegion": "eu-west-1",
+      "sourceIPAddress": "192.0.2.50",
+      "userAgent": "aws-cli/2.0.0 Python/3.8.2",
+      "requestParameters": {
+        "instanceType": "t2.micro",
+        "imageId": "ami-0abcdef1234567890"
+      },
+      "responseElements": {
+        "instancesSet": {
+          "items": [
+            {
+              "instanceId": "i-1234567890abcdef0"
+            }
+          ]
+        }
+      },
+      "eventID": "d4e5-6f7a-8b9c-0d1e2f3a4b5c",
+      "eventType": "AwsApiCall"
+    }
+  ]
+}

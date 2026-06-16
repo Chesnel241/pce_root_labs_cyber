@@ -1,0 +1,11 @@
+{
+  "id": "5.1.2",
+  "title": "Exfiltration via VPC Flow Logs",
+  "track": "cloud-soc",
+  "module": "5.1",
+  "slug": "cloud-soc-05-vpc-exfiltration",
+  "description": "A suspected data exfiltration incident occurred via DNS tunneling. Analyze the VPC flow logs to identify the destination IP address used for exfiltration. The flag format is PCE{<IP_ADDRESS>_dns_exfil}.",
+  "flag": "PCE{198.51.100.42_dns_exfil}",
+  "difficulty": "medium",
+  "tags": ["aws", "vpc", "flow-logs", "exfiltration", "dns"]
+}

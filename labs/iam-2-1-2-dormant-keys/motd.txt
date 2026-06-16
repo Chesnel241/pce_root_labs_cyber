@@ -1,0 +1,14 @@
+Welcome to the IAM Dormant Access Keys Lab!
+
+Scenario:
+You are an auditor reviewing the AWS IAM access keys for your organization.
+Security policy dictates that any Access Key older than 90 days which has not been used in the last 90 days must be identified and removed.
+
+Your task:
+Analyze the provided 'access_keys_audit.csv' in your home directory.
+Find the Access Key ID of the active access key that violates this policy (created > 90 days ago AND last used > 90 days ago OR never used). Note: ignore inactive keys.
+
+The flag format is PCE{ACCESS_KEY_ID}.
+Example: PCE{AKIA1234567890ABCDEF}
+
+Good luck!

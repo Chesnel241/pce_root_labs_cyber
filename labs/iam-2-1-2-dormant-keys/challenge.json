@@ -1,0 +1,9 @@
+{
+  "id": "2.1.2",
+  "slug": "iam-2-1-2-dormant-keys",
+  "track": "iam-identity",
+  "module": "2.1",
+  "title": "Access keys dormantes (> 90j)",
+  "description": "Identify an IAM access key that has been active but unused for over 90 days.",
+  "flag": "PCE{AKIA5QYV7B8E9F0G1H2I}"
+}

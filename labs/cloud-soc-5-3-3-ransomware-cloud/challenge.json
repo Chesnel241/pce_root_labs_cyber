@@ -1,0 +1,9 @@
+{
+  "id": "5.3.3",
+  "title": "Scénario ransomware cloud",
+  "track": "cloud-soc",
+  "module": "5.3",
+  "description": "Un ransomware a frappé notre bucket S3. Analysez les journaux CloudTrail pour trouver l'adresse IP de l'attaquant et l'Access Key ID compromise.",
+  "difficulty": "medium",
+  "flag": "PCE{203.0.113.42_AKIAIOSFODNN7EXAMPLE}"
+}
