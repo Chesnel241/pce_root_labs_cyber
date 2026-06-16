@@ -69,8 +69,8 @@ export function attachTerminal(server) {
     const userId = verifyToken(token);
 
     if (!userId) {
-      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-      socket.destroy();
+      logger.warn(`WS upgrade rejected: Invalid token for sessionId ${sessionId}`);
+      socket.end('HTTP/1.1 401 Unauthorized\r\n\r\n');
       return;
     }
 
