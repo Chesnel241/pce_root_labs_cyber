@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SolutionRequestsPanel } from "@/components/admin/solution-requests-panel";
 import { formatNumber } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { useAdminStats, useAdminUsers } from "@/lib/use-platform-data";
@@ -195,6 +196,9 @@ export default function AdminPage() {
           </Badge>
         )}
       </PageHeader>
+
+      {/* Demandes de corrigé à valider */}
+      <SolutionRequestsPanel />
 
       {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

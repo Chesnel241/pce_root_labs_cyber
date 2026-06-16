@@ -25,6 +25,7 @@ import { LabTerminal } from "./lab-terminal";
 import { GuidedInstructions } from "@/components/learn/guided-instructions";
 import { GlossaryText } from "@/components/learn/glossary-text";
 import { FlagCelebration } from "@/components/learn/flag-celebration";
+import { SolutionPanel } from "@/components/learn/solution-panel";
 import { cn } from "@/lib/utils";
 
 type LabStatus = "idle" | "starting" | "running";
@@ -253,6 +254,8 @@ export function ChallengeWorkspace(props: ChallengeWorkspaceProps) {
             })}
           </CardContent>
         </Card>
+
+        <SolutionPanel challengeId={props.challengeId} />
       </div>
 
       {/* Workspace */}

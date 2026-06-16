@@ -1,8 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { Check, Copy, GraduationCap, ListChecks, Target } from "lucide-react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  GraduationCap,
+  ListChecks,
+  Target,
+} from "lucide-react";
 import { getGuide } from "@/lib/guides";
+import { Button } from "@/components/ui/button";
 import { GlossaryText } from "./glossary-text";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +30,11 @@ export function GuidedInstructions({
     () => getGuide(challengeId, description),
     [challengeId, description],
   );
+  // Étape courante du guide affiché en « cartes swap » (une seule à la fois).
+  const [step, setStep] = React.useState(0);
+  React.useEffect(() => setStep(0), [challengeId]);
+  const cur = guide.steps[Math.min(step, guide.steps.length - 1)];
+  const lastStep = guide.steps.length - 1;
 
   return (
     <div className="space-y-5">
@@ -62,25 +76,70 @@ export function GuidedInstructions({
         </section>
       )}
 
-      {/* Guide pas à pas */}
+      {/* Guide pas à pas — en cartes « swap » (une étape à la fois) */}
       <section>
-        <SectionLabel icon={ListChecks}>Guide pas à pas</SectionLabel>
-        <ol className="mt-1 space-y-3">
-          {guide.steps.map((step, i) => (
-            <li key={i} className="flex gap-3">
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                {i + 1}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">{step.title}</p>
-                <GlossaryText className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
-                  {step.detail}
-                </GlossaryText>
-                {step.command && <CommandBlock command={step.command} />}
-              </div>
-            </li>
-          ))}
-        </ol>
+        <div className="mb-1.5 flex items-center justify-between">
+          <SectionLabel icon={ListChecks}>Guide pas à pas</SectionLabel>
+          <span className="text-xs font-medium text-muted-foreground">
+            Étape {step + 1}/{guide.steps.length}
+          </span>
+        </div>
+
+        <div
+          key={step}
+          className="animate-pop-in min-h-[120px] rounded-xl border border-border bg-surface-muted/40 p-3.5"
+        >
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+              {step + 1}
+            </span>
+            <p className="text-sm font-semibold">{cur.title}</p>
+          </div>
+          <GlossaryText className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+            {cur.detail}
+          </GlossaryText>
+          {cur.command && <CommandBlock command={cur.command} />}
+        </div>
+
+        <div className="mt-2.5 flex items-center justify-between gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={step === 0}
+            onClick={() => setStep((s) => Math.max(0, s - 1))}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Précédent
+          </Button>
+
+          <div className="flex items-center gap-1.5">
+            {guide.steps.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setStep(i)}
+                aria-label={`Aller à l'étape ${i + 1}`}
+                className={cn(
+                  "h-1.5 rounded-full transition-all",
+                  i === step
+                    ? "w-5 bg-primary"
+                    : "w-1.5 bg-border hover:bg-muted-foreground/40",
+                )}
+              />
+            ))}
+          </div>
+
+          {step < lastStep ? (
+            <Button size="sm" onClick={() => setStep((s) => Math.min(lastStep, s + 1))}>
+              Suivant
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+              <Check className="h-3.5 w-3.5" />
+              Fin du guide
+            </span>
+          )}
+        </div>
       </section>
 
       {/* Format du flag */}

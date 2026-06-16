@@ -138,6 +138,31 @@ export interface ApiChallengeDetail {
   hintsCount: number;
   flagPrefix: string;
   solved: boolean;
+  /** Statut de la demande de corrigé pour l'utilisateur (champ additif). */
+  solutionStatus?: SolutionStatus;
+}
+
+export type SolutionStatus = "none" | "pending" | "approved" | "rejected";
+
+/** Réponse de GET /challenges/:id/solution. `flag` présent uniquement si approuvé. */
+export interface SolutionResponse {
+  status: SolutionStatus;
+  flag?: string;
+  walkthrough?: string | null;
+}
+
+/** Demande de corrigé côté administration. */
+export interface AdminSolutionRequest {
+  id: string;
+  userId: string;
+  username: string;
+  email: string;
+  challengeId: string;
+  challengeTitle: string;
+  trackId: string;
+  status: SolutionStatus;
+  requestedAt: string;
+  decidedAt: string | null;
 }
 
 /** Badge nouvellement débloqué retourné lors d'une soumission réussie. */
@@ -313,6 +338,28 @@ export const api = {
   adminUsers: (query = "") =>
     request<{ users: AdminUser[] }>(
       `/admin/users${query ? `?query=${encodeURIComponent(query)}` : ""}`,
+    ),
+  /** Demander à voir le corrigé (en attente de validation par un admin). */
+  requestSolution: (challengeId: string) =>
+    request<{ status: SolutionStatus; requestedAt: string }>(
+      `/challenges/${encodeURIComponent(challengeId)}/solution-request`,
+      { method: "POST" },
+    ),
+  /** Récupérer le corrigé (le flag n'est renvoyé que si la demande est approuvée). */
+  getSolution: (challengeId: string) =>
+    request<SolutionResponse>(
+      `/challenges/${encodeURIComponent(challengeId)}/solution`,
+    ),
+  /** (Admin) Demandes de corrigé, filtrables par statut. */
+  adminSolutionRequests: (status = "pending") =>
+    request<{ requests: AdminSolutionRequest[] }>(
+      `/admin/solution-requests?status=${encodeURIComponent(status)}`,
+    ),
+  /** (Admin) Approuver ou rejeter une demande de corrigé. */
+  decideSolution: (id: string, decision: "approve" | "reject") =>
+    request<{ id: string; status: SolutionStatus }>(
+      `/admin/solution-requests/${encodeURIComponent(id)}/decision`,
+      { method: "POST", body: JSON.stringify({ decision }) },
     ),
   startLab: (challengeId: string) =>
     request<LabSession>(`/labs/${encodeURIComponent(challengeId)}/start`, {
