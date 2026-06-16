@@ -12,6 +12,7 @@ import { getChallenge } from '../db/curriculum.js';
 import { getSolvedChallengeIds } from '../services/progress.service.js';
 import * as flagsService from '../services/flags.service.js';
 import * as hintsService from '../services/hints.service.js';
+import * as solutionService from '../services/solution.service.js';
 import { config } from '../config/env.js';
 
 export const challengesRouter = Router();
@@ -33,13 +34,17 @@ challengesRouter.get('/:challengeId', optionalAuth, async (req, res, next) => {
     const { challenge, module, track } = found;
     let solved = false;
     let revealedHints = 0;
+    // Additive: status of this (authed) user's solution-reveal request.
+    let solutionStatus = 'none';
     if (req.user?.id) {
-      const [solvedSet, revealed] = await Promise.all([
+      const [solvedSet, revealed, solStatus] = await Promise.all([
         getSolvedChallengeIds(req.user.id),
         hintsService.getRevealedHintCount(req.user.id, challenge.id),
+        solutionService.getSolutionStatus(req.user.id, challenge.id),
       ]);
       solved = solvedSet.has(challenge.id);
       revealedHints = revealed;
+      solutionStatus = solStatus;
     }
 
     res.status(200).json({
@@ -61,6 +66,9 @@ challengesRouter.get('/:challengeId', optionalAuth, async (req, res, next) => {
         solved,
         // Additive: number of hints this (authed) user has revealed.
         revealedHints,
+        // Additive: solution-reveal request status for this (authed) user.
+        // 'none' when unauthenticated or no request exists.
+        solutionStatus,
       },
     });
   } catch (err) {
@@ -77,6 +85,40 @@ challengesRouter.post('/:challengeId/submit', requireAuth, async (req, res, next
       userId: req.user.id,
       challengeId: req.params.challengeId,
       flag,
+    });
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/challenges/:challengeId/solution-request
+// Upsert a solution-reveal ("corrigé") request for (user, challenge). Creates a
+// pending request the first time; subsequent calls echo the current status
+// without resetting an approved/rejected request back to pending.
+challengesRouter.post('/:challengeId/solution-request', requireAuth, async (req, res, next) => {
+  try {
+    if (!isConfigured()) throw new DatabaseNotConfiguredError();
+    const result = await solutionService.requestSolution({
+      userId: req.user.id,
+      challengeId: req.params.challengeId,
+    });
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/challenges/:challengeId/solution
+// Returns the real flag only when the user's request is approved (or the user
+// is an admin). Otherwise returns the status WITHOUT the flag.
+challengesRouter.get('/:challengeId/solution', requireAuth, async (req, res, next) => {
+  try {
+    if (!isConfigured()) throw new DatabaseNotConfiguredError();
+    const result = await solutionService.getSolution({
+      userId: req.user.id,
+      challengeId: req.params.challengeId,
+      isAdmin: req.user.role === 'admin',
     });
     res.status(200).json(result);
   } catch (err) {

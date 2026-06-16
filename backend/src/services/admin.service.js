@@ -7,16 +7,18 @@
 import { query } from '../db/pool.js';
 import { totalChallenges, getTracks } from '../db/curriculum.js';
 import { labsRunningCount } from './docker.service.js';
+import { countPendingSolutionRequests } from './solution.service.js';
 
 /**
  * Aggregate platform statistics.
- * @returns {Promise<{users:number, submissions:number, solvedTotal:number, labsRunning:number, challenges:number, tracks:number}>}
+ * @returns {Promise<{users:number, submissions:number, solvedTotal:number, labsRunning:number, challenges:number, tracks:number, pendingSolutionRequests:number}>}
  */
 export async function getStats() {
-  const [users, submissions, solved] = await Promise.all([
+  const [users, submissions, solved, pendingSolutionRequests] = await Promise.all([
     query(`SELECT COUNT(*)::int AS n FROM users`),
     query(`SELECT COUNT(*)::int AS n FROM submissions`),
     query(`SELECT COUNT(*)::int AS n FROM submissions WHERE correct = true`),
+    countPendingSolutionRequests(),
   ]);
   return {
     users: Number(users.rows[0]?.n ?? 0),
@@ -25,6 +27,8 @@ export async function getStats() {
     labsRunning: labsRunningCount(),
     challenges: totalChallenges(),
     tracks: getTracks().length,
+    // Additive: number of solution-reveal requests awaiting admin decision.
+    pendingSolutionRequests,
   };
 }
 

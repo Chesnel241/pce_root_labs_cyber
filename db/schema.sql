@@ -170,3 +170,24 @@ CREATE TABLE IF NOT EXISTS hint_reveals (
 
 CREATE INDEX IF NOT EXISTS idx_hint_reveals_user ON hint_reveals (user_id);
 CREATE INDEX IF NOT EXISTS idx_hint_reveals_user_challenge ON hint_reveals (user_id, challenge_id);
+
+-- ---------------------------------------------------------------------------
+-- Solution requests — "corrigé" (solution reveal) workflow. A student may
+-- REQUEST to see a challenge's solution; the request is 'pending' until an
+-- admin approves or rejects it. One row per (user, challenge) so a request is
+-- idempotent (re-requesting never resets a decided request back to pending).
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS solution_requests (
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id      UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    challenge_id TEXT NOT NULL REFERENCES challenges (id) ON DELETE CASCADE,
+    status       TEXT NOT NULL DEFAULT 'pending'
+                 CHECK (status IN ('pending', 'approved', 'rejected')),
+    requested_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    decided_at   TIMESTAMPTZ,
+    decided_by   UUID REFERENCES users (id),
+    CONSTRAINT uq_solution_request_user_challenge UNIQUE (user_id, challenge_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_solution_requests_status ON solution_requests (status);
+CREATE INDEX IF NOT EXISTS idx_solution_requests_challenge ON solution_requests (challenge_id);
