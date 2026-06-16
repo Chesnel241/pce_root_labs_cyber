@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { BookOpenCheck, Check, Loader2, RotateCw, X } from "lucide-react";
+import { BookOpenCheck, Check, Loader2, RotateCw, X, ChevronDown, ChevronUp } from "lucide-react";
 import { api, ApiError, type AdminSolutionRequest } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { getGuide } from "@/lib/guides";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -21,6 +22,11 @@ export function SolutionRequestsPanel() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [actingId, setActingId] = React.useState<string | null>(null);
+  const [expandedId, setExpandedId] = React.useState<string | null>(null);
+
+  function toggleExpand(id: string) {
+    setExpandedId((prev) => (prev === id ? null : id));
+  }
 
   const load = React.useCallback(async () => {
     if (!isAdmin) return;
@@ -97,43 +103,83 @@ export function SolutionRequestsPanel() {
             {requests.map((r) => (
               <li
                 key={r.id}
-                className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0"
+                className="flex flex-col gap-3 py-3 first:pt-0"
               >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">
-                    {r.username}{" "}
-                    <span className="font-normal text-muted-foreground">
-                      ({r.email})
-                    </span>
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    Challenge {r.challengeId} — {r.challengeTitle} ·{" "}
-                    {new Date(r.requestedAt).toLocaleString("fr-FR")}
-                  </p>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">
+                      {r.username}{" "}
+                      <span className="font-normal text-muted-foreground">
+                        ({r.email})
+                      </span>
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      Challenge {r.challengeId} — {r.challengeTitle} ·{" "}
+                      {new Date(r.requestedAt).toLocaleString("fr-FR")}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => toggleExpand(r.id)}
+                    >
+                      {expandedId === r.id ? "Masquer corrigé" : "Voir corrigé"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => decide(r.id, "reject")}
+                      disabled={actingId === r.id}
+                    >
+                      <X className="h-4 w-4" />
+                      Rejeter
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => decide(r.id, "approve")}
+                      disabled={actingId === r.id}
+                    >
+                      {actingId === r.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Check className="h-4 w-4" />
+                      )}
+                      Approuver
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => decide(r.id, "reject")}
-                    disabled={actingId === r.id}
-                  >
-                    <X className="h-4 w-4" />
-                    Rejeter
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => decide(r.id, "approve")}
-                    disabled={actingId === r.id}
-                  >
-                    {actingId === r.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Check className="h-4 w-4" />
-                    )}
-                    Approuver
-                  </Button>
-                </div>
+                {expandedId === r.id && (
+                  <div className="animate-fade-in mt-1 rounded-lg border border-border bg-surface-muted/50 p-4 text-sm">
+                    {(() => {
+                      const guide = getGuide(r.challengeId, "");
+                      return (
+                        <div className="space-y-4">
+                          <div>
+                            <strong className="block text-foreground">Objectif attendu</strong>
+                            <p className="mt-1 text-muted-foreground">{guide.objective}</p>
+                          </div>
+                          <div>
+                            <strong className="block text-foreground">Étapes de résolution</strong>
+                            <ol className="mt-2 list-decimal space-y-3 pl-4 text-muted-foreground">
+                              {guide.steps.map((step, idx) => (
+                                <li key={idx} className="pl-1">
+                                  <span className="font-medium text-foreground">{step.title}</span>
+                                  <p className="mt-0.5">{step.detail}</p>
+                                  {step.command && (
+                                    <code className="mt-1.5 block overflow-x-auto rounded-md bg-[#0F172A] px-3 py-2 font-mono text-xs text-emerald-300">
+                                      {step.command}
+                                    </code>
+                                  )}
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
               </li>
             ))}
           </ul>
