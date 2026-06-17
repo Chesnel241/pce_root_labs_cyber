@@ -7,19 +7,19 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["CloudTrail", "AWS CLI", "AssumeRole"],
     steps: [
       {
-        title: "Interrogation des logs CloudTrail",
-        detail: "Utilisez AWS CLI pour rechercher les événements liés à l'action AssumeRole. Cela permet de voir quels rôles ont été assumés récemment.",
-        command: "aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=AssumeRole --region us-east-1"
+        title: "Recherche de l'acteur malveillant",
+        detail: "Utilisez jq pour analyser les IP sources et les user-agents dans les événements afin de repérer l'adresse IP intruse.",
+        command: "jq -r '.Records[] | \"\\(.sourceIPAddress) \\(.userAgent)\"' ~/cloudtrail-events.json"
       },
       {
-        title: "Analyse de l'événement suspect",
-        detail: "Examinez les détails de l'événement suspect dans les logs CloudTrail. Cherchez l'adresse IP d'origine ou l'identité qui a effectué l'action sans autorisation. L'information trouvée vous permettra d'obtenir le flag.",
-        command: "aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=AssumeRole --max-results 10"
+        title: "Identification de l'événement pivot",
+        detail: "Cherchez les actions AssumeRole réalisées par cette IP suspecte pour comprendre quel rôle a été usurpé.",
+        command: "grep -n \"AssumeRole\" ~/cloudtrail-events.json"
       },
       {
         title: "Validation du Flag",
-        detail: "Une fois l'intrusion confirmée, soumettez le flag trouvé dans la plateforme. Le flag attendu est **PCE{...}**.",
-        command: ""
+        detail: "Une fois l'adresse IP intruse confirmée (203.0.113.66), utilisez la commande de validation. Le flag attendu est **PCE{cloudtrail_unauthorized_assumerole_2024}**.",
+        command: "verify-finding 203.0.113.66"
       }
     ]
   },
@@ -30,17 +30,17 @@ export const guides: Record<string, ChallengeGuide> = {
     steps: [
       {
         title: "Recherche dans les VPC Flow Logs",
-        detail: "Interrogez le groupe de logs associé aux VPC Flow Logs pour identifier le trafic vers des adresses IP suspectes ou des volumes de transfert élevés.",
-        command: "aws logs filter-log-events --log-group-name /aws/vpc/flowlogs --filter-pattern \"REJECT\""
+        detail: "Interrogez le fichier VPC Flow Logs local pour identifier le trafic, notamment vers le port DNS (53) qui indique une exfiltration.",
+        command: "grep \" 53 \" ~/vpc-flow-logs.txt"
       },
       {
         title: "Identification de l'adresse IP d'exfiltration",
-        detail: "A partir des logs filtrés, repérez l'adresse IP de destination et le port (ex: 53 pour DNS) qui indiquent une exfiltration de données. L'adresse IP impliquée est généralement incluse dans le flag.",
-        command: "aws logs tail /aws/vpc/flowlogs --follow"
+        detail: "À partir des logs, repérez l'adresse IP de destination suspecte. L'adresse IP impliquée est généralement incluse dans le flag.",
+        command: "cat ~/vpc-flow-logs.txt"
       },
       {
         title: "Validation du Flag",
-        detail: "Soumettez le flag correspondant à l'incident d'exfiltration identifié. Le flag attendu est **PCE{...}**.",
+        detail: "Soumettez le flag correspondant à l'incident d'exfiltration (format : PCE{<IP>_dns_exfil}). Le flag attendu est **PCE{198.51.100.42_dns_exfil}**.",
         command: ""
       }
     ]
@@ -52,17 +52,17 @@ export const guides: Record<string, ChallengeGuide> = {
     steps: [
       {
         title: "Recherche d'actions IAM sensibles",
-        detail: "Utilisez CloudTrail pour identifier les actions d'attachement ou de modification de politiques IAM, comme `AttachUserPolicy` ou `PutUserPolicy`.",
-        command: "aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=AttachUserPolicy"
+        detail: "Utilisez grep pour identifier les actions d'attachement ou de modification de politiques IAM, comme `PutUserPolicy`.",
+        command: "grep \"PutUserPolicy\" ~/logs/cloudtrail.json"
       },
       {
         title: "Analyse de la politique attachée",
-        detail: "Vérifiez quelle politique a été attachée et à quel utilisateur. Les attaquants utilisent souvent cela pour obtenir des permissions Administrateur.",
-        command: "aws iam list-attached-user-policies --user-name <suspect_user>"
+        detail: "Vérifiez quelle politique a été attachée à l'utilisateur suspect (dev-johndoe). La payload de la politique révèle le flag.",
+        command: "jq '.Records[] | select(.eventName==\"PutUserPolicy\")' ~/logs/cloudtrail.json"
       },
       {
         title: "Validation du Flag",
-        detail: "Une fois l'escalade de privilèges confirmée, entrez le flag. Le flag attendu est **PCE{...}**.",
+        detail: "Une fois l'escalade de privilèges confirmée dans la charge utile, entrez le flag. Le flag attendu est **PCE{cloudtrail_iam_privesc_detected_2024}**.",
         command: ""
       }
     ]
@@ -74,17 +74,17 @@ export const guides: Record<string, ChallengeGuide> = {
     steps: [
       {
         title: "Recherche de la désactivation de CloudTrail",
-        detail: "Cherchez les événements `StopLogging` dans CloudTrail, indiquant qu'un acteur a interrompu l'enregistrement des API AWS.",
-        command: "aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=StopLogging"
+        detail: "Cherchez les événements `StopLogging` dans les logs, indiquant qu'un acteur a interrompu l'enregistrement.",
+        command: "grep -i \"StopLogging\" ~/cloudtrail_logs.json"
       },
       {
         title: "Identification de l'auteur",
-        detail: "Extrayez l'identité IAM et l'adresse IP associées à cet événement de désactivation pour comprendre l'étendue de la compromission.",
-        command: "aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=DeleteTrail"
+        detail: "Utilisez jq pour extraire les détails de cet événement de désactivation. Le flag se trouve dans les requestParameters.",
+        command: "jq '.Records[] | select(.eventName==\"StopLogging\")' ~/cloudtrail_logs.json"
       },
       {
         title: "Validation du Flag",
-        detail: "Soumettez le flag découvert suite à cette investigation. Le flag attendu est **PCE{...}**.",
+        detail: "Soumettez le flag découvert dans `requestParameters.name`. Le flag attendu est **PCE{n0_m0r3_l0gs_4_u}**.",
         command: ""
       }
     ]
@@ -96,18 +96,18 @@ export const guides: Record<string, ChallengeGuide> = {
     steps: [
       {
         title: "Analyse de la chaîne d'assomption de rôles (Role Chaining)",
-        detail: "Recherchez de multiples événements `AssumeRole` successifs pour tracer la progression de l'attaquant d'un rôle à un autre.",
-        command: "aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=AssumeRole --max-results 50"
+        detail: "Lister tous les événements `AssumeRole` pour voir les rôles cibles et comprendre le chemin de l'attaquant.",
+        command: "jq -r '.Records[] | select(.eventName==\"AssumeRole\") | \"\\(.userIdentity.userName // .userIdentity.arn) -> \\(.requestParameters.roleArn)\"' ~/cloudtrail-events.json"
       },
       {
         title: "Traçage de la session",
-        detail: "Associez les identifiants de session ou les identités source pour cartographier le chemin d'accès pris par l'attaquant.",
-        command: "aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=GetCallerIdentity"
+        detail: "Identifiez le rôle final, le plus privilégié (db-admin), en suivant les accès successifs.",
+        command: "grep \"db-admin\" ~/cloudtrail-events.json"
       },
       {
         title: "Validation du Flag",
-        detail: "Une fois le mouvement latéral identifié, validez le flag. Le flag attendu est **PCE{...}**.",
-        command: ""
+        detail: "Utilisez le script de vérification avec le nom du rôle final identifié. Le flag attendu est **PCE{lateral_movement_role_chain_2024}**.",
+        command: "verify-finding db-admin"
       }
     ]
   },
@@ -117,18 +117,18 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["Persistence", "AWS Lambda", "Resource-based Policies"],
     steps: [
       {
-        title: "Recherche de permissions Lambda suspectes",
-        detail: "Listez les fonctions Lambda et inspectez leurs politiques d'accès pour identifier des autorisations accordées à des comptes externes ou inconnus (`AddPermission`).",
-        command: "aws lambda list-functions"
+        title: "Recherche de code malveillant",
+        detail: "L'équipe a exporté le code des fonctions Lambda dans `~/lambdas/`. Cherchez des appels système suspects ou de l'exécution de commande (ex: `subprocess`).",
+        command: "grep -r \"subprocess\" ~/lambdas/"
       },
       {
-        title: "Inspection de la politique de la fonction",
-        detail: "Vérifiez la politique basée sur la ressource de la fonction Lambda suspecte pour voir qui peut l'invoquer.",
-        command: "aws lambda get-policy --function-name <suspicious_lambda_name>"
+        title: "Inspection de la fonction suspecte",
+        detail: "Affichez le contenu de la fonction compromise pour comprendre comment la porte dérobée a été implémentée et trouver le flag.",
+        command: "cat ~/lambdas/CleanupTask-Dev/lambda_function.py"
       },
       {
         title: "Validation du Flag",
-        detail: "Une fois la persistance confirmée, vous pouvez valider l'exercice. Le flag attendu est **PCE{...}**.",
+        detail: "Une fois le code de la backdoor lu, récupérez le flag. Le flag attendu est **PCE{L4mbd4_B4ckd00r_P3rsist3nc3_2024}**.",
         command: ""
       }
     ]
@@ -139,18 +139,18 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["Cryptomining", "EC2", "CloudWatch Metrics"],
     steps: [
       {
-        title: "Identification des instances sur-utilisées",
-        detail: "Utilisez CloudWatch pour repérer les instances EC2 avec un usage CPU constant à 100%, caractéristique typique du minage de cryptomonnaie.",
-        command: "aws cloudwatch get-metric-statistics --namespace AWS/EC2 --metric-name CPUUtilization --dimensions Name=InstanceId,Value=<instance_id> --start-time 2026-06-01T00:00:00Z --end-time 2026-06-15T00:00:00Z --period 3600 --statistics Maximum"
+        title: "Analyse des processus en cours",
+        detail: "Utilisez la commande top pour vérifier les processus consommant le plus de CPU. Le cryptomineur est souvent très gourmand.",
+        command: "top -n 1"
       },
       {
-        title: "Analyse du trafic réseau de l'instance",
-        detail: "Examinez les VPC Flow Logs pour l'instance suspecte afin de repérer les connexions vers des pools de minage connus (souvent sur des ports spécifiques comme 3333).",
-        command: "aws ec2 describe-instances --filters \"Name=instance-state-name,Values=running\""
+        title: "Examen de la configuration du mineur",
+        detail: "Une fois le binaire suspect localisé (ex: `xmrig` dans `/var/tmp/.crypto/`), lisez son fichier de configuration pour retrouver les identifiants du pool de minage.",
+        command: "cat /var/tmp/.crypto/config.json"
       },
       {
         title: "Validation du Flag",
-        detail: "Soumettez le flag après avoir confirmé la présence du mineur. Le flag attendu est **PCE{...}**.",
+        detail: "Soumettez le flag caché dans l'identifiant utilisateur (user) du mineur. Le flag attendu est **PCE{crypt0_m1n3r_3c2_d3t3ct3d}**.",
         command: ""
       }
     ]
@@ -162,17 +162,17 @@ export const guides: Record<string, ChallengeGuide> = {
     steps: [
       {
         title: "Inspection des requêtes DNS",
-        detail: "Analysez les logs de requêtes DNS de Route53 (ou VPC DNS Query Logs) pour repérer de très longues requêtes avec des sous-domaines générés aléatoirement.",
-        command: "aws logs filter-log-events --log-group-name /aws/route53/querylogs --filter-pattern \"QUERY\""
+        detail: "Analysez les requêtes DNS pour identifier celles qui sont particulièrement longues et contiennent des données encodées.",
+        command: "cat ~/dns.log | grep -v \"NXDOMAIN\""
       },
       {
-        title: "Identification du domaine malveillant",
-        detail: "Identifiez le nom de domaine de base utilisé pour le tunneling. La longueur anormale des requêtes confirme l'exfiltration.",
-        command: "aws logs tail /aws/route53/querylogs --follow"
+        title: "Identification des données exfiltrées",
+        detail: "Reconstituez les données envoyées vers le domaine malveillant pour identifier la signature de l'exfiltration.",
+        command: "cat ~/dns.log"
       },
       {
         title: "Validation du Flag",
-        detail: "Soumettez le flag relatif à l'exfiltration DNS. Le flag attendu est **PCE{...}**.",
+        detail: "Soumettez le flag trouvé suite à l'analyse des requêtes. Le flag attendu est **PCE{dns_tunn3ling_d3t3ct3d}**.",
         command: ""
       }
     ]
@@ -184,17 +184,22 @@ export const guides: Record<string, ChallengeGuide> = {
     steps: [
       {
         title: "Identification de l'instance",
-        detail: "Trouvez l'ID de l'instance EC2 concernée par l'alerte de sécurité.",
-        command: "aws ec2 describe-instances --filters \"Name=tag:Name,Values=CompromisedInstance\""
+        detail: "Utilisez le CLI AWS mocké pour lister les instances EC2 et trouver l'ID de la machine compromise.",
+        command: "aws ec2 describe-instances"
+      },
+      {
+        title: "Identification du Security Group de quarantaine",
+        detail: "Listez les Security Groups disponibles pour trouver celui prévu pour l'isolation (ex: `sg-isolated`).",
+        command: "aws ec2 describe-security-groups"
       },
       {
         title: "Modification du Security Group",
-        detail: "Isolez l'instance en lui assignant un Security Group vide (ou de quarantaine) qui bloque tout trafic entrant et sortant.",
-        command: "aws ec2 modify-instance-attribute --instance-id <compromised_instance_id> --groups <quarantine_sg_id>"
+        detail: "Remplacez les groupes de l'instance `i-badc0ffee` par le Security Group de quarantaine `sg-isolated`.",
+        command: "aws ec2 modify-instance-attribute --instance-id i-badc0ffee --groups sg-isolated"
       },
       {
         title: "Validation du Flag",
-        detail: "L'instance étant isolée, vous avez complété l'objectif. Le flag attendu est **PCE{...}**.",
+        detail: "La commande renverra le flag une fois l'instance correctement isolée. Le flag attendu est **PCE{ec2_containment_2024}**.",
         command: ""
       }
     ]
@@ -205,19 +210,19 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["S3 Forensics", "Data Breach", "Access Logs"],
     steps: [
       {
-        title: "Recherche des événements d'accès aux objets S3",
-        detail: "Utilisez CloudTrail pour repérer les événements `GetObject` ou inspectez les S3 Server Access Logs pour identifier l'identité et l'IP ayant accédé massivement aux fichiers.",
-        command: "aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=GetObject"
+        title: "Recherche des téléchargements anormaux",
+        detail: "Utilisez awk sur le log d'accès S3 pour lister les téléchargements (`GET.OBJECT`) en les triant par volume de données (champ 15).",
+        command: "awk '$8 ~ /GET.OBJECT/ {print $15, $6, $9}' ~/s3-access.log | sort -rn"
       },
       {
-        title: "Identification des objets exfiltrés",
-        detail: "Listez les fichiers qui ont été téléchargés et identifiez l'acteur responsable de l'exfiltration.",
-        command: "aws s3api list-objects-v2 --bucket <target_bucket>"
+        title: "Corrélation avec CloudTrail",
+        detail: "Croisez vos trouvailles avec CloudTrail pour voir l'origine de l'acteur (ex: `svc-reporting`) qui a téléchargé les données en masse.",
+        command: "jq -r '.Records[] | select(.eventName==\"GetObject\") | \"\\(.userIdentity.userName) \\(.awsRegion) \\(.sourceIPAddress) \\(.requestParameters.key)\"' ~/cloudtrail-events.json"
       },
       {
         title: "Validation du Flag",
-        detail: "Confirmez l'acteur et l'exfiltration avec le flag. Le flag attendu est **PCE{...}**.",
-        command: ""
+        detail: "Utilisez le script de vérification avec le compte usurpé pour obtenir le flag. Le flag attendu est **PCE{s3_forensics_exfil_actor_2024}**.",
+        command: "verify-finding svc-reporting"
       }
     ]
   },
@@ -227,18 +232,18 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["Ransomware", "AWS KMS", "CloudTrail"],
     steps: [
       {
-        title: "Recherche de chiffrement de masse",
-        detail: "Dans CloudTrail, recherchez les appels d'API KMS de type `Encrypt` ou `GenerateDataKey` générés de manière inhabituelle et massive.",
-        command: "aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=GenerateDataKey"
+        title: "Recherche d'actions de chiffrement",
+        detail: "Dans CloudTrail, recherchez les appels KMS comme `Encrypt` ou `GenerateDataKey` pour trouver les actions du ransomware.",
+        command: "grep \"Encrypt\" ~/cloudtrail-events.json"
       },
       {
-        title: "Identification de l'Access Key et de l'IP",
-        detail: "Examinez les détails de l'événement pour extraire l'Access Key ID (AKIA...) de l'attaquant ainsi que son adresse IP d'origine.",
-        command: "aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=PutObject"
+        title: "Identification de la source",
+        detail: "En utilisant jq, filtrez pour trouver l'adresse IP d'origine et la clé d'accès (AKIA...) utilisée par le ransomware.",
+        command: "jq '.Records[] | select(.eventName==\"Encrypt\")' ~/cloudtrail-events.json"
       },
       {
         title: "Validation du Flag",
-        detail: "Une fois la clé et l'IP récupérées, vous pouvez soumettre la solution. Le flag attendu est **PCE{...}**.",
+        detail: "Reconstituez le flag sous la forme IP_ACCESSKEY. Le flag attendu est **PCE{203.0.113.42_AKIAIOSFODNN7EXAMPLE}**.",
         command: ""
       }
     ]
@@ -249,18 +254,18 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["Detection Engineering", "EventBridge", "IAM"],
     steps: [
       {
-        title: "Consultation des règles EventBridge existantes",
-        detail: "Listez les règles EventBridge pour identifier celles qui surveillent les événements IAM critiques (comme `CreateUser`, `AttachUserPolicy`, etc.).",
-        command: "aws events list-rules"
+        title: "Recherche d'activités IAM suspectes",
+        detail: "Analysez le fichier CloudTrail fourni pour identifier quel utilisateur IAM malveillant a été créé.",
+        command: "jq -r '.Records[] | select(.eventName==\"CreateUser\") | .requestParameters.userName' ~/lab-data/cloudtrail.json"
       },
       {
-        title: "Vérification des cibles",
-        detail: "Inspectez les cibles de ces règles pour voir comment les alertes sont transmises (par exemple vers SNS).",
-        command: "aws events list-targets-by-rule --rule <iam_detection_rule_name>"
+        title: "Validation de la détection",
+        detail: "Soumettez le nom de l'utilisateur malveillant (`evil_backdoor_admin`) au script pour vérifier votre règle.",
+        command: "./submit_finding.sh evil_backdoor_admin"
       },
       {
         title: "Validation du Flag",
-        detail: "La création ou la vérification des règles vous donne le flag de réussite. Le flag attendu est **PCE{...}**.",
+        detail: "L'exécution du script de soumission réussie vous donnera le flag de réussite. Le flag attendu est **PCE{iam_detection_rules_2024}**.",
         command: ""
       }
     ]
@@ -271,19 +276,19 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["GuardDuty", "Alert Triage", "SIEM"],
     steps: [
       {
-        title: "Récupération des alertes GuardDuty",
-        detail: "Affichez la liste des findings (découvertes) GuardDuty pour votre environnement.",
-        command: "aws guardduty list-findings --detector-id <detector_id>"
+        title: "Récupération et priorisation des alertes",
+        detail: "Utilisez jq pour afficher la liste des findings GuardDuty par Verdict et Description afin de filtrer le bruit (activités légitimes).",
+        command: "jq -r '.Findings[] | \"[\\(.Verdict)] \\(.Type) — \\(.Description)\"' ~/guardduty-findings.json"
       },
       {
-        title: "Analyse des détails de l'alerte",
-        detail: "Obtenez les détails spécifiques de l'alerte pour comprendre le contexte et la gravité, et pour déterminer s'il s'agit d'une activité légitime ou malveillante.",
-        command: "aws guardduty get-findings --detector-id <detector_id> --finding-ids <finding_id>"
+        title: "Analyse des vrais positifs",
+        detail: "Recherchez le finding qui n'a pas de \"TriageNote\" bénigne et qui correspond à une réelle attaque (ex: ID `5ec0a1b2c3d4e5f6a7b8c9d0e1f2beef`).",
+        command: "jq -r '.Findings[] | \"\\(.Severity) \\(.Type) \\(.Id)\"' ~/guardduty-findings.json | sort -rn"
       },
       {
         title: "Validation du Flag",
-        detail: "Une fois le vrai positif qualifié, soumettez le flag. Le flag attendu est **PCE{...}**.",
-        command: ""
+        detail: "Une fois le vrai positif identifié par son ID, confirmez-le pour obtenir le flag. Le flag attendu est **PCE{guardduty_true_positive_2024}**.",
+        command: "verify-finding 5ec0a1b2c3d4e5f6a7b8c9d0e1f2beef"
       }
     ]
   },
@@ -293,19 +298,19 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["API Monitoring", "CloudWatch Alarms", "Alerting"],
     steps: [
       {
-        title: "Inspection des métriques CloudWatch",
-        detail: "Vérifiez les alarmes CloudWatch configurées sur les métriques log pour repérer celles liées aux appels d'API sensibles.",
-        command: "aws cloudwatch describe-alarms"
+        title: "Inspection des journaux d'API",
+        detail: "Recherchez dans les logs l'appel à une API critique comme `DeleteTrail`, indiquant qu'un attaquant a tenté de supprimer la journalisation.",
+        command: "grep \"DeleteTrail\" ~/lab-data/api_logs.json"
       },
       {
-        title: "Vérification du filtre de logs",
-        detail: "Consultez le filtre métrique (Metric Filter) dans CloudWatch Logs pour comprendre précisément quel pattern d'API déclenche l'alerte.",
-        command: "aws logs describe-metric-filters --log-group-name CloudTrail/DefaultLogGroup"
+        title: "Identification de l'eventID",
+        detail: "Repérez l'identifiant `eventID` associé à cet appel malveillant (`evt-005`).",
+        command: "grep -o '\"eventID\": \"[^\"]*\"' ~/lab-data/api_logs.json"
       },
       {
         title: "Validation du Flag",
-        detail: "L'alerte configurée vous révèle le flag de validation. Le flag attendu est **PCE{...}**.",
-        command: ""
+        detail: "Exécutez le script d'investigation en lui passant l'eventID trouvé pour confirmer l'alerte. Le flag attendu est **PCE{Suspicious_API_Calls_Detected_2026}**.",
+        command: "python3 ~/lab-data/investigate.py evt-005"
       }
     ]
   }

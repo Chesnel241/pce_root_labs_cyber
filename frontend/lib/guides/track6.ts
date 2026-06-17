@@ -1,170 +1,136 @@
-import type { ChallengeGuide } from "../guides";
+import { ChallengeGuide } from '../guides';
 
 export const guides: Record<string, ChallengeGuide> = {
   "6.1.1": {
-    context: "Le VPC de l'environnement de production a été mal conçu : les instances privées (comme les bases de données) sont placées dans des sous-réseaux qui possèdent une route directe vers Internet via une Internet Gateway (IGW), ce qui les expose à des attaques externes.",
-    objective: "Corriger la table de routage des sous-réseaux privés pour utiliser une NAT Gateway au lieu de l'Internet Gateway, assurant ainsi la segmentation correcte du VPC.",
-    concepts: ["AWS VPC", "Subnets", "Route Tables", "NAT Gateway", "Internet Gateway (IGW)", "Network Segmentation"],
+    context: "Votre entreprise a déployé une architecture réseau sur le Cloud. Cependant, l'équipe de sécurité a signalé que le sous-réseau de la base de données (private_db_subnet) est exposé directement à Internet via une mauvaise configuration de sa table de routage.",
+    objective: "Inspecter et modifier le fichier 'vpc_config.json' pour supprimer l'accès direct à Internet via l'Internet Gateway.",
+    concepts: ["VPC", "Subnets", "Routing Table", "Internet Gateway", "Segmentation"],
     steps: [
       {
-        title: "Inspection du VPC et des sous-réseaux",
-        detail: "Tout d'abord, nous devons identifier l'ID du VPC et lister ses sous-réseaux pour repérer ceux qui sont incorrectement configurés.",
-        command: "aws ec2 describe-vpcs\naws ec2 describe-subnets --filters \"Name=vpc-id,Values=<vpc-id>\""
+        title: "Inspection de la configuration",
+        detail: "Examinez le fichier vpc_config.json pour identifier la route vers l'Internet Gateway (igw-).",
+        command: "cat vpc_config.json"
       },
       {
-        title: "Vérification des tables de routage",
-        detail: "Examinez les tables de routage associées aux sous-réseaux privés. Vous verrez une route 0.0.0.0/0 pointant vers une ressource igw-xxx.",
-        command: "aws ec2 describe-route-tables --filters \"Name=vpc-id,Values=<vpc-id>\""
-      },
-      {
-        title: "Création/Identification de la NAT Gateway",
-        detail: "Si une NAT Gateway n'existe pas, créez-en une dans le sous-réseau public. Sinon, récupérez son ID (nat-xxx).",
-        command: "aws ec2 describe-nat-gateways"
-      },
-      {
-        title: "Modification de la table de routage privée",
-        detail: "Supprimez la route vers l'IGW et ajoutez une route vers la NAT Gateway pour le trafic sortant 0.0.0.0/0.",
-        command: "aws ec2 replace-route --route-table-id <rtb-private-id> --destination-cidr-block 0.0.0.0/0 --nat-gateway-id <nat-id>"
+        title: "Correction de la configuration",
+        detail: "Supprimez la route pointant vers l'Internet Gateway pour isoler le sous-réseau privé.",
+        command: "sed -i '/igw-/d' vpc_config.json"
       },
       {
         title: "Validation et obtention du flag",
-        detail: "Une fois le routage corrigé, le script de validation vous confirmera la résolution. Le flag attendu est **PCE{...}**."
+        detail: "Le script de validation vérifiera l'absence de route vers l'IGW. Le flag attendu est **PCE{vpc_segmentation_fixed_2024}**.",
+        command: "./validate.py"
       }
     ]
   },
   "6.1.2": {
-    context: "Les Security Groups d'une application sont configurés avec des règles trop permissives. Des ports d'administration critiques (comme le port 22 pour SSH ou 3389 pour RDP) sont ouverts au monde entier (0.0.0.0/0).",
-    objective: "Appliquer le principe de moindre privilège aux Security Groups en restreignant l'accès aux adresses IP nécessaires uniquement.",
-    concepts: ["AWS Security Groups", "Least Privilege", "Ingress Rules", "Network Exposure"],
+    context: "Vous auditez le Security Group du tier web 'PCE Corp'. Une règle d'entrée (ingress) ouvre 0.0.0.0/0 (tout Internet) sur TOUS les ports, ce qui représente une exposition maximale.",
+    objective: "Réécrire la règle en MOINDRE EXPOSITION (un seul port utile, un protocole précis, un CIDR de confiance).",
+    concepts: ["Security Groups", "Least Privilege", "Network Exposure", "Ingress/Egress"],
     steps: [
       {
-        title: "Identification des Security Groups vulnérables",
-        detail: "Listez les Security Groups et repérez ceux contenant des règles autorisant 0.0.0.0/0 sur des ports sensibles.",
-        command: "aws ec2 describe-security-groups --query \"SecurityGroups[*].[GroupId,GroupName,IpPermissions]\""
+        title: "Inspection de la configuration",
+        detail: "Examinez les règles actuelles du Security Group.",
+        command: "cat security-group.json"
       },
       {
-        title: "Révocation de la règle permissive",
-        detail: "Supprimez la règle Ingress qui expose le port 22 à tout Internet.",
-        command: "aws ec2 revoke-security-group-ingress --group-id <sg-id> --protocol tcp --port 22 --cidr 0.0.0.0/0"
+        title: "Lancer l'audit",
+        detail: "Utilisez le script d'audit pour identifier les failles.",
+        command: "python3 sg-audit.py"
       },
       {
-        title: "Ajout d'une règle stricte",
-        detail: "Autorisez uniquement l'IP de votre Bastion ou votre propre IP pour l'administration.",
-        command: "aws ec2 authorize-security-group-ingress --group-id <sg-id> --protocol tcp --port 22 --cidr <votre-ip>/32"
+        title: "Correction",
+        detail: "Modifiez le fichier security-group.json pour restreindre le protocole à TCP, le port à 443, et l'IP source à un réseau spécifique (ex. 10.0.0.0/16).",
+        command: "sed -i 's/\"0.0.0.0\\/0\"/\"10.0.0.0\\/16\"/' security-group.json; sed -i 's/\"-1\"/\"tcp\"/' security-group.json; sed -i 's/\"fromPort\": 0/\"fromPort\": 443/' security-group.json; sed -i 's/\"toPort\": 65535/\"toPort\": 443/' security-group.json"
       },
       {
-        title: "Validation et obtention du flag",
-        detail: "Après avoir restreint l'accès, le moteur de lab détecte la fermeture de la faille. Le flag attendu est **PCE{...}**."
+        title: "Relancer l'audit et obtention du flag",
+        detail: "L'audit confirmera que la configuration respecte le principe de moindre exposition. Le flag attendu est **PCE{security_group_least_exposure_2024}**.",
+        command: "python3 sg-audit.py"
       }
     ]
   },
   "6.1.3": {
-    context: "Pour accéder à des serveurs internes de manière sécurisée sans les exposer publiquement, un Bastion host (ou serveur de rebond) couplé à une connexion VPN doit être utilisé.",
-    objective: "Configurer un tunnel SSH sécurisé (ProxyJump) via un Bastion pour atteindre une instance interne.",
-    concepts: ["Bastion Host", "VPN", "SSH ProxyJump", "Network Access Control"],
+    context: "Vous devez accéder à un serveur de base de données interne non exposé à Internet. L'architecture utilise un Bastion Host n'acceptant que les connexions SSH depuis le VPN d'entreprise.",
+    objective: "Se connecter au VPN, accéder au Bastion Host et récupérer le flag depuis le serveur interne.",
+    concepts: ["Bastion Host", "VPN", "Network Access Control"],
     steps: [
       {
-        title: "Récupération des informations de connexion",
-        detail: "Trouvez l'IP publique du Bastion et l'IP privée de l'instance cible.",
-        command: "aws ec2 describe-instances --query \"Reservations[*].Instances[*].[Tags[?Key=='Name'].Value,PublicIpAddress,PrivateIpAddress]\""
+        title: "Connexion au VPN",
+        detail: "Utilisez le client VPN mock fourni pour vous connecter au réseau d'entreprise.",
+        command: "./vpn-client.py connect"
       },
       {
-        title: "Connexion via ProxyJump",
-        detail: "Utilisez l'option -J de SSH pour rebondir automatiquement sur le Bastion et vous connecter à l'instance interne.",
-        command: "ssh -i key.pem -J ec2-user@<ip-bastion> ec2-user@<ip-interne>"
-      },
-      {
-        title: "Lecture du flag",
-        detail: "Une fois connecté sur l'instance interne, lisez le fichier contenant le flag.",
-        command: "cat /var/www/html/flag.txt"
-      },
-      {
-        title: "Soumission du flag",
-        detail: "Le flag attendu est **PCE{...}**."
+        title: "Connexion au Bastion et obtention du flag",
+        detail: "Connectez-vous au Bastion Host via SSH pour récupérer le flag depuis le serveur interne. Le flag attendu est **PCE{bastion_vpn_secured_2026}**.",
+        command: "./ssh-bastion.py"
       }
     ]
   },
   "6.1.4": {
-    context: "Une application web hébergée sur un Application Load Balancer (ALB) subit des attaques courantes du Top 10 OWASP, telles que des injections SQL (SQLi) et du Cross-Site Scripting (XSS).",
-    objective: "Concevoir et attacher un Web Application Firewall (WAF) avec des règles spécifiques pour bloquer ces attaques.",
-    concepts: ["AWS WAF", "OWASP Top 10", "SQL Injection", "XSS", "Application Security"],
+    context: "Votre mission est de configurer les règles d'un Web Application Firewall (WAF) pour protéger une application web contre les injections SQL (SQLi) et les attaques Cross-Site Scripting (XSS).",
+    objective: "Compléter les expressions régulières du WAF sans bloquer le trafic légitime.",
+    concepts: ["WAF", "SQL Injection", "Cross-Site Scripting (XSS)", "Regular Expressions"],
     steps: [
       {
-        title: "Création d'un WebACL",
-        detail: "Créez un AWS WAFv2 WebACL avec une règle par défaut pour autoriser le trafic (Allow).",
-        command: "aws wafv2 create-web-acl --name AppProtection --scope REGIONAL --default-action Allow={} --visibility-config MetricName=AppProtection,CloudWatchMetricsEnabled=true,SampledRequestsEnabled=true"
+        title: "Écriture des règles WAF",
+        detail: "Remplissez le fichier waf_rules.py avec des expressions régulières pour détecter SQLi et XSS.",
+        command: "cat << 'EOF' > waf_rules.py\nimport re\nSQLI_REGEX = r\"(?:'|--|;|\\b(?:UNION|SELECT|DROP)\\b)\"\nXSS_REGEX = r\"(?:<script>|onerror|javascript:|onload)\"\ndef is_malicious(payload: str) -> bool:\n    if not payload: return False\n    if SQLI_REGEX and re.search(SQLI_REGEX, payload, re.IGNORECASE): return True\n    if XSS_REGEX and re.search(XSS_REGEX, payload, re.IGNORECASE): return True\n    return False\nEOF"
       },
       {
-        title: "Ajout des règles gérées (Managed Rules)",
-        detail: "Mettez à jour le WebACL pour inclure la règle 'AWSManagedRulesSQLiRuleSet' afin de bloquer automatiquement les requêtes contenant des payloads SQLi.",
-        command: "aws wafv2 update-web-acl --name AppProtection --scope REGIONAL --id <webacl-id> --lock-token <token> --rules <json-rules-file>"
-      },
-      {
-        title: "Association à l'ALB",
-        detail: "Associez le WebACL fraîchement configuré à l'ARN de votre Application Load Balancer.",
-        command: "aws wafv2 associate-web-acl --web-acl-arn <webacl-arn> --resource-arn <alb-arn>"
-      },
-      {
-        title: "Vérification et obtention du flag",
-        detail: "Tentez une injection SQL (ex: ?id=1' OR '1'='1). Si la requête est bloquée (403 Forbidden), le défi est réussi. Le flag attendu est **PCE{...}**."
+        title: "Test du WAF et obtention du flag",
+        detail: "Lancez les tests pour vérifier que le WAF bloque les attaques mais autorise le trafic légitime. Le flag attendu est **PCE{waf_rules_designed_2024}**.",
+        command: "./test_waf.py"
       }
     ]
   },
   "6.2.1": {
-    context: "Une stratégie IAM (Policy) est actuellement rattachée à un rôle très utilisé. Problème : elle contient un bloc accordant les droits 'Action: *' sur 'Resource: *', violant gravement le principe du moindre privilège.",
-    objective: "Restreindre la politique IAM pour qu'elle ne permette que les actions strictement requises (ex: accès en lecture seule à un bucket S3 précis).",
-    concepts: ["AWS IAM", "Zero Trust", "Principle of Least Privilege (PoLP)", "Policy Simulation"],
+    context: "Vous auditez la policy IAM attachée au rôle applicatif 'PCE Corp' pce-report-uploader. Le Statement accorde Action:'*' sur Resource:'*' (équivalent AdministratorAccess).",
+    objective: "Réécrire la policy en MOINDRE PRIVILEGE (actions explicites et ressources scopées à un ARN précis).",
+    concepts: ["IAM", "Least Privilege", "IAM Policies"],
     steps: [
       {
-        title: "Analyse de la politique existante",
-        detail: "Affichez la politique IAM associée pour identifier le statement trop permissif.",
-        command: "aws iam get-policy-version --policy-arn <policy-arn> --version-id v1"
+        title: "Inspection de la policy",
+        detail: "Vérifiez le contenu de la policy IAM vulnérable.",
+        command: "cat iam-policy.json"
       },
       {
-        title: "Création d'une politique restreinte",
-        detail: "Créez un fichier policy.json autorisant uniquement, par exemple, s3:GetObject sur le bucket désiré.",
-        command: "echo '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::mon-bucket/*\"}]}' > policy.json"
+        title: "Lancer l'audit initial",
+        detail: "Vérifiez le non-respect du principe de moindre privilège.",
+        command: "python3 policy-audit.py"
       },
       {
-        title: "Mise à jour de la politique IAM",
-        detail: "Créez une nouvelle version de la politique et définissez-la comme version par défaut.",
-        command: "aws iam create-policy-version --policy-arn <policy-arn> --policy-document file://policy.json --set-as-default"
+        title: "Correction de la policy",
+        detail: "Remplacez les wildcards par des permissions spécifiques.",
+        command: "sed -i 's/\"Action\": \"\\*\"/\"Action\": [\"s3:GetObject\", \"s3:PutObject\"]/' iam-policy.json; sed -i 's/\"Resource\": \"\\*\"/\"Resource\": \"arn:aws:s3:::pce-corp-reports\\/\\*\"/' iam-policy.json"
       },
       {
         title: "Validation et obtention du flag",
-        detail: "Le script de conformité vérifiera l'absence du '*:*'. Le flag attendu est **PCE{...}**."
+        detail: "Le script de conformité vérifiera l'absence de permissions globales. Le flag attendu est **PCE{least_privilege_scoped_policy_2024}**.",
+        command: "python3 policy-audit.py"
       }
     ]
   },
   "6.2.2": {
-    context: "Dans un cluster Kubernetes avec Istio, les communications entre les microservices 'frontend' et 'backend' se font en clair. Un attaquant dans le cluster pourrait intercepter ou modifier ces flux.",
-    objective: "Mettre en place une authentification mutuelle TLS (mTLS) stricte pour chiffrer le trafic interne.",
-    concepts: ["mTLS", "Istio", "Service Mesh", "Zero Trust", "Kubernetes"],
+    context: "Le microservice de paiement hébergé à https://api.internal/flag est fortement protégé. Il nécessite du Mutual TLS (mTLS) pour les requêtes entrantes.",
+    objective: "Localiser un certificat client et une clé valide laissés sur l'hôte, et les utiliser pour effectuer une requête réussie vers l'API.",
+    concepts: ["mTLS", "Authentication", "Certificates", "Zero Trust"],
     steps: [
       {
-        title: "Vérification de l'état actuel",
-        detail: "Vérifiez que le mode mTLS n'est pas appliqué strictement.",
-        command: "kubectl get peerauthentication --all-namespaces"
-      },
-      {
-        title: "Création de la politique PeerAuthentication",
-        detail: "Rédigez un manifeste YAML pour forcer le mTLS strict sur le namespace de l'application.",
-        command: "echo 'apiVersion: security.istio.io/v1beta1\nkind: PeerAuthentication\nmetadata:\n  name: default\n  namespace: mon-app\nspec:\n  mtls:\n    mode: STRICT' > mtls-strict.yaml"
-      },
-      {
-        title: "Application de la politique",
-        detail: "Appliquez la politique sur le cluster.",
-        command: "kubectl apply -f mtls-strict.yaml"
+        title: "Recherche des certificats",
+        detail: "Vérifiez les fichiers de certificats disponibles sur le système.",
+        command: "ls -la /etc/microservices/certs/"
       },
       {
         title: "Test de la connexion et obtention du flag",
-        detail: "Une tentative de connexion sans certificat client échouera désormais. Le vérificateur de lab vous octroiera le succès. Le flag attendu est **PCE{...}**."
+        detail: "Faites une requête cURL avec la clé et le certificat. Le flag attendu est **PCE{mTLS_auth_successful_2024}**.",
+        command: "curl --cert /etc/microservices/certs/client.crt --key /etc/microservices/certs/client.key https://api.internal/flag"
       }
     ]
   },
   "6.2.3": {
-    context: "Des Service Control Policies (SCP) sont en place pour interdire la création de ressources en dehors de la région eu-west-1. Toutefois, une faille dans la logique de la politique permet de contourner cette restriction.",
-    objective: "Identifier la faille dans la SCP (bypass), exploiter ce comportement pour créer une ressource dans une autre région et comprendre comment corriger la politique.",
+    context: "Une SCP empêche la création de ressources, mais une faille dans la logique de la politique permet de contourner cette restriction (bypass de région).",
+    objective: "Identifier la faille dans la SCP et l'exploiter pour démarrer une instance EC2 dans la région autorisée.",
     concepts: ["AWS Organizations", "Service Control Policies (SCP)", "Policy Evaluation Logic", "Bypass"],
     steps: [
       {
@@ -174,95 +140,59 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Identification du bypass",
-        detail: "Vous remarquerez peut-être qu'une condition ne s'applique pas à un certain rôle (ex: ArnNotEquals) ou qu'elle exclut certains services globaux mal configurés.",
-        command: "aws organizations describe-policy --policy-id <policy-id>"
+        detail: "Lisez la SCP. Vous remarquerez que la région 'eu-central-1' est autorisée.",
+        command: "aws organizations describe-policy --policy-id p-12345"
       },
       {
-        title: "Exploitation du bypass",
-        detail: "Assumez le rôle exempté ou utilisez l'action non couverte pour créer un bucket S3 dans us-east-1, prouvant ainsi la vulnérabilité.",
-        command: "aws s3api create-bucket --bucket test-bypass-bucket --region us-east-1"
-      },
-      {
-        title: "Obtention du flag",
-        detail: "L'outil de vérification validera votre preuve d'exploitation de la SCP. Le flag attendu est **PCE{...}**."
+        title: "Exploitation du bypass et obtention du flag",
+        detail: "Lancez une instance EC2 dans la région autorisée pour obtenir le flag. Le flag attendu est **PCE{scp_region_bypass_2024}**.",
+        command: "aws ec2 run-instances --region eu-central-1"
       }
     ]
   },
   "6.3.1": {
-    context: "Lors d'un audit basé sur le CIS AWS Foundations Benchmark, le contrôle 1.20 a échoué : un bucket S3 contenant des données sensibles permet un accès public en lecture.",
-    objective: "Identifier ce bucket et activer la fonctionnalité S3 Block Public Access pour corriger la non-conformité.",
+    context: "Lors d'un audit basé sur le CIS AWS Foundations Benchmark, un bucket S3 permet un accès public en lecture.",
+    objective: "Activer la fonctionnalité S3 Block Public Access au niveau du compte pour corriger la non-conformité.",
     concepts: ["CIS Benchmark", "Security Audit", "Amazon S3", "Block Public Access"],
     steps: [
       {
-        title: "Recherche du bucket public",
-        detail: "Vérifiez les paramètres de blocage d'accès public des buckets S3 de votre compte pour trouver celui qui est vulnérable.",
-        command: "aws s3api get-public-access-block --bucket <bucket-name> || echo 'Pas de blocage'"
+        title: "Lancer l'audit initial",
+        detail: "Vérifiez l'état de la configuration et identifiez le FAIL critique (CIS 2.1.5).",
+        command: "python3 cis-audit.py"
       },
       {
-        title: "Activation de Block Public Access",
-        detail: "Appliquez la configuration stricte pour bloquer les ACLs et les politiques de bucket publiques.",
-        command: "aws s3api put-public-access-block --bucket <bucket-name> --public-access-block-configuration \"BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true\""
+        title: "Correction de la configuration",
+        detail: "Modifiez le fichier account-config.json pour activer le blocage d'accès public au niveau du compte.",
+        command: "sed -i 's/\"accountLevel\": false/\"accountLevel\": true/' account-config.json"
       },
       {
-        title: "Vérification",
-        detail: "Assurez-vous que la configuration est bien prise en compte, résolvant ainsi la violation du benchmark CIS.",
-        command: "aws s3api get-public-access-block --bucket <bucket-name>"
-      },
-      {
-        title: "Validation",
-        detail: "Le score de conformité CIS augmentera. Le flag attendu est **PCE{...}**."
+        title: "Validation et obtention du flag",
+        detail: "Le score de conformité CIS sera de 100%. Le flag attendu est **PCE{cis_public_s3_block_2024}**.",
+        command: "python3 cis-audit.py"
       }
     ]
   },
   "6.3.2": {
-    context: "AWS Security Hub a remonté une alerte de sévérité CRITIQUE concernant une mauvaise configuration de sécurité majeure (ex: une clé d'accès IAM racine utilisée récemment ou une base de données publique).",
-    objective: "Consulter les 'findings' dans Security Hub, identifier la ressource vulnérable et appliquer la remédiation appropriée.",
-    concepts: ["AWS Security Hub", "Security Posture Management", "Incident Response", "Remediation"],
+    context: "AWS Security Hub a remonté une alerte de sévérité CRITIQUE.",
+    objective: "Consulter les 'findings' dans Security Hub et identifier la ressource vulnérable contenant le flag.",
+    concepts: ["AWS Security Hub", "Security Posture Management", "Incident Response"],
     steps: [
       {
-        title: "Liste des alertes critiques",
-        detail: "Utilisez la CLI pour filtrer les 'findings' de Security Hub ayant une sévérité CRITICAL et un statut ACTIVE.",
-        command: "aws securityhub get-findings --filters '{\"SeverityLabel\":[{\"Value\":\"CRITICAL\",\"Comparison\":\"EQUALS\"}],\"RecordState\":[{\"Value\":\"ACTIVE\",\"Comparison\":\"EQUALS\"}]}'"
-      },
-      {
-        title: "Analyse du finding",
-        detail: "Identifiez la ressource incriminée (par exemple, une access key IAM spécifique). Lisez la description de la vulnérabilité.",
-        command: "Examinez le JSON retourné par la commande précédente pour extraire le ResourceId."
-      },
-      {
-        title: "Remédiation manuelle",
-        detail: "Appliquez la correction demandée, comme désactiver une clé d'accès ou chiffrer un volume.",
-        command: "aws iam update-access-key --access-key-id <ACCESS_KEY> --status Inactive"
-      },
-      {
-        title: "Obtention du flag",
-        detail: "Après correction, le statut du finding passera à RESOLVED. Le flag attendu est **PCE{...}**."
+        title: "Liste des alertes",
+        detail: "Utilisez la CLI mock pour récupérer les findings et trouvez le flag dans la description du finding CRITICAL. Le flag attendu est **PCE{cloud_security_hub_2026}**.",
+        command: "aws securityhub get-findings"
       }
     ]
   },
   "6.3.3": {
-    context: "Pour brouiller les pistes, un attaquant a altéré la configuration d'audit du compte cloud : CloudTrail a été interrompu ou AWS Config a été désactivé.",
-    objective: "Investiguer les événements de sécurité pour découvrir comment la journalisation a été compromise, puis réactiver correctement CloudTrail et Config.",
-    concepts: ["AWS CloudTrail", "AWS Config", "Audit Logging", "Evasion Techniques", "Forensics"],
+    context: "Un attaquant a altéré la configuration d'audit du compte cloud. CloudTrail a capturé l'événement de désactivation, contenant le flag.",
+    objective: "Investiguer les événements de sécurité hors-ligne pour découvrir le flag.",
+    concepts: ["AWS CloudTrail", "AWS Config", "Audit Logging", "Forensics"],
     steps: [
       {
-        title: "Vérification du statut de CloudTrail",
-        detail: "Listez les trails existants et vérifiez leur statut pour constater que le logging est en pause.",
-        command: "aws cloudtrail describe-trails\naws cloudtrail get-trail-status --name <trail-name>"
-      },
-      {
         title: "Recherche de l'événement de compromission",
-        detail: "Consultez les événements CloudTrail récents pour trouver l'appel API 'StopLogging' et identifier l'IP/l'utilisateur responsable.",
-        command: "aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=StopLogging"
-      },
-      {
-        title: "Réactivation de CloudTrail",
-        detail: "Relancez la journalisation pour restaurer la conformité et la visibilité de l'audit.",
-        command: "aws cloudtrail start-logging --name <trail-name>"
-      },
-      {
-        title: "Validation et obtention du flag",
-        detail: "Le lab valide que les mécanismes de traçabilité sont à nouveau opérationnels. Le flag attendu est **PCE{...}**."
+        detail: "Consultez le fichier de logs CloudTrail pour trouver l'appel API 'StopLogging' et identifier le nom du trail contenant le flag. Le flag attendu est **PCE{cloudtrail_config_bypassed_2026}**.",
+        command: "cat lab-data/cloudtrail_logs.json"
       }
     ]
   }

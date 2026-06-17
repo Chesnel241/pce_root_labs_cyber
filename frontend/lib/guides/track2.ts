@@ -7,18 +7,19 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["AWS IAM", "MFA", "Security Audit"],
     steps: [
       {
-        title: "Générer un rapport de credentials IAM",
-        detail: "La première étape consiste à demander à AWS de générer un rapport récapitulatif de l'état des identifiants (mot de passe, access keys, MFA) pour tous les utilisateurs du compte.",
-        command: "aws iam generate-credential-report"
+        title: "Lister les utilisateurs du compte",
+        detail: "La première étape consiste à demander à AWS la liste des utilisateurs du compte pour repérer les cibles potentielles.",
+        command: "aws iam list-users"
       },
       {
-        title: "Récupérer et analyser le rapport",
-        detail: "Une fois le rapport généré, nous le récupérons au format CSV. Nous chercherons la colonne `mfa_active` pour repérer les utilisateurs sans MFA.",
-        command: "aws iam get-credential-report --query 'Content' --output text | base64 -d > report.csv"
+        title: "Vérifier le statut MFA",
+        detail: "Pour chaque utilisateur, vérifiez les périphériques MFA associés afin de trouver ceux qui n'en ont pas. Testons sur 'intern_charlie' :",
+        command: "aws iam list-mfa-devices --user-name intern_charlie"
       },
       {
         title: "Isoler l'utilisateur compromis",
-        detail: "En analysant le rapport, vous remarquez qu'un utilisateur n'a pas MFA activé. C'est l'objectif de notre audit. Le flag attendu est **PCE{...}**."
+        detail: "En analysant le résultat, vous remarquez que 'intern_charlie' n'a pas de MFA activé. Obtenez ses informations détaillées (Tags) pour localiser le drapeau. Le flag attendu est **PCE{iam_no_mfa_found_2024}**.",
+        command: "aws iam get-user --user-name intern_charlie"
       }
     ]
   },
@@ -28,18 +29,13 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["AWS IAM", "Access Keys", "Rotation"],
     steps: [
       {
-        title: "Lister les clés d'accès des utilisateurs",
-        detail: "Récupérez la liste des clés d'accès pour chaque utilisateur IAM afin de vérifier la date de leur dernière utilisation.",
-        command: "aws iam list-users"
-      },
-      {
-        title: "Vérifier la date de dernière utilisation d'une clé d'accès",
-        detail: "Utilisez la commande `get-access-key-last-used` pour déterminer quand la clé a été utilisée pour la dernière fois.",
-        command: "aws iam get-access-key-last-used --access-key-id <ACCESS_KEY_ID>"
+        title: "Consulter l'audit des clés",
+        detail: "Dans cet environnement, un fichier 'access_keys_audit.csv' a été généré. Affichez son contenu pour identifier les clés problématiques.",
+        command: "cat access_keys_audit.csv"
       },
       {
         title: "Trouver la clé dormante",
-        detail: "Vous avez trouvé une clé d'accès qui n'a pas été utilisée depuis plus de 90 jours. Le flag attendu est **PCE{...}**."
+        detail: "Recherchez la clé d'accès appartenant à 'eve' dont le statut est 'Active' mais qui n'a pas été utilisée depuis plus de 90 jours. L'ID de la clé est le flag. Le flag attendu est **PCE{AKIA5QYV7B8E9F0G1H2I}**."
       }
     ]
   },
@@ -50,17 +46,18 @@ export const guides: Record<string, ChallengeGuide> = {
     steps: [
       {
         title: "Lister les politiques attachées",
-        detail: "Affichez la liste des politiques gérées et inline attachées aux utilisateurs, groupes ou rôles du compte.",
+        detail: "Affichez la liste des politiques gérées localement sur le compte AWS pour trouver celles configurées manuellement.",
         command: "aws iam list-policies --scope Local"
       },
       {
-        title: "Examiner le contenu des politiques",
-        detail: "Vérifiez les versions de la politique pour identifier la présence de l'action `*` accordée sur la ressource `*`.",
-        command: "aws iam get-policy-version --policy-arn <POLICY_ARN> --version-id v1"
+        title: "Examiner le contenu d'une politique suspecte",
+        detail: "Inspectez la politique 'PCE-Deploy-FullAccess' pour y trouver une permission avec l'action `*`.",
+        command: "aws iam get-policy-version --policy-arn arn:aws:iam::123456789012:policy/PCE-Deploy-FullAccess --version-id v3"
       },
       {
         title: "Récupérer le flag",
-        detail: "Vous avez localisé la politique contenant le wildcard dangereux. Le flag attendu est **PCE{...}**."
+        detail: "Une fois identifiée, utilisez l'outil d'audit sur l'ARN de cette politique pour extraire le drapeau. Le flag attendu est **PCE{iam_wildcard_admin_policy_2024}**.",
+        command: "aws iam audit-policy --policy-arn arn:aws:iam::123456789012:policy/PCE-Deploy-FullAccess"
       }
     ]
   },
@@ -70,18 +67,19 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["Git", "Secrets Leak", "OSINT", "AWS IAM"],
     steps: [
       {
-        title: "Cloner le dépôt cible",
-        detail: "Récupérez le dépôt Git suspect sur votre machine locale afin de l'analyser.",
-        command: "git clone <REPO_URL>"
+        title: "Naviguer dans le dépôt cible",
+        detail: "Placez-vous dans le répertoire du projet Git local vulnérable.",
+        command: "cd project"
       },
       {
         title: "Rechercher des secrets dans l'historique",
-        detail: "Utilisez des outils comme `git grep` ou `trufflehog` pour analyser l'historique des commits à la recherche d'identifiants de clés AWS (`AKIA...`).",
-        command: "git grep 'AKIA'"
+        detail: "Utilisez git log pour analyser l'historique complet des commits à la recherche d'identifiants de clés AWS (AKIA).",
+        command: "git log -p | grep 'AKIA'"
       },
       {
         title: "Identifier la clé exposée",
-        detail: "La clé d'accès a été trouvée dans un ancien commit. Le flag attendu est **PCE{...}**."
+        detail: "Les clés d'accès (Access Key ID et Secret Access Key) ont été trouvées dans un ancien commit. Exécutez le script python à la racine avec ces clés pour récupérer le drapeau. Le flag attendu est **PCE{git_keys_exposed_2024}**.",
+        command: "../verify-keys.py"
       }
     ]
   },
@@ -92,21 +90,17 @@ export const guides: Record<string, ChallengeGuide> = {
     steps: [
       {
         title: "Vérifier ses propres permissions",
-        detail: "Identifiez les permissions associées à votre utilisateur actuel, notamment si vous pouvez lancer une EC2 et utiliser un rôle spécifique.",
-        command: "aws iam get-user-policy --user-name <YOUR_USER> --policy-name <POLICY_NAME>"
+        detail: "Identifiez les politiques en ligne associées à votre utilisateur actuel, `svc-ci-deployer`.",
+        command: "aws iam get-user-policy --user-name svc-ci-deployer --policy-name ci-deploy-inline"
       },
       {
-        title: "Créer un script de lancement (UserData)",
-        detail: "Préparez un script `userdata.sh` qui créera par exemple un reverse shell ou extraira les identifiants IAM temporaires de l'instance et vous les enverra."
+        title: "Comprendre la faille",
+        detail: "La politique trouvée combine les droits pour lancer une instance EC2 (`ec2:RunInstances`) et pour passer n'importe quel rôle IAM (`iam:PassRole` avec ressource `*`)."
       },
       {
-        title: "Lancer l'instance EC2 avec le rôle",
-        detail: "Utilisez vos droits pour créer une instance en y attachant le rôle cible (Profil d'instance). L'instance s'exécutera avec les droits de ce rôle.",
-        command: "aws ec2 run-instances --image-id <AMI_ID> --instance-type t2.micro --iam-instance-profile Name=\"<ROLE_NAME>\" --user-data file://userdata.sh"
-      },
-      {
-        title: "Récupérer le flag",
-        detail: "Une fois les identifiants temporaires obtenus via l'instance, utilisez-les pour accomplir une action administrateur et valider le challenge. Le flag attendu est **PCE{...}**."
+        title: "Auditer l'utilisateur et récupérer le flag",
+        detail: "Exécutez la commande d'audit de l'environnement pour valider la découverte de cette faille et récupérer le drapeau. Le flag attendu est **PCE{passrole_runinstances_privesc_2024}**.",
+        command: "aws iam audit-user --user-name svc-ci-deployer"
       }
     ]
   },
@@ -117,17 +111,17 @@ export const guides: Record<string, ChallengeGuide> = {
     steps: [
       {
         title: "Identifier un utilisateur avec plus de droits",
-        detail: "Listez les utilisateurs IAM et repérez-en un avec un profil Administrateur ou des droits étendus.",
+        detail: "Listez les utilisateurs IAM et repérez-en un avec un profil Administrateur (ici, `admin_user`).",
         command: "aws iam list-users"
       },
       {
         title: "Générer de nouvelles clés d'accès",
-        detail: "Utilisez vos permissions pour créer une nouvelle clé d'accès pour l'utilisateur cible.",
-        command: "aws iam create-access-key --user-name <ADMIN_USER>"
+        detail: "Utilisez vos permissions pour créer une nouvelle clé d'accès pour l'utilisateur cible `admin_user`.",
+        command: "aws iam create-access-key --user-name admin_user"
       },
       {
         title: "S'authentifier en tant que cible",
-        detail: "Configurez votre CLI AWS avec les nouvelles clés pour prendre l'identité de l'utilisateur à privilèges. Le flag attendu est **PCE{...}**."
+        detail: "En exécutant cette commande, la `SecretAccessKey` renvoyée contiendra le drapeau du challenge. Le flag attendu est **PCE{iam_pivot_key_2026}**."
       }
     ]
   },
@@ -137,43 +131,39 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["AWS IAM", "Trust Policy", "AssumeRole", "Privilege Escalation"],
     steps: [
       {
-        title: "Identifier le rôle cible",
-        detail: "Repérez un rôle disposant de privilèges élevés que vous souhaitez assumer.",
-        command: "aws iam list-roles"
-      },
-      {
         title: "Préparer la nouvelle politique de confiance",
-        detail: "Créez un fichier JSON `trust-policy.json` stipulant que votre utilisateur a le droit de faire `sts:AssumeRole` sur ce rôle."
+        detail: "Vous disposez d'un fichier `trust-policy.json` (ou vous devez le créer) stipulant que `dev-user` a le droit d'assumer le rôle."
       },
       {
         title: "Mettre à jour la politique du rôle",
-        detail: "Appliquez la politique modifiée au rôle.",
-        command: "aws iam update-assume-role-policy --role-name <ADMIN_ROLE> --policy-document file://trust-policy.json"
+        detail: "Appliquez la politique modifiée au rôle d'administration cible `admin-role` pour altérer ses approbations.",
+        command: "aws iam update-assume-role-policy --role-name admin-role --policy-document file://trust-policy.json"
       },
       {
         title: "Assumer le rôle",
-        detail: "Assumer le rôle pour obtenir les privilèges d'administrateur. Le flag attendu est **PCE{...}**.",
-        command: "aws sts assume-role --role-arn arn:aws:iam::<ACCOUNT_ID>:role/<ADMIN_ROLE> --role-session-name PwnedSession"
+        detail: "Le rôle vous fait maintenant confiance. Assumez ce rôle pour obtenir un jeton valide. Ce jeton contiendra le drapeau recherché. Le flag attendu est **PCE{update_assume_role_policy_admin_2024}**.",
+        command: "aws sts assume-role --role-arn arn:aws:iam::123456789012:role/admin-role --role-session-name PwnedSession"
       }
     ]
   },
   "2.3.1": {
-    context: "L'authentification via OpenID Connect (OIDC) nécessite de vérifier précisément qui se connecte. Si la condition `StringLike` sur le champ `sub` est trop permissive (ex: `repo:MonOrg/*`), n'importe quel dépôt de cette organisation peut obtenir un accès AWS.",
+    context: "L'authentification via OpenID Connect (OIDC) nécessite de vérifier précisément qui se connecte. Si la condition sur le champ `sub` est trop permissive (ex: wildcard `repo:*`), n'importe quel dépôt de cette organisation (ou de GitHub) peut obtenir l'accès AWS.",
     objective: "OIDC trust misconfiguration (GitHub Actions → accès AWS).",
     concepts: ["AWS IAM", "OIDC", "GitHub Actions", "Trust Policy"],
     steps: [
       {
         title: "Analyser la relation de confiance",
-        detail: "Examinez la politique OIDC du rôle IAM. Vous verrez que le champ `sub` autorise une portée trop large (wildcard).",
-        command: "aws iam get-role --role-name <OIDC_ROLE>"
+        detail: "Examinez la politique d'assomption OIDC du rôle IAM vulnérable `gha-deploy-prod`.",
+        command: "aws iam get-role --role-name gha-deploy-prod"
       },
       {
         title: "Exploiter la configuration",
-        detail: "Créez un nouveau dépôt dans l'organisation concernée (ou utilisez un dépôt existant contrôlé) et configurez une GitHub Action pour assumer le rôle vulnérable."
+        detail: "Dans le document, vous remarquerez un `StringLike` sur `token.actions.githubusercontent.com:sub` défini à `repo:*` au lieu d'un dépôt spécifique."
       },
       {
         title: "Récupérer le flag",
-        detail: "Votre workflow GitHub Actions s'exécute, assume le rôle, et récupère le secret. Le flag attendu est **PCE{...}**."
+        detail: "Auditez la relation de confiance (`trust-policy`) pour que le système vous valide et vous retourne le drapeau. Le flag attendu est **PCE{oidc_trust_wildcard_sub_2024}**.",
+        command: "aws iam audit-trust --role-name gha-deploy-prod"
       }
     ]
   },
@@ -183,18 +173,18 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["AWS IAM", "Cross-Account", "Confused Deputy"],
     steps: [
       {
-        title: "Identifier le rôle cross-account vulnérable",
-        detail: "Analysez les rôles configurés pour des tiers (SaaS, partenaires) et vérifiez si la propriété `ExternalId` est requise.",
-        command: "aws iam get-role --role-name <CROSS_ACCOUNT_ROLE>"
+        title: "Assumer le rôle cross-account vulnérable",
+        detail: "Depuis le compte attaquant, exploitez la politique de confiance laxiste du compte de la victime en assumant directement le rôle `VulnerableRole`.",
+        command: "aws sts assume-role --role-arn arn:aws:iam::999988887777:role/VulnerableRole --role-session-name ConfusedDeputy"
       },
       {
-        title: "Assumer le rôle depuis un autre compte",
-        detail: "Utilisez un accès depuis le compte AWS du tiers pour forcer l'assomption de ce rôle et ainsi accéder aux ressources du compte victime.",
-        command: "aws sts assume-role --role-arn arn:aws:iam::<VICTIM_ACCOUNT_ID>:role/<CROSS_ACCOUNT_ROLE> --role-session-name ConfusedDeputy"
+        title: "Configurer l'accès",
+        detail: "Configurez les variables d'environnement (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`) avec les valeurs renvoyées."
       },
       {
         title: "Récupérer l'objectif",
-        detail: "L'absence de vérification permet l'escalade de privilèges via l'assomption de rôle non autorisée. Le flag attendu est **PCE{...}**."
+        detail: "Une fois authentifié en tant que rôle vulnérable, listez les buckets S3 et téléchargez le fichier `flag.txt` qui s'y trouve. Le flag attendu est **PCE{cross_account_trust_abuse_2024}**.",
+        command: "aws s3 ls"
       }
     ]
   },
@@ -204,21 +194,21 @@ export const guides: Record<string, ChallengeGuide> = {
     concepts: ["SAML", "XML Signature Wrapping", "Federation"],
     steps: [
       {
-        title: "Intercepter la réponse SAML",
-        detail: "Connectez-vous via l'Identity Provider (IdP) et interceptez la réponse SAML (XML encodé en base64) avec un proxy comme Burp Suite."
+        title: "Intercepter l'assertion SAML",
+        detail: "Le jeton SAML intercepté se trouve dans le fichier `token.txt`. Décodez-le de base64 pour observer le XML en clair."
       },
       {
         title: "Manipuler l'assertion",
-        detail: "Modifiez l'assertion pour changer votre identité (par ex. pour cibler un rôle `Admin`) en utilisant des techniques de XML Signature Wrapping (XSW) pour contourner la validation de la signature."
+        detail: "Modifiez l'attribut du rôle de `user` à `admin` dans l'assertion. Étant donné que le système omet de rejeter les assertions non signées (vulnerability `XML Signature Bypass`), supprimez entièrement la balise `<Signature>`."
       },
       {
         title: "Soumettre la réponse",
-        detail: "Envoyez l'assertion modifiée à AWS (au endpoint SAML) pour assumer un rôle avec des droits supérieurs.",
-        command: "aws sts assume-role-with-saml --role-arn <ADMIN_ROLE_ARN> --principal-arn <SAML_PROVIDER_ARN> --saml-assertion <BASE64_SAML_ASSERTION>"
+        detail: "Enregistrez le nouveau contenu encodé en base64 dans `modified_token.txt` et passez-le au script vulnérable `login.py`.",
+        command: "python3 login.py $(cat modified_token.txt)"
       },
       {
         title: "Récupérer le flag",
-        detail: "L'élévation de privilèges via l'assertion SAML modifiée a réussi. Le flag attendu est **PCE{...}**."
+        detail: "L'application vous accepte en tant qu'administrateur car la validation cryptographique a été esquivée. Le flag attendu est **PCE{saml_sig_bypass_2026}**."
       }
     ]
   }
