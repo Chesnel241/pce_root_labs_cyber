@@ -24,7 +24,7 @@ export const guides: Record<string, ChallengeGuide> = {
       {
         title: "Récupération du flag",
         command: "cat /mnt/host/root/flag.txt",
-        detail: "Cherchez le flag sur le système de l'hôte. Souvent, il se trouve dans le dossier `/root`. Le flag attendu est **PCE{escap3d_pr1v_c0ntain3r_2026}**."
+        detail: "Cherchez le flag sur le système de l'hôte. Souvent, il se trouve dans le dossier `/root`. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -51,7 +51,7 @@ export const guides: Record<string, ChallengeGuide> = {
       {
         title: "Lecture du flag",
         command: "cat /root/flag.txt",
-        detail: "Le flag attendu est **PCE{d0ck3r_s0ck3t_rc3_pwnd_2026}**."
+        detail: "Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -73,7 +73,7 @@ export const guides: Record<string, ChallengeGuide> = {
       {
         title: "Récupération du flag",
         command: "cat /root/flag.txt",
-        detail: "Le flag attendu est **PCE{nsenter_mount_breakout_2024}**."
+        detail: "Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -95,7 +95,7 @@ export const guides: Record<string, ChallengeGuide> = {
       {
         title: "Recherche de secrets dans les couches",
         command: "grep -r 'PCE{' .",
-        detail: "Fouillez dans les dossiers extraits pour trouver les fichiers supprimés dans les dernières couches. Vous trouverez le flag caché dans l'un des fichiers de l'historique. Le flag attendu est **PCE{docker_layer_hardcoded_secret_2024}**."
+        detail: "Fouillez dans les dossiers extraits pour trouver les fichiers supprimés dans les dernières couches. Vous trouverez le flag caché dans l'un des fichiers de l'historique. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -117,7 +117,7 @@ export const guides: Record<string, ChallengeGuide> = {
       {
         title: "Abus des permissions (ex: lister les secrets)",
         command: "kubectl get secrets -n kube-system",
-        detail: "Puisque vous avez les droits `cluster-admin`, vous pouvez lire tous les secrets de tous les namespaces, y compris le flag. Le flag attendu est **PCE{k8s_clusteradmin_binding_2024}**."
+        detail: "Puisque vous avez les droits `cluster-admin`, vous pouvez lire tous les secrets de tous les namespaces, y compris le flag. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -139,7 +139,7 @@ export const guides: Record<string, ChallengeGuide> = {
       {
         title: "Recherche du flag",
         command: "kubectl get secrets -n default",
-        detail: "Naviguez dans l'interface ou utilisez les permissions accordées au Dashboard pour lire le flag dans les secrets. Le flag attendu est **PCE{k8s_d4shb04rd_n0_4uth_2026}**."
+        detail: "Naviguez dans l'interface ou utilisez les permissions accordées au Dashboard pour lire le flag dans les secrets. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -161,7 +161,7 @@ export const guides: Record<string, ChallengeGuide> = {
       {
         title: "Lecture du secret contenant le flag",
         command: "ETCDCTL_API=3 etcdctl --endpoints=https://<etcd_ip>:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/peer.crt --key=/etc/kubernetes/pki/etcd/peer.key get /registry/secrets/default/flag-secret",
-        detail: "Lisez la valeur brute du secret dans etcd. Le flag attendu est **PCE{etcd_secrets_unencrypted_2024}**."
+        detail: "Lisez la valeur brute du secret dans etcd. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -183,7 +183,7 @@ export const guides: Record<string, ChallengeGuide> = {
       {
         title: "Lecture des secrets",
         command: "curl -k -H \"Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)\" https://kubernetes.default.svc/api/v1/namespaces/default/secrets",
-        detail: "Le SA a les droits de lire les secrets. Utilisez l'API pour récupérer le flag. Le flag attendu est **PCE{k8s_sa_token_abused_2024}**."
+        detail: "Le SA a les droits de lire les secrets. Utilisez l'API pour récupérer le flag. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -210,7 +210,7 @@ export const guides: Record<string, ChallengeGuide> = {
       {
         title: "Récupération du flag",
         command: "curl http://<target_ip>:<target_port>/flag",
-        detail: "Requêtez le service cible maintenant que la connexion est permise. Le flag attendu est **PCE{k8s_networkpolicy_gap_2024}**."
+        detail: "Requêtez le service cible maintenant que la connexion est permise. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -232,7 +232,7 @@ export const guides: Record<string, ChallengeGuide> = {
       {
         title: "Extraction du flag",
         command: "curl http://<ingress_ip>/internal-flag-endpoint",
-        detail: "Une fois le contournement réussi, accédez au endpoint contenant le flag. Le flag attendu est **PCE{ingr3ss_byp4ss_2026}**."
+        detail: "Une fois le contournement réussi, accédez au endpoint contenant le flag. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -254,7 +254,7 @@ export const guides: Record<string, ChallengeGuide> = {
       {
         title: "Extraction des données",
         command: "cat exfiltrated_data.txt",
-        detail: "Le script exécute une requête vers la cible interne et vous renvoie les données (ex: le flag). Le flag attendu est **PCE{k8s_dns_rebinding_2024}**."
+        detail: "Le script exécute une requête vers la cible interne et vous renvoie les données (ex: le flag). Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -276,7 +276,7 @@ export const guides: Record<string, ChallengeGuide> = {
       {
         title: "Lecture du flag",
         command: "cat /root/flag.txt",
-        detail: "Grâce à vos droits root dans le conteneur, lisez le fichier contenant le flag. Le flag attendu est **PCE{k8s_pods_run_as_root_2024}**."
+        detail: "Grâce à vos droits root dans le conteneur, lisez le fichier contenant le flag. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -298,7 +298,7 @@ export const guides: Record<string, ChallengeGuide> = {
       {
         title: "Récupération du flag",
         command: "echo '#!/bin/sh' > /cmd ; echo 'cat /flag > /tmp/output' >> /cmd ; chmod a+x /cmd",
-        detail: "Le script sera exécuté par le noyau. Vous récupérerez la sortie dans `/tmp/output`. Le flag attendu est **PCE{sys_admin_c4p_m0unt_2024}**."
+        detail: "Le script sera exécuté par le noyau. Vous récupérerez la sortie dans `/tmp/output`. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -325,7 +325,7 @@ export const guides: Record<string, ChallengeGuide> = {
       {
         title: "Lecture du flag",
         command: "kubectl exec -it <bad_pod> -- cat /host-root/flag.txt",
-        detail: "Le flag attendu est **PCE{psp_bypass_2024}**."
+        detail: "Le flag attendu est **PCE{...}**."
       }
     ]
   }

@@ -28,7 +28,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation et obtention du flag",
-        detail: "Une fois le routage corrigé, le script de validation vous confirmera la résolution. Le flag attendu est **PCE{vpc_segmentation_fixed_2024}**."
+        detail: "Une fois le routage corrigé, le script de validation vous confirmera la résolution. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -54,7 +54,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation et obtention du flag",
-        detail: "Après avoir restreint l'accès, le moteur de lab détecte la fermeture de la faille. Le flag attendu est **PCE{security_group_least_exposure_2024}**."
+        detail: "Après avoir restreint l'accès, le moteur de lab détecte la fermeture de la faille. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -80,7 +80,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Soumission du flag",
-        detail: "Le flag attendu est **PCE{bastion_vpn_secured_2026}**."
+        detail: "Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -106,7 +106,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Vérification et obtention du flag",
-        detail: "Tentez une injection SQL (ex: ?id=1' OR '1'='1). Si la requête est bloquée (403 Forbidden), le défi est réussi. Le flag attendu est **PCE{waf_rules_designed_2024}**."
+        detail: "Tentez une injection SQL (ex: ?id=1' OR '1'='1). Si la requête est bloquée (403 Forbidden), le défi est réussi. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -132,7 +132,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation et obtention du flag",
-        detail: "Le script de conformité vérifiera l'absence du '*:*'. Le flag attendu est **PCE{least_privilege_scoped_policy_2024}**."
+        detail: "Le script de conformité vérifiera l'absence du '*:*'. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -158,7 +158,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Test de la connexion et obtention du flag",
-        detail: "Une tentative de connexion sans certificat client échouera désormais. Le vérificateur de lab vous octroiera le succès. Le flag attendu est **PCE{mTLS_auth_successful_2024}**."
+        detail: "Une tentative de connexion sans certificat client échouera désormais. Le vérificateur de lab vous octroiera le succès. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -184,7 +184,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Obtention du flag",
-        detail: "L'outil de vérification validera votre preuve d'exploitation de la SCP. Le flag attendu est **PCE{scp_region_bypass_2024}**."
+        detail: "L'outil de vérification validera votre preuve d'exploitation de la SCP. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -210,7 +210,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation",
-        detail: "Le score de conformité CIS augmentera. Le flag attendu est **PCE{cis_public_s3_block_2024}**."
+        detail: "Le score de conformité CIS augmentera. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -236,7 +236,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Obtention du flag",
-        detail: "Après correction, le statut du finding passera à RESOLVED. Le flag attendu est **PCE{cloud_security_hub_2026}**."
+        detail: "Après correction, le statut du finding passera à RESOLVED. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -262,7 +262,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation et obtention du flag",
-        detail: "Le lab valide que les mécanismes de traçabilité sont à nouveau opérationnels. Le flag attendu est **PCE{cloudtrail_config_bypassed_2026}**."
+        detail: "Le lab valide que les mécanismes de traçabilité sont à nouveau opérationnels. Le flag attendu est **PCE{...}**."
       }
     ]
   }

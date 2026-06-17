@@ -13,7 +13,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation de la vulnérabilité",
-        detail: "En analysant le fichier, vous découvrez que les identifiants AWS sont effectivement stockés en clair. Cette clé doit être révoquée et remplacée par l'utilisation de `credentials()` dans Jenkins. Le flag correspondant à cette découverte est **PCE{jenkins_plaintext_aws_creds_2024}**."
+        detail: "En analysant le fichier, vous découvrez que les identifiants AWS sont effectivement stockés en clair. Cette clé doit être révoquée et remplacée par l'utilisation de `credentials()` dans Jenkins. Le flag correspondant à cette découverte est **PCE{...}**."
       }
     ]
   },
@@ -34,7 +34,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Récupération du flag",
-        detail: "Consultez les logs de console du build Jenkins. La commande injectée s'exécute et affiche le flag. Le flag attendu est **PCE{pipeline_cmd_inj_2024}**."
+        detail: "Consultez les logs de console du build Jenkins. La commande injectée s'exécute et affiche le flag. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -54,7 +54,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Extraction du secret",
-        detail: "L'analyse révèle que le secret a été imprimé en clair lors d'une étape de diagnostic. Le flag récupéré est **PCE{gha_secrets_leaked_2024}**."
+        detail: "L'analyse révèle que le secret a été imprimé en clair lors d'une étape de diagnostic. Le flag récupéré est **PCE{...}**."
       }
     ]
   },
@@ -74,7 +74,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation de la sécurité",
-        detail: "Vérifiez que le build passe avec le pipeline sécurisé, que les secrets n'apparaissent plus dans les logs et que l'injection n'est plus possible. Le flag de complétion est **PCE{j3nk1ns_p1p3l1n3_s3cur3d}**."
+        detail: "Vérifiez que le build passe avec le pipeline sécurisé, que les secrets n'apparaissent plus dans les logs et que l'injection n'est plus possible. Le flag de complétion est **PCE{...}**."
       }
     ]
   },
@@ -94,7 +94,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation des vulnérabilités",
-        detail: "Après avoir listé et vérifié les 5 erreurs critiques dans le code, vous validez le challenge. Le flag correspondant est **PCE{terraform_five_misconfigs_2024}**."
+        detail: "Après avoir listé et vérifié les 5 erreurs critiques dans le code, vous validez le challenge. Le flag correspondant est **PCE{...}**."
       }
     ]
   },
@@ -114,7 +114,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation de l'audit",
-        detail: "La détection de ces défauts permet de corriger le template avant le déploiement. Le flag de ce défi est **PCE{cfn_auditing_and_securing_2026}**."
+        detail: "La détection de ces défauts permet de corriger le template avant le déploiement. Le flag de ce défi est **PCE{...}**."
       }
     ]
   },
@@ -134,7 +134,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Conclusion de l'audit",
-        detail: "Ces découvertes montrent que le conteneur serait hautement vulnérable s'il était déployé. Le flag de l'exercice est **PCE{d0ck3rf1l3_s3cr3t_l34k_2024}**."
+        detail: "Ces découvertes montrent que le conteneur serait hautement vulnérable s'il était déployé. Le flag de l'exercice est **PCE{...}**."
       }
     ]
   },
@@ -154,7 +154,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Récupération du flag",
-        detail: "En inspectant le commit incriminé, vous retrouvez la clé ou le flag. Le flag attendu est **PCE{git_history_leaked_aws_key_2024}**."
+        detail: "En inspectant le commit incriminé, vous retrouvez la clé ou le flag. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -175,7 +175,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Récupération du flag",
-        detail: "La valeur du mot de passe exposé s'affiche. Le flag de validation est **PCE{env_v4r_s3cr3t_2026}**."
+        detail: "La valeur du mot de passe exposé s'affiche. Le flag de validation est **PCE{...}**."
       }
     ]
   },
@@ -195,7 +195,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation de la migration",
-        detail: "En migrant avec succès vers AWS Secrets Manager, vous sécurisez l'accès. Le flag validant cette étape est **PCE{migrated_to_secrets_manager_2024}**."
+        detail: "En migrant avec succès vers AWS Secrets Manager, vous sécurisez l'accès. Le flag validant cette étape est **PCE{...}**."
       }
     ]
   },
@@ -216,7 +216,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Analyse du comportement malveillant",
-        detail: "Le script extrait des informations sensibles ou télécharge un binaire externe. La découverte de cette mécanique donne accès au flag : **PCE{npm_typosquat_postinstall_2024}**."
+        detail: "Le script extrait des informations sensibles ou télécharge un binaire externe. La découverte de cette mécanique donne accès au flag : **PCE{...}**."
       }
     ]
   },
@@ -237,7 +237,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Identification du paquet piégé",
-        detail: "L'identification du faux paquet permet de bloquer son utilisation. Le flag confirmant l'analyse est **PCE{typ0squatt1ng_busted}**."
+        detail: "L'identification du faux paquet permet de bloquer son utilisation. Le flag confirmant l'analyse est **PCE{...}**."
       }
     ]
   },
@@ -258,7 +258,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation de la sécurité de l'image",
-        detail: "L'image est correctement signée et son SBOM est validé. Le flag correspondant est **PCE{sbom_and_signatures_secured_2026}**."
+        detail: "L'image est correctement signée et son SBOM est validé. Le flag correspondant est **PCE{...}**."
       }
     ]
   }

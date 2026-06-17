@@ -18,7 +18,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Isoler l'utilisateur compromis",
-        detail: "En analysant le rapport, vous remarquez qu'un utilisateur n'a pas MFA activé. C'est l'objectif de notre audit. Le flag attendu est **PCE{iam_no_mfa_found_2024}**."
+        detail: "En analysant le rapport, vous remarquez qu'un utilisateur n'a pas MFA activé. C'est l'objectif de notre audit. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -39,7 +39,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Trouver la clé dormante",
-        detail: "Vous avez trouvé une clé d'accès qui n'a pas été utilisée depuis plus de 90 jours. Le flag attendu est **PCE{AKIA5QYV7B8E9F0G1H2I}**."
+        detail: "Vous avez trouvé une clé d'accès qui n'a pas été utilisée depuis plus de 90 jours. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -60,7 +60,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Récupérer le flag",
-        detail: "Vous avez localisé la politique contenant le wildcard dangereux. Le flag attendu est **PCE{iam_wildcard_admin_policy_2024}**."
+        detail: "Vous avez localisé la politique contenant le wildcard dangereux. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -81,7 +81,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Identifier la clé exposée",
-        detail: "La clé d'accès a été trouvée dans un ancien commit. Le flag attendu est **PCE{git_keys_exposed_2024}**."
+        detail: "La clé d'accès a été trouvée dans un ancien commit. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -106,7 +106,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Récupérer le flag",
-        detail: "Une fois les identifiants temporaires obtenus via l'instance, utilisez-les pour accomplir une action administrateur et valider le challenge. Le flag attendu est **PCE{passrole_runinstances_privesc_2024}**."
+        detail: "Une fois les identifiants temporaires obtenus via l'instance, utilisez-les pour accomplir une action administrateur et valider le challenge. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -127,7 +127,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "S'authentifier en tant que cible",
-        detail: "Configurez votre CLI AWS avec les nouvelles clés pour prendre l'identité de l'utilisateur à privilèges. Le flag attendu est **PCE{iam_pivot_key_2026}**."
+        detail: "Configurez votre CLI AWS avec les nouvelles clés pour prendre l'identité de l'utilisateur à privilèges. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -152,7 +152,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Assumer le rôle",
-        detail: "Assumer le rôle pour obtenir les privilèges d'administrateur. Le flag attendu est **PCE{update_assume_role_policy_admin_2024}**.",
+        detail: "Assumer le rôle pour obtenir les privilèges d'administrateur. Le flag attendu est **PCE{...}**.",
         command: "aws sts assume-role --role-arn arn:aws:iam::<ACCOUNT_ID>:role/<ADMIN_ROLE> --role-session-name PwnedSession"
       }
     ]
@@ -173,7 +173,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Récupérer le flag",
-        detail: "Votre workflow GitHub Actions s'exécute, assume le rôle, et récupère le secret. Le flag attendu est **PCE{oidc_trust_wildcard_sub_2024}**."
+        detail: "Votre workflow GitHub Actions s'exécute, assume le rôle, et récupère le secret. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -194,7 +194,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Récupérer l'objectif",
-        detail: "L'absence de vérification permet l'escalade de privilèges via l'assomption de rôle non autorisée. Le flag attendu est **PCE{cross_account_trust_abuse_2024}**."
+        detail: "L'absence de vérification permet l'escalade de privilèges via l'assomption de rôle non autorisée. Le flag attendu est **PCE{...}**."
       }
     ]
   },
@@ -218,7 +218,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Récupérer le flag",
-        detail: "L'élévation de privilèges via l'assertion SAML modifiée a réussi. Le flag attendu est **PCE{saml_sig_bypass_2026}**."
+        detail: "L'élévation de privilèges via l'assertion SAML modifiée a réussi. Le flag attendu est **PCE{...}**."
       }
     ]
   }

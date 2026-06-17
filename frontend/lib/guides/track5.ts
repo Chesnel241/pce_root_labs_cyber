@@ -18,7 +18,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation du Flag",
-        detail: "Une fois l'intrusion confirmée, soumettez le flag trouvé dans la plateforme. Le flag attendu est **PCE{cloudtrail_unauthorized_assumerole_2024}**.",
+        detail: "Une fois l'intrusion confirmée, soumettez le flag trouvé dans la plateforme. Le flag attendu est **PCE{...}**.",
         command: ""
       }
     ]
@@ -40,7 +40,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation du Flag",
-        detail: "Soumettez le flag correspondant à l'incident d'exfiltration identifié. Le flag attendu est **PCE{198.51.100.42_dns_exfil}**.",
+        detail: "Soumettez le flag correspondant à l'incident d'exfiltration identifié. Le flag attendu est **PCE{...}**.",
         command: ""
       }
     ]
@@ -62,7 +62,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation du Flag",
-        detail: "Une fois l'escalade de privilèges confirmée, entrez le flag. Le flag attendu est **PCE{cloudtrail_iam_privesc_detected_2024}**.",
+        detail: "Une fois l'escalade de privilèges confirmée, entrez le flag. Le flag attendu est **PCE{...}**.",
         command: ""
       }
     ]
@@ -84,7 +84,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation du Flag",
-        detail: "Soumettez le flag découvert suite à cette investigation. Le flag attendu est **PCE{n0_m0r3_l0gs_4_u}**.",
+        detail: "Soumettez le flag découvert suite à cette investigation. Le flag attendu est **PCE{...}**.",
         command: ""
       }
     ]
@@ -106,7 +106,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation du Flag",
-        detail: "Une fois le mouvement latéral identifié, validez le flag. Le flag attendu est **PCE{lateral_movement_role_chain_2024}**.",
+        detail: "Une fois le mouvement latéral identifié, validez le flag. Le flag attendu est **PCE{...}**.",
         command: ""
       }
     ]
@@ -128,7 +128,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation du Flag",
-        detail: "Une fois la persistance confirmée, vous pouvez valider l'exercice. Le flag attendu est **PCE{L4mbd4_B4ckd00r_P3rsist3nc3_2024}**.",
+        detail: "Une fois la persistance confirmée, vous pouvez valider l'exercice. Le flag attendu est **PCE{...}**.",
         command: ""
       }
     ]
@@ -150,7 +150,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation du Flag",
-        detail: "Soumettez le flag après avoir confirmé la présence du mineur. Le flag attendu est **PCE{crypt0_m1n3r_3c2_d3t3ct3d}**.",
+        detail: "Soumettez le flag après avoir confirmé la présence du mineur. Le flag attendu est **PCE{...}**.",
         command: ""
       }
     ]
@@ -172,7 +172,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation du Flag",
-        detail: "Soumettez le flag relatif à l'exfiltration DNS. Le flag attendu est **PCE{dns_tunn3ling_d3t3ct3d}**.",
+        detail: "Soumettez le flag relatif à l'exfiltration DNS. Le flag attendu est **PCE{...}**.",
         command: ""
       }
     ]
@@ -194,7 +194,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation du Flag",
-        detail: "L'instance étant isolée, vous avez complété l'objectif. Le flag attendu est **PCE{ec2_containment_2024}**.",
+        detail: "L'instance étant isolée, vous avez complété l'objectif. Le flag attendu est **PCE{...}**.",
         command: ""
       }
     ]
@@ -216,7 +216,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation du Flag",
-        detail: "Confirmez l'acteur et l'exfiltration avec le flag. Le flag attendu est **PCE{s3_forensics_exfil_actor_2024}**.",
+        detail: "Confirmez l'acteur et l'exfiltration avec le flag. Le flag attendu est **PCE{...}**.",
         command: ""
       }
     ]
@@ -238,7 +238,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation du Flag",
-        detail: "Une fois la clé et l'IP récupérées, vous pouvez soumettre la solution. Le flag attendu est **PCE{203.0.113.42_AKIAIOSFODNN7EXAMPLE}**.",
+        detail: "Une fois la clé et l'IP récupérées, vous pouvez soumettre la solution. Le flag attendu est **PCE{...}**.",
         command: ""
       }
     ]
@@ -260,7 +260,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation du Flag",
-        detail: "La création ou la vérification des règles vous donne le flag de réussite. Le flag attendu est **PCE{iam_detection_rules_2024}**.",
+        detail: "La création ou la vérification des règles vous donne le flag de réussite. Le flag attendu est **PCE{...}**.",
         command: ""
       }
     ]
@@ -282,7 +282,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation du Flag",
-        detail: "Une fois le vrai positif qualifié, soumettez le flag. Le flag attendu est **PCE{guardduty_true_positive_2024}**.",
+        detail: "Une fois le vrai positif qualifié, soumettez le flag. Le flag attendu est **PCE{...}**.",
         command: ""
       }
     ]
@@ -304,7 +304,7 @@ export const guides: Record<string, ChallengeGuide> = {
       },
       {
         title: "Validation du Flag",
-        detail: "L'alerte configurée vous révèle le flag de validation. Le flag attendu est **PCE{Suspicious_API_Calls_Detected_2026}**.",
+        detail: "L'alerte configurée vous révèle le flag de validation. Le flag attendu est **PCE{...}**.",
         command: ""
       }
     ]
