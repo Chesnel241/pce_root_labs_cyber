@@ -8,7 +8,7 @@ RUN adduser -D analyst
 WORKDIR /home/analyst
 
 COPY motd.txt /etc/motd
-COPY dns.log /home/analyst/dns.log
+COPY lab-data/dns.log /home/analyst/dns.log
 
 RUN chown analyst:analyst /home/analyst/dns.log && \
     chmod 644 /home/analyst/dns.log

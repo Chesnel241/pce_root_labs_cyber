@@ -5,7 +5,7 @@ LABEL com.pceroot.lab="true" \
       com.pceroot.lab.slug="cloud-soc-05-vpc-exfiltration"
 
 RUN apt-get update && \
-    apt-get install -y python3 jq awk nano vim bsdmainutils && \
+    apt-get install -y python3 jq gawk nano vim bsdmainutils && \
     rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -s /bin/bash analyst
