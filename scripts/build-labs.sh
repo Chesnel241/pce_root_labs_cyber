@@ -34,7 +34,16 @@ for lab_dir in */; do
       # Extract slug using grep (more robust on systems without node)
       SLUG=$(grep -o '"slug": *"[^"]*"' "$lab_dir/challenge.json" | cut -d'"' -f4)
 
-      
+      # Fallback: the lab DIRECTORY name is the canonical slug expected by the
+      # backend (the curriculum `lab` field maps to image `pce-lab-<dir>`).
+      # Many auto-generated challenge.json files omit the "slug" key; without
+      # this fallback those labs are skipped and their image is never built, so
+      # `POST /api/labs/<id>/start` returns 503 (image introuvable) and the
+      # terminal stays stuck on "démo / code 1006".
+      if [ -z "$SLUG" ]; then
+        SLUG="$lab_dir"
+      fi
+
       if [ -n "$SLUG" ]; then
         IMAGE_NAME="pce-lab-$SLUG:latest"
         echo "============================================================"
